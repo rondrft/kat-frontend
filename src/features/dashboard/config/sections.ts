@@ -1,9 +1,9 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
+  Activity,
   LayoutDashboard,
   PartyPopper,
-  Music,
   Settings,
   Shield,
 } from "lucide-react";
@@ -40,11 +40,11 @@ export const dashboardSections: DashboardSectionConfig[] = [
     icon: Shield,
   },
   {
-    id: "music",
-    label: "Music",
-    title: "Music",
-    description: "Playback and queue controls.",
-    icon: Music,
+    id: "activity",
+    label: "Activity",
+    title: "Activity",
+    description: "Audit logs and message ranking.",
+    icon: Activity,
   },
   {
     id: "settings",

@@ -2,7 +2,7 @@ export const dashboardSectionIds = [
   "dashboard",
   "servers",
   "moderation",
-  "music",
+  "activity",
   "settings",
   "analytics",
 ] as const;

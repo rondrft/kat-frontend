@@ -234,6 +234,7 @@ function WelcomeSectionComponent({ guildId: guildIdProp }: WelcomeSectionProps) 
           sampleUser={sampleUser}
           backgroundPreviewUrl={localBackgroundPreview}
           isSaving={saveMutation.isPending}
+          isSaved={saveMutation.isSuccess}
           isUploading={uploadMutation.isPending}
           onChange={updateDraft}
           onSave={handleSave}
@@ -248,6 +249,7 @@ function WelcomeSectionComponent({ guildId: guildIdProp }: WelcomeSectionProps) 
           sampleUser={sampleUser}
           backgroundPreviewUrl={localBackgroundPreview}
           isSaving={saveMutation.isPending}
+          isSaved={saveMutation.isSuccess}
           isUploading={uploadMutation.isPending}
           onChange={updateDraft}
           onSave={handleSave}
@@ -267,12 +269,6 @@ function WelcomeSectionComponent({ guildId: guildIdProp }: WelcomeSectionProps) 
                 Use these tokens in messages, embeds, and generated images.
               </p>
             </div>
-
-            {saveMutation.isSuccess ? (
-              <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                Saved
-              </span>
-            ) : null}
           </div>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">

@@ -31,6 +31,10 @@ export const DEFAULT_WELCOME_CONFIG: WelcomeConfig = {
   imageShowAvatar: true,
   imageTextColor: "#0F172A",
   imageMentionUser: false,
+  imageCardEnabled: true,
+  imageCardColor: "#000000",
+  imageCardOpacity: 120,
+  imageAvatarSize: 140,
 };
 
 function unwrapApiData<T>(data: ApiResponse<T> | T): T {
@@ -56,6 +60,17 @@ function normalizeBackgroundMode(
 ): BackgroundMode {
   const mode = String(value ?? fallback).toUpperCase() as BackgroundMode;
   return BACKGROUND_MODES.has(mode) ? mode : fallback;
+}
+
+function normalizeInteger(
+  value: unknown,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.min(max, Math.max(min, Math.round(number)));
 }
 
 export function normalizeWelcomeConfig(raw: unknown, guildId = ""): WelcomeConfig {
@@ -106,12 +121,53 @@ export function normalizeWelcomeConfig(raw: unknown, guildId = ""): WelcomeConfi
       typeof row.imageMentionUser === "boolean"
         ? row.imageMentionUser
         : DEFAULT_WELCOME_CONFIG.imageMentionUser,
+    imageCardEnabled:
+      typeof row.imageCardEnabled === "boolean"
+        ? row.imageCardEnabled
+        : DEFAULT_WELCOME_CONFIG.imageCardEnabled,
+    imageCardColor: String(
+      row.imageCardColor ?? DEFAULT_WELCOME_CONFIG.imageCardColor,
+    ),
+    imageCardOpacity: normalizeInteger(
+      row.imageCardOpacity,
+      DEFAULT_WELCOME_CONFIG.imageCardOpacity,
+      0,
+      255,
+    ),
+    imageAvatarSize: normalizeInteger(
+      row.imageAvatarSize,
+      DEFAULT_WELCOME_CONFIG.imageAvatarSize,
+      60,
+      200,
+    ),
   };
 }
 
 export function toWelcomePayload(config: WelcomeConfig): SaveWelcomeConfigPayload {
-  const { guildId: _guildId, ...payload } = config;
-  return payload;
+  return {
+    welcomeEnabled: config.welcomeEnabled,
+    boostEnabled: config.boostEnabled,
+    welcomeChannelId: config.welcomeChannelId,
+    boostChannelId: config.boostChannelId,
+    welcomeOutputType: config.welcomeOutputType,
+    boostOutputType: config.boostOutputType,
+    messageTemplate: config.messageTemplate,
+    embedTitleTemplate: config.embedTitleTemplate,
+    embedColor: config.embedColor,
+    imageTitleTemplate: config.imageTitleTemplate,
+    imageUsernameTemplate: config.imageUsernameTemplate,
+    imageFooterTemplate: config.imageFooterTemplate,
+    imageBackgroundMode: config.imageBackgroundMode,
+    imageBackgroundColor: config.imageBackgroundColor,
+    imageBackgroundUrl: config.imageBackgroundUrl,
+    imageShowAvatar: config.imageShowAvatar,
+    imageTextColor: config.imageTextColor,
+    imageMentionUser: config.imageMentionUser,
+    imageCardEnabled: config.imageCardEnabled,
+    imageCardColor: config.imageCardColor,
+    imageCardOpacity: config.imageCardOpacity,
+    imageAvatarSize: config.imageAvatarSize,
+  };
 }
 
 export async function getWelcomeConfig(guildId: string): Promise<WelcomeConfig> {

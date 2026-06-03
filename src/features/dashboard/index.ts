@@ -1,4 +1,5 @@
 export { DashboardShell } from "./components/dashboard-shell";
+export { ActivitySection } from "./components/sections/activity-section";
 export { NewMembersWidget } from "./components/widgets/new-members-widget";
 export {
   useNewMembers,

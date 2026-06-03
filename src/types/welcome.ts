@@ -22,6 +22,10 @@ export type WelcomeConfig = {
   imageShowAvatar: boolean;
   imageTextColor: string;
   imageMentionUser: boolean;
+  imageCardEnabled: boolean;
+  imageCardColor: string;
+  imageCardOpacity: number;
+  imageAvatarSize: number;
 };
 
 export type SaveWelcomeConfigPayload = Omit<WelcomeConfig, "guildId">;

@@ -28,6 +28,12 @@ const ModerationSection = lazy(() =>
   })),
 );
 
+const ActivitySection = lazy(() =>
+  import("@/features/dashboard/components/sections/activity-section").then((m) => ({
+    default: m.ActivitySection,
+  })),
+);
+
 const SectionPlaceholder = lazy(() =>
   import("@/features/dashboard/components/placeholders/section-placeholder").then(
     (m) => ({ default: m.SectionPlaceholder }),
@@ -73,6 +79,14 @@ function SectionRendererComponent({ sectionId }: SectionRendererProps) {
     return (
       <Suspense fallback={<SectionFallback />}>
         <ModerationSection />
+      </Suspense>
+    );
+  }
+
+  if (sectionId === "activity") {
+    return (
+      <Suspense fallback={<SectionFallback />}>
+        <ActivitySection />
       </Suspense>
     );
   }

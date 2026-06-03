@@ -26,6 +26,8 @@ export const endpoints = {
     welcomeBackground: (guildId: string) => `/guilds/${guildId}/welcomes/background`,
     moderation: (guildId: string) => `/guilds/${guildId}/moderation`,
     monthlyJoins: (guildId: string) => `/guilds/${guildId}/members/joins/monthly`,
+    auditLogs: (guildId: string) => `/guilds/${guildId}/audit-logs`,
+    ranking: (guildId: string) => `/guilds/${guildId}/ranking`,
   },
   bot: {
     status: "/bot/status",

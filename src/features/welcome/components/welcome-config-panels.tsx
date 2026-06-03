@@ -33,6 +33,7 @@ type EventConfigPanelProps = {
   sampleUser: SampleUser;
   backgroundPreviewUrl: string | null;
   isSaving: boolean;
+  isSaved: boolean;
   isUploading: boolean;
   onChange: (patch: Partial<WelcomeConfig>) => void;
   onSave: () => void;
@@ -78,6 +79,23 @@ function textareaClassName() {
   return "flex min-h-[104px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 }
 
+function clampInteger(value: string, min: number, max: number) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return min;
+  return Math.min(max, Math.max(min, Math.round(number)));
+}
+
+function hexToRgba(hex: string, opacity: number) {
+  const normalizedHex = /^#[0-9a-f]{6}$/i.test(hex) ? hex : "#000000";
+  const red = Number.parseInt(normalizedHex.slice(1, 3), 16);
+  const green = Number.parseInt(normalizedHex.slice(3, 5), 16);
+  const blue = Number.parseInt(normalizedHex.slice(5, 7), 16);
+
+  return `rgb(${red} ${green} ${blue} / ${
+    Math.min(255, Math.max(0, opacity)) / 255
+  })`;
+}
+
 function EventConfigPanel({
   event,
   config,
@@ -85,6 +103,7 @@ function EventConfigPanel({
   sampleUser,
   backgroundPreviewUrl,
   isSaving,
+  isSaved,
   isUploading,
   onChange,
   onSave,
@@ -130,8 +149,15 @@ function EventConfigPanel({
             <h2 className="mt-1 text-xl font-bold tracking-tight">{title}</h2>
             <p className="mt-1 text-sm text-muted-foreground">{description}</p>
           </div>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kat/10">
-            <Icon className="h-5 w-5 text-kat" />
+          <div className="flex shrink-0 items-center gap-2">
+            {isSaved ? (
+              <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                Saved
+              </span>
+            ) : null}
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-kat/10">
+              <Icon className="h-5 w-5 text-kat" />
+            </div>
           </div>
         </div>
 
@@ -402,6 +428,84 @@ function EventConfigPanel({
                 </span>
               </label>
             </div>
+
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(160px,0.7fr)]">
+              <div className="space-y-3 rounded-xl bg-background/70 p-3">
+                <p className="text-sm font-medium">Card settings</p>
+                <div className="grid items-end gap-3 sm:grid-cols-[minmax(150px,0.9fr)_88px_minmax(150px,1fr)]">
+                  <div className="flex h-10 items-center gap-3 rounded-lg bg-background px-3">
+                    <Switch
+                      checked={config.imageCardEnabled}
+                      onCheckedChange={(checked) =>
+                        onChange({ imageCardEnabled: checked })
+                      }
+                    />
+                    <p className="text-sm font-medium">Card overlay</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor={`${event}CardColor`}>Color</Label>
+                    <Input
+                      id={`${event}CardColor`}
+                      type="color"
+                      value={config.imageCardColor || "#000000"}
+                      onChange={(changeEvent) =>
+                        onChange({ imageCardColor: changeEvent.target.value })
+                      }
+                      className="h-10 p-1"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <Label htmlFor={`${event}CardOpacity`}>Opacity</Label>
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {config.imageCardOpacity}
+                      </span>
+                    </div>
+                    <Input
+                      id={`${event}CardOpacity`}
+                      type="range"
+                      min={0}
+                      max={255}
+                      value={config.imageCardOpacity}
+                      onChange={(changeEvent) =>
+                        onChange({
+                          imageCardOpacity: clampInteger(
+                            changeEvent.target.value,
+                            0,
+                            255,
+                          ),
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-xl bg-background/70 p-3">
+                <p className="text-sm font-medium">Avatar settings</p>
+                <div className="space-y-2">
+                  <Label htmlFor={`${event}AvatarSize`}>Size</Label>
+                  <Input
+                    id={`${event}AvatarSize`}
+                    type="number"
+                    min={60}
+                    max={200}
+                    value={config.imageAvatarSize}
+                    onChange={(changeEvent) =>
+                      onChange({
+                        imageAvatarSize: clampInteger(
+                          changeEvent.target.value,
+                          60,
+                          200,
+                        ),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         ) : null}
 
@@ -478,7 +582,17 @@ function EventConfigPanel({
                 style={previewBackground}
               >
                 <div className="absolute inset-0 bg-white/20" />
-                <div className="absolute inset-x-[5%] inset-y-[5%] rounded-md bg-white/30 backdrop-blur-[1px]" />
+                {config.imageCardEnabled ? (
+                  <div
+                    className="absolute inset-x-[5%] inset-y-[5%] rounded-md backdrop-blur-[1px]"
+                    style={{
+                      backgroundColor: hexToRgba(
+                        config.imageCardColor,
+                        config.imageCardOpacity,
+                      ),
+                    }}
+                  />
+                ) : null}
                 <div className="relative z-10 m-auto flex flex-col items-center">
                   <p
                     className="text-xl font-bold leading-tight sm:text-2xl"
@@ -490,7 +604,11 @@ function EventConfigPanel({
                     <img
                       src={sampleUser.avatar}
                       alt=""
-                      className="mt-4 h-24 w-24 rounded-full border-4 border-white object-cover shadow-lg sm:mt-5 sm:h-32 sm:w-32"
+                      className="mt-4 rounded-full border-4 border-white object-cover shadow-lg sm:mt-5"
+                      style={{
+                        height: `clamp(60px, ${config.imageAvatarSize}px, 42%)`,
+                        width: `clamp(60px, ${config.imageAvatarSize}px, 42%)`,
+                      }}
                     />
                   ) : null}
                   <p
