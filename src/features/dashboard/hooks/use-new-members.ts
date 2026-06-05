@@ -27,10 +27,9 @@ export function useNewMembers(guildId: string | null) {
       : ["guilds", "members", "recent"],
     queryFn: () => guildService.getRecentMembers(guildId!, RECENT_MEMBERS_WIDGET_LIMIT),
     enabled,
-    staleTime: 10 * 1000,
+    staleTime: 30 * 1000,
     placeholderData: (previous) => previous,
-    refetchInterval: 10_000,
-    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
   });
 }
 
@@ -53,9 +52,8 @@ export function useMemberAlerts(guildId: string | null) {
       : ["guilds", "members", "alerts"],
     queryFn: () => guildService.getRecentMembers(guildId!, MEMBER_ALERTS_LIMIT),
     enabled,
-    staleTime: 30 * 1000,
+    staleTime: 60 * 1000,
     placeholderData: (previous) => previous,
     refetchInterval: 30_000,
-    refetchOnWindowFocus: true,
   });
 }

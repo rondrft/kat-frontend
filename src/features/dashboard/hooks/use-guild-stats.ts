@@ -23,9 +23,8 @@ export function useGuildStats(guildId: string | null) {
     queryKey: guildId ? guildStatsQueryKey(guildId) : ["guilds", "stats"],
     queryFn: () => guildService.getGuildStats(guildId!),
     enabled,
-    staleTime: 30 * 1000,
+    staleTime: 60 * 1000,
     placeholderData: (previous) => previous,
-    refetchOnWindowFocus: true,
     retry: (failureCount, error) => {
       if (error instanceof AppError && error.status >= 400 && error.status < 500) {
         return false;

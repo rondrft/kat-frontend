@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useEffect, useMemo, useState } from "react";
-import { AlertCircle, Braces, Loader2, PartyPopper, Sparkles } from "lucide-react";
+import { AlertCircle, Braces, Crown, Loader2, PartyPopper, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiConfig } from "@/config/api";
 import {
@@ -14,6 +14,7 @@ import {
   useWelcomeConfig,
 } from "@/features/welcome/hooks/use-welcome-config";
 import { useGuilds } from "@/features/guilds/hooks/use-guilds";
+import { usePremiumStatus } from "@/features/guilds/hooks/use-premium-status";
 import { DEFAULT_WELCOME_CONFIG, toWelcomePayload } from "@/lib/api/welcome";
 import { cn } from "@/lib/utils";
 import { useGuildStore } from "@/store/guild-store";
@@ -81,6 +82,9 @@ function WelcomeSectionComponent({ guildId: guildIdProp }: WelcomeSectionProps) 
   const { data: guilds = [] } = useGuilds();
   const selectedGuild = guilds.find((guild) => guild.id === guildId);
   const serverName = selectedGuild?.name ?? "Kat Community";
+
+  const { data: premiumData } = usePremiumStatus(guildId);
+  const isPremium = premiumData?.isPremium ?? false;
 
   const welcomeQuery = useWelcomeConfig(guildId);
   const saveMutation = useSaveWelcomeConfig(guildId);
@@ -243,18 +247,28 @@ function WelcomeSectionComponent({ guildId: guildIdProp }: WelcomeSectionProps) 
       ) : null}
 
       {activePanel === "boost" ? (
-        <BoostConfigPanel
-          config={config}
-          serverName={serverName}
-          sampleUser={sampleUser}
-          backgroundPreviewUrl={localBackgroundPreview}
-          isSaving={saveMutation.isPending}
-          isSaved={saveMutation.isSuccess}
-          isUploading={uploadMutation.isPending}
-          onChange={updateDraft}
-          onSave={handleSave}
-          onUploadBackground={handleUploadBackground}
-        />
+        <div className="relative">
+          {!isPremium ? (
+            <span className="pointer-events-none absolute right-0 top-0 z-10 inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">
+              <Crown className="h-3 w-3" />
+              Premium
+            </span>
+          ) : null}
+          <div className={!isPremium ? "pointer-events-none opacity-50" : undefined}>
+            <BoostConfigPanel
+              config={config}
+              serverName={serverName}
+              sampleUser={sampleUser}
+              backgroundPreviewUrl={localBackgroundPreview}
+              isSaving={saveMutation.isPending}
+              isSaved={saveMutation.isSuccess}
+              isUploading={uploadMutation.isPending}
+              onChange={updateDraft}
+              onSave={handleSave}
+              onUploadBackground={handleUploadBackground}
+            />
+          </div>
+        </div>
       ) : null}
 
       {activePanel === "variables" ? (

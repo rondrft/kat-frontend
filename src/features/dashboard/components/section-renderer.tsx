@@ -34,6 +34,12 @@ const ActivitySection = lazy(() =>
   })),
 );
 
+const PremiumSection = lazy(() =>
+  import("@/features/dashboard/components/sections/premium-section").then((m) => ({
+    default: m.PremiumSection,
+  })),
+);
+
 const SectionPlaceholder = lazy(() =>
   import("@/features/dashboard/components/placeholders/section-placeholder").then(
     (m) => ({ default: m.SectionPlaceholder }),
@@ -87,6 +93,14 @@ function SectionRendererComponent({ sectionId }: SectionRendererProps) {
     return (
       <Suspense fallback={<SectionFallback />}>
         <ActivitySection />
+      </Suspense>
+    );
+  }
+
+  if (sectionId === "premium") {
+    return (
+      <Suspense fallback={<SectionFallback />}>
+        <PremiumSection />
       </Suspense>
     );
   }

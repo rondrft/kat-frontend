@@ -19,3 +19,23 @@ export type ModerationConfig = {
 };
 
 export type SaveModerationConfigPayload = Omit<ModerationConfig, "guildId">;
+
+export type ModPermissions = {
+  xkick: string[];
+  xban: string[];
+  xmute: string[];
+  xwarn: string[];
+  xhistory: string[];
+};
+
+export type PurgeConfig = {
+  enabled: boolean;
+  allowedRoleId: string | null;
+  maxMessages: number;
+  maxAgeSeconds: number;
+};
+
+export type NukeConfig = {
+  allowedRoleId: string | null;
+  allowedUserIds: string[];
+};

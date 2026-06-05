@@ -3,8 +3,8 @@ export const dashboardSectionIds = [
   "servers",
   "moderation",
   "activity",
-  "settings",
   "analytics",
+  "premium",
 ] as const;
 
 export type DashboardSectionId = (typeof dashboardSectionIds)[number];

@@ -28,9 +28,8 @@ export function useModerationConfig(guildId: string | null) {
     queryKey: guildId ? moderationConfigQueryKey(guildId) : ["guilds", "moderation"],
     queryFn: () => getModerationConfig(guildId!),
     enabled,
-    staleTime: 30 * 1000,
+    staleTime: 60 * 1000,
     placeholderData: (previous) => previous,
-    refetchOnWindowFocus: true,
     retry: false,
   });
 }

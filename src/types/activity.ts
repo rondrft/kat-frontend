@@ -1,12 +1,29 @@
+export type AuditLogAction =
+  | "BAN"
+  | "UNBAN"
+  | "KICK"
+  | "TIMEOUT"
+  | "UNTIMEOUT"
+  | "MUTE"
+  | "UNMUTE"
+  | "WARN"
+  | "MESSAGE_DELETE"
+  | "MESSAGE_BULK_DELETE"
+  | "ROLE_ADD"
+  | "ROLE_REMOVE"
+  | "AUTO_MOD";
+
 export type AuditLogEntry = {
   id: string;
-  action: string;
-  targetUserId: string | null;
+  guildId: string;
+  targetDiscordId: string;
   targetUsername: string;
-  targetAvatarUrl: string | null;
-  executorUserId: string | null;
+  targetAvatar: string | null;
+  executorDiscordId: string;
   executorUsername: string;
+  action: AuditLogAction;
   reason: string | null;
+  durationMinutes: number | null;
   createdAt: string;
 };
 

@@ -43,9 +43,8 @@ export function useBoosterRole(guildId: string | null) {
     queryKey: guildId ? boosterRoleQueryKey(guildId) : ["guilds", "boosters", "me"],
     queryFn: () => getMyBoosterRole(guildId!),
     enabled,
-    staleTime: 30 * 1000,
+    staleTime: 60 * 1000,
     placeholderData: (previous) => previous,
-    refetchOnWindowFocus: true,
   });
 
   return {
@@ -65,9 +64,8 @@ export function useAllBoosterRoles(guildId: string | null) {
       : ["guilds", "boosters", "all"],
     queryFn: () => getAllBoosterRoles(guildId!),
     enabled,
-    staleTime: 30 * 1000,
+    staleTime: 60 * 1000,
     placeholderData: (previous) => previous,
-    refetchOnWindowFocus: true,
   });
 }
 
@@ -80,9 +78,8 @@ export function useBoosterSettings(guildId: string | null) {
       : ["guilds", "boosters", "settings"],
     queryFn: () => getBoosterSettings(guildId!),
     enabled,
-    staleTime: 30 * 1000,
+    staleTime: 60 * 1000,
     placeholderData: (previous) => previous,
-    refetchOnWindowFocus: true,
     retry: false,
   });
 }

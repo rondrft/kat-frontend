@@ -601,14 +601,17 @@ function EventConfigPanel({
                     {renderTemplate(config.imageTitleTemplate, serverName, sampleUser)}
                   </p>
                   {config.imageShowAvatar ? (
-                    <img
+                    <Image
                       src={sampleUser.avatar}
                       alt=""
+                      width={config.imageAvatarSize}
+                      height={config.imageAvatarSize}
                       className="mt-4 rounded-full border-4 border-white object-cover shadow-lg sm:mt-5"
                       style={{
                         height: `clamp(60px, ${config.imageAvatarSize}px, 42%)`,
                         width: `clamp(60px, ${config.imageAvatarSize}px, 42%)`,
                       }}
+                      unoptimized
                     />
                   ) : null}
                   <p

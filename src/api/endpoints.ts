@@ -25,12 +25,19 @@ export const endpoints = {
     welcomes: (guildId: string) => `/guilds/${guildId}/welcomes`,
     welcomeBackground: (guildId: string) => `/guilds/${guildId}/welcomes/background`,
     moderation: (guildId: string) => `/guilds/${guildId}/moderation`,
+    moderationPermissions: (guildId: string) => `/guilds/${guildId}/moderation/permissions`,
+    moderationPurge: (guildId: string) => `/guilds/${guildId}/moderation/purge`,
+    moderationNuke: (guildId: string) => `/guilds/${guildId}/moderation/nuke`,
     monthlyJoins: (guildId: string) => `/guilds/${guildId}/members/joins/monthly`,
     auditLogs: (guildId: string) => `/guilds/${guildId}/audit-logs`,
     ranking: (guildId: string) => `/guilds/${guildId}/ranking`,
+    premium: (guildId: string) => `/guilds/${guildId}/premium`,
   },
   bot: {
     status: "/bot/status",
     stats: "/bot/stats",
+  },
+  owner: {
+    metrics: "/owner/metrics",
   },
 } as const;

@@ -43,9 +43,8 @@ export function useMemberJoinStats(
     },
     retry: 1,
     enabled,
-    staleTime: 10 * 1000,
+    staleTime: 30 * 1000,
     placeholderData: (previous) => previous,
-    refetchInterval: 10_000,
-    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
   });
 }

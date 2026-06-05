@@ -4,7 +4,7 @@ import {
   Activity,
   LayoutDashboard,
   PartyPopper,
-  Settings,
+  Crown,
   Shield,
 } from "lucide-react";
 import type { DashboardSectionId } from "@/features/dashboard/types";
@@ -47,18 +47,18 @@ export const dashboardSections: DashboardSectionConfig[] = [
     icon: Activity,
   },
   {
-    id: "settings",
-    label: "Settings",
-    title: "Settings",
-    description: "Bot preferences and integrations.",
-    icon: Settings,
-  },
-  {
     id: "analytics",
     label: "Statistics",
     title: "Statistics",
     description: "Server numbers, boosts, channels, and active modules.",
     icon: BarChart3,
+  },
+  {
+    id: "premium",
+    label: "Premium",
+    title: "Premium",
+    description: "Unlock advanced tools, unlimited limits, and priority support.",
+    icon: Crown,
   },
 ];
 

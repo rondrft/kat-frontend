@@ -15,6 +15,7 @@ import {
 import { TempVoiceChannelModal } from "@/features/voice/components/temp-voice-channel-modal";
 import { AutoRolesModal } from "@/features/auto-roles/components/auto-roles-modal";
 import { BoosterRoleModal } from "@/features/boosters/components/booster-role-modal";
+import { usePremiumStatus } from "@/features/guilds/hooks/use-premium-status";
 import { useGuildStore } from "@/store/guild-store";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +28,9 @@ function OverviewSectionComponent() {
   const [tempVoiceOpen, setTempVoiceOpen] = useState(false);
   const [autoRolesOpen, setAutoRolesOpen] = useState(false);
   const [boosterRolesOpen, setBoosterRolesOpen] = useState(false);
+
+  const { data: premiumData } = usePremiumStatus(selectedGuildId);
+  const isPremium = premiumData?.isPremium ?? false;
 
   const {
     data: joinStats,
@@ -79,10 +83,10 @@ function OverviewSectionComponent() {
                 title="Booster Roles"
                 description="Custom premium roles for 2x server boosters."
                 icon={Crown}
-                className="h-full min-w-0 flex-1"
+                className={cn("h-full min-w-0 flex-1", !isPremium && "pointer-events-none opacity-50")}
                 badge="premium"
                 disableHoverMotion
-                onClick={() => setBoosterRolesOpen(true)}
+                onClick={isPremium ? () => setBoosterRolesOpen(true) : undefined}
               />
             </div>
           </div>

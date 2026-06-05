@@ -1,6 +1,8 @@
 "use client";
 
-import { memo, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   Ban,
@@ -18,6 +20,11 @@ import {
   ShieldCheck,
   TimerReset,
   Trash2,
+  ChevronDown,
+  ToggleLeft,
+  Users,
+  Shield,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,14 +43,35 @@ import {
   useModerationConfig,
   useSaveModerationConfig,
 } from "@/features/moderation/hooks/use-moderation-config";
+import { apiClient } from "@/api";
 import { cn } from "@/lib/utils";
+import type { ApiResponse } from "@/types/api";
 import { useGuildStore } from "@/store/guild-store";
+import type { GuildRole } from "@/features/auto-roles/types/auto-roles-config";
+import { guildService } from "@/services/guild.service";
+import {
+  useModPermissions,
+  useSaveModPermissions,
+} from "@/features/moderation/hooks/use-mod-permissions";
+import { usePremiumStatus } from "@/features/guilds/hooks/use-premium-status";
+import {
+  usePurgeConfig,
+  useSavePurgeConfig,
+} from "@/features/moderation/hooks/use-purge-config";
+import {
+  useNukeConfig,
+  useSaveNukeConfig,
+} from "@/features/moderation/hooks/use-nuke-config";
 import type {
   ModerationAction,
   ModerationConfig,
   ModerationRuleConfig,
   ModerationRuleType,
+  ModPermissions,
+  PurgeConfig,
+  NukeConfig,
 } from "@/types/moderation";
+import { getDiscordAvatarUrl } from "@/utils/discord";
 
 type ModerationMode =
   | "monitor"
@@ -476,6 +504,367 @@ function RuleDialog({
   );
 }
 
+const emptyPermissions: ModPermissions = {
+  xkick: [],
+  xban: [],
+  xmute: [],
+  xwarn: [],
+  xhistory: [],
+};
+
+const defaultPurgeConfig: PurgeConfig = {
+  enabled: false,
+  allowedRoleId: null,
+  maxMessages: 20,
+  maxAgeSeconds: 300,
+};
+
+const defaultNukeConfig: NukeConfig = {
+  allowedRoleId: null,
+  allowedUserIds: [],
+};
+
+function roleColorStyle(color?: number): React.CSSProperties | undefined {
+  if (!color) return undefined;
+  return { backgroundColor: `#${color.toString(16).padStart(6, "0")}` };
+}
+
+function CommandRoleSelect({
+  roles,
+  selectedIds,
+  onChange,
+  isLoading,
+}: {
+  roles: GuildRole[];
+  selectedIds: string[];
+  onChange: (ids: string[]) => void;
+  isLoading?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  const toggle = (roleId: string) => {
+    if (selectedIds.includes(roleId)) {
+      onChange(selectedIds.filter((id) => id !== roleId));
+    } else {
+      onChange([...selectedIds, roleId]);
+    }
+  };
+
+  const selectedRoles = roles.filter((r) => selectedIds.includes(r.id));
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex min-h-10 w-full items-center gap-1.5 rounded-xl border border-black/[0.08] bg-background px-3 py-1.5 text-left text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kat focus-visible:ring-offset-2 dark:border-white/10"
+      >
+        {isLoading ? (
+          <span className="text-xs text-muted-foreground">Loading roles…</span>
+        ) : selectedRoles.length > 0 ? (
+          <div className="flex flex-1 flex-wrap gap-1">
+            {selectedRoles.map((role) => (
+              <span
+                key={role.id}
+                className="inline-flex items-center gap-1 rounded-md bg-black/[0.06] px-1.5 py-0.5 text-xs font-medium dark:bg-white/[0.08]"
+              >
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full bg-muted"
+                  style={roleColorStyle(role.color)}
+                />
+                {role.name}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <span className="text-xs text-muted-foreground">Select roles…</span>
+        )}
+        <ChevronDown className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+      </button>
+      {open && (
+        <div className="absolute right-0 z-50 mt-1 max-h-60 w-72 overflow-y-auto rounded-xl border border-black/[0.08] bg-background p-1 shadow-lg dark:border-white/10">
+          {roles.length === 0 ? (
+            <p className="px-2 py-3 text-xs text-muted-foreground">
+              {isLoading ? "Loading roles…" : "No roles available"}
+            </p>
+          ) : (
+            roles.map((role) => {
+              const checked = selectedIds.includes(role.id);
+              return (
+                <label
+                  key={role.id}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.04]"
+                >
+                  <input
+                    type="checkbox"
+                    className="accent-[hsl(var(--kat-brand))]"
+                    checked={checked}
+                    onChange={() => toggle(role.id)}
+                  />
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-full bg-muted"
+                    style={roleColorStyle(role.color)}
+                  />
+                  <span className="truncate">{role.name}</span>
+                </label>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SingleRoleSelect({
+  roles,
+  selectedId,
+  onChange,
+  isLoading,
+}: {
+  roles: GuildRole[];
+  selectedId: string | null;
+  onChange: (id: string | null) => void;
+  isLoading?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  const selectedRole = roles.find((r) => r.id === selectedId) ?? null;
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex min-h-10 w-full items-center gap-1.5 rounded-xl border border-black/[0.08] bg-background px-3 py-1.5 text-left text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kat focus-visible:ring-offset-2 dark:border-white/10"
+      >
+        {isLoading ? (
+          <span className="text-xs text-muted-foreground">Loading roles…</span>
+        ) : selectedRole ? (
+          <div className="flex flex-1 flex-wrap gap-1">
+            <span className="inline-flex items-center gap-1 rounded-md bg-black/[0.06] px-1.5 py-0.5 text-xs font-medium dark:bg-white/[0.08]">
+              <span
+                className="h-2 w-2 shrink-0 rounded-full bg-muted"
+                style={roleColorStyle(selectedRole.color)}
+              />
+              {selectedRole.name}
+            </span>
+          </div>
+        ) : (
+          <span className="text-xs text-muted-foreground">Select a role…</span>
+        )}
+        <ChevronDown className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+      </button>
+      {open && (
+        <div className="absolute right-0 z-50 mt-1 max-h-60 w-72 overflow-y-auto rounded-xl border border-black/[0.08] bg-background p-1 shadow-lg dark:border-white/10">
+          <label
+            className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.04]"
+          >
+            <input
+              type="radio"
+              name="nuke-role"
+              className="accent-[hsl(var(--kat-brand))]"
+              checked={selectedId === null}
+              onChange={() => onChange(null)}
+            />
+            <span className="text-muted-foreground">No role</span>
+          </label>
+          {roles.length === 0 ? (
+            <p className="px-2 py-3 text-xs text-muted-foreground">
+              {isLoading ? "Loading roles…" : "No roles available"}
+            </p>
+          ) : (
+            roles.map((role) => {
+              const checked = role.id === selectedId;
+              return (
+                <label
+                  key={role.id}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.04]"
+                >
+                  <input
+                    type="radio"
+                    name="nuke-role"
+                    className="accent-[hsl(var(--kat-brand))]"
+                    checked={checked}
+                    onChange={() => onChange(role.id)}
+                  />
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-full bg-muted"
+                    style={roleColorStyle(role.color)}
+                  />
+                  <span className="truncate">{role.name}</span>
+                </label>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+type MemberTag = {
+  id: string;
+  username: string;
+  avatar: string | null;
+};
+
+function UserTagInput({
+  userIds,
+  onChange,
+  guildId,
+}: {
+  userIds: string[];
+  onChange: (ids: string[]) => void;
+  guildId: string;
+}) {
+  const [inputValue, setInputValue] = useState("");
+  const [tags, setTags] = useState<MemberTag[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (userIds.length === 0) {
+      setTags([]);
+      return;
+    }
+    const idsSet = new Set(userIds);
+    setTags((prev) => {
+      const next = prev.filter((t) => idsSet.has(t.id));
+      const missing = userIds.filter((id) => !next.find((t) => t.id === id));
+      if (missing.length === 0) return next;
+      return next;
+    });
+  }, [userIds]);
+
+  const removeTag = (id: string) => {
+    setTags((prev) => prev.filter((t) => t.id !== id));
+    onChange(userIds.filter((uid) => uid !== id));
+  };
+
+  const addUser = async (userId: string) => {
+    const trimmed = userId.trim();
+    if (!trimmed) return;
+    if (userIds.includes(trimmed)) {
+      setError("User already added");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await apiClient.get<ApiResponse<MemberTag> | unknown>(
+        `/guilds/${guildId}/members/${trimmed}`,
+      );
+      const raw =
+        typeof data === "object" && data !== null && "data" in data
+          ? (data as ApiResponse<MemberTag>).data
+          : data;
+      if (!raw || typeof raw !== "object") {
+        setError("User not found in this server");
+        return;
+      }
+      const member = raw as Record<string, unknown>;
+      const id = String(member.id ?? "");
+      if (!id) {
+        setError("User not found in this server");
+        return;
+      }
+      const tag: MemberTag = {
+        id,
+        username: String(member.username ?? "Unknown"),
+        avatar: typeof member.avatar === "string" ? member.avatar : null,
+      };
+      setTags((prev) => [...prev, tag]);
+      onChange([...userIds, id]);
+      setInputValue("");
+    } catch {
+      setError("User not found in this server");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => {
+            setInputValue(e.target.value);
+            if (error) setError(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              void addUser(inputValue);
+            }
+          }}
+          placeholder="Enter Discord user ID…"
+          className="flex h-10 w-full rounded-xl border border-black/[0.08] bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kat focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10"
+        />
+      </div>
+      {loading ? (
+        <p className="text-xs text-muted-foreground">Looking up user…</p>
+      ) : null}
+      {error ? (
+        <p className="text-xs text-destructive">{error}</p>
+      ) : null}
+      {tags.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {tags.map((tag) => (
+            <span
+              key={tag.id}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-black/[0.06] px-2 py-1 text-xs font-medium dark:bg-white/[0.08]"
+            >
+              <Image
+                src={getDiscordAvatarUrl(tag.id, tag.avatar, 32)}
+                alt=""
+                width={16}
+                height={16}
+                className="h-4 w-4 shrink-0 rounded-full"
+                unoptimized
+              />
+              <span className="max-w-[120px] truncate">{tag.username}</span>
+              <button
+                type="button"
+                onClick={() => removeTag(tag.id)}
+                className="ml-0.5 rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-black/[0.1] hover:text-foreground dark:hover:bg-white/[0.1]"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 type ModerationSectionProps = {
   guildId?: string;
 };
@@ -496,6 +885,37 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
   const [muteMinutes, setMuteMinutes] = useState(10);
   const [saved, setSaved] = useState(false);
 
+  const {
+    data: permissionsData,
+    isLoading: permissionsLoading,
+  } = useModPermissions(guildId);
+  const savePermissions = useSaveModPermissions(guildId);
+  const [permissions, setPermissions] = useState<ModPermissions | null>(null);
+
+  const {
+    data: purgeData,
+    isLoading: purgeLoading,
+  } = usePurgeConfig(guildId);
+  const savePurge = useSavePurgeConfig(guildId);
+  const [purgeConfig, setPurgeConfig] = useState<PurgeConfig | null>(null);
+
+  const {
+    data: nukeData,
+    isLoading: nukeLoading,
+  } = useNukeConfig(guildId);
+  const saveNuke = useSaveNukeConfig(guildId);
+  const [nukeConfig, setNukeConfig] = useState<NukeConfig | null>(null);
+
+  const { data: guildRoles = [], isLoading: rolesLoading } = useQuery({
+    queryKey: ["guilds", guildId, "roles"],
+    queryFn: () => guildService.getGuildRoles(guildId!),
+    enabled: Boolean(guildId),
+    staleTime: 60 * 1000,
+  });
+
+  const { data: premiumData } = usePremiumStatus(guildId);
+  const isPremium = premiumData?.isPremium ?? false;
+
   useEffect(() => {
     if (!moderationConfig) return;
     setStrictness(moderationConfig.strictness);
@@ -503,6 +923,24 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
     setRules((current) => applyModerationConfigToRules(current, moderationConfig));
     setSaved(true);
   }, [moderationConfig]);
+
+  useEffect(() => {
+    if (permissionsData) {
+      setPermissions(permissionsData);
+    }
+  }, [permissionsData]);
+
+  useEffect(() => {
+    if (purgeData) {
+      setPurgeConfig(purgeData);
+    }
+  }, [purgeData]);
+
+  useEffect(() => {
+    if (nukeData) {
+      setNukeConfig(nukeData);
+    }
+  }, [nukeData]);
 
   const selectedRule = rules.find((rule) => rule.id === selectedRuleId) ?? null;
 
@@ -733,7 +1171,7 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
       </section>
 
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {rules.map((rule) => (
+        {rules.filter((rule) => !rule.premium).map((rule) => (
           <RuleTile
             key={rule.id}
             rule={rule}
@@ -741,6 +1179,283 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
             onToggle={(id, enabled) => updateRule(id, { enabled })}
           />
         ))}
+      </section>
+
+      <section className="relative">
+        <div className="mb-3 flex items-center gap-2">
+          <Shield className="h-4 w-4 text-violet-500" />
+          <h3 className="text-sm font-bold tracking-tight">Anti-Raid</h3>
+          {!isPremium ? (
+            <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">
+              <Crown className="h-3 w-3" />
+              Premium
+            </span>
+          ) : null}
+        </div>
+        <div
+          className={cn(
+            "grid gap-3 md:grid-cols-2 xl:grid-cols-4",
+            !isPremium && "pointer-events-none opacity-50",
+          )}
+        >
+          {rules.filter((rule) => rule.premium).map((rule) => (
+            <RuleTile
+              key={rule.id}
+              rule={rule}
+              onOpen={(nextRule) => setSelectedRuleId(nextRule.id)}
+              onToggle={(id, enabled) => updateRule(id, { enabled })}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* Command Permissions + Purge Command */}
+      <section className="grid gap-4 md:grid-cols-2">
+        <div className={cn("dashboard-glass-card p-5 sm:p-6", !isPremium && "relative")}>
+          <div className="flex items-start gap-3">
+            {!isPremium ? (
+              <span className="pointer-events-none absolute right-4 top-4 z-10 inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">
+                <Crown className="h-3 w-3" />
+                Premium
+              </span>
+            ) : null}
+            <Users className="mt-0.5 h-5 w-5 shrink-0 text-kat" />
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-bold tracking-tight">Command Permissions</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Allow specific roles to use moderation commands without Discord permissions
+              </p>
+            </div>
+          </div>
+
+          {permissionsLoading ? (
+            <div className="mt-4 space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-12 animate-pulse rounded-xl bg-white/[0.05]" />
+              ))}
+            </div>
+          ) : (
+            <div className={cn("mt-4 space-y-4", !isPremium && "pointer-events-none opacity-50")}>
+              <div className="grid grid-cols-2 gap-2">
+                {(["xkick", "xban", "xmute", "xwarn", "xhistory"] as const).map(
+                  (cmd) => (
+                    <div
+                      key={cmd}
+                      className="rounded-xl bg-black/[0.025] p-2 dark:bg-white/[0.03]"
+                    >
+                      <p className="mb-1.5 text-xs font-semibold text-kat">{cmd}</p>
+                      <CommandRoleSelect
+                        roles={guildRoles}
+                        selectedIds={(permissions ?? emptyPermissions)[cmd]}
+                        isLoading={rolesLoading}
+                        onChange={(ids) =>
+                          setPermissions((prev) =>
+                            prev
+                              ? { ...prev, [cmd]: ids }
+                              : { ...emptyPermissions, [cmd]: ids },
+                          )
+                        }
+                      />
+                    </div>
+                  ),
+                )}
+
+                <div className="rounded-xl bg-black/[0.025] p-2 dark:bg-white/[0.03]">
+                  <p className="mb-1.5 text-xs font-semibold text-kat">xnuke</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <SingleRoleSelect
+                      roles={guildRoles}
+                      selectedId={(nukeConfig ?? defaultNukeConfig).allowedRoleId}
+                      isLoading={rolesLoading}
+                      onChange={(id) =>
+                        setNukeConfig((prev) =>
+                          prev
+                            ? { ...prev, allowedRoleId: id }
+                            : { ...defaultNukeConfig, allowedRoleId: id },
+                        )
+                      }
+                    />
+                    <UserTagInput
+                      guildId={guildId ?? ""}
+                      userIds={(nukeConfig ?? defaultNukeConfig).allowedUserIds}
+                      onChange={(ids) =>
+                        setNukeConfig((prev) =>
+                          prev
+                            ? { ...prev, allowedUserIds: ids }
+                            : { ...defaultNukeConfig, allowedUserIds: ids },
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={savePermissions.isPending || saveNuke.isPending || !permissions || !isPremium}
+                  onClick={() => {
+                    if (!permissions) return;
+                    savePermissions.mutate(permissions, {
+                      onSuccess: () => {
+                        if (nukeConfig) {
+                          saveNuke.mutate(nukeConfig);
+                        }
+                      },
+                    });
+                  }}
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {savePermissions.isPending || saveNuke.isPending ? "Saving..." : "Save"}
+                </Button>
+                {savePermissions.isError || saveNuke.isError ? (
+                  <p className="text-sm text-destructive">
+                    Could not save. Please try again.
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="dashboard-glass-card p-5 sm:p-6">
+          <div className="flex items-start gap-3">
+            <ToggleLeft className="mt-0.5 h-5 w-5 shrink-0 text-kat" />
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-bold tracking-tight">Purge Command (purgeenme)</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Let a specific role delete their own recent messages by typing purgeenme
+              </p>
+            </div>
+          </div>
+
+          {purgeLoading ? (
+            <div className="mt-4 space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-12 animate-pulse rounded-xl bg-white/[0.05]" />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 space-y-5">
+              <div className="flex items-center justify-between rounded-2xl bg-black/[0.025] p-3 dark:bg-white/[0.03]">
+                <div>
+                  <p className="text-sm font-semibold">Enable Purge Command</p>
+                  <p className="text-xs text-muted-foreground">
+                    Allow members with the selected role to use purgeenme
+                  </p>
+                </div>
+                <Switch
+                  checked={(purgeConfig ?? defaultPurgeConfig).enabled}
+                  onCheckedChange={(enabled) =>
+                    setPurgeConfig((prev) =>
+                      prev ? { ...prev, enabled } : { ...defaultPurgeConfig, enabled },
+                    )
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="allowed-role">Allowed Role</Label>
+                <select
+                  id="allowed-role"
+                  value={(purgeConfig ?? defaultPurgeConfig).allowedRoleId ?? ""}
+                  onChange={(e) =>
+                    setPurgeConfig((prev) =>
+                      prev
+                        ? { ...prev, allowedRoleId: e.target.value || null }
+                        : { ...defaultPurgeConfig, allowedRoleId: e.target.value || null },
+                    )
+                  }
+                  className="flex h-10 w-full rounded-xl border border-black/[0.08] bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kat focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10"
+                >
+                  <option value="">No role</option>
+                  {guildRoles.map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="max-messages">Max Messages</Label>
+                  <input
+                    id="max-messages"
+                    type="number"
+                    min={1}
+                    max={40}
+                    value={(purgeConfig ?? defaultPurgeConfig).maxMessages}
+                    onChange={(e) =>
+                      setPurgeConfig((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              maxMessages: Math.min(40, Math.max(1, Number(e.target.value))),
+                            }
+                          : {
+                              ...defaultPurgeConfig,
+                              maxMessages: Math.min(40, Math.max(1, Number(e.target.value))),
+                            },
+                      )
+                    }
+                    className="flex h-10 w-full rounded-xl border border-black/[0.08] bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kat focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10"
+                  />
+                  <p className="text-xs text-muted-foreground">Between 1 and 40</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="max-age">Max Age (seconds)</Label>
+                  <input
+                    id="max-age"
+                    type="number"
+                    min={10}
+                    max={86400}
+                    value={(purgeConfig ?? defaultPurgeConfig).maxAgeSeconds}
+                    onChange={(e) =>
+                      setPurgeConfig((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              maxAgeSeconds: Math.min(
+                                86400,
+                                Math.max(10, Number(e.target.value)),
+                              ),
+                            }
+                          : {
+                              ...defaultPurgeConfig,
+                              maxAgeSeconds: Math.min(
+                                86400,
+                                Math.max(10, Number(e.target.value)),
+                              ),
+                            },
+                      )
+                    }
+                    className="flex h-10 w-full rounded-xl border border-black/[0.08] bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kat focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10"
+                  />
+                  <p className="text-xs text-muted-foreground">Between 10 and 86400</p>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                size="sm"
+                disabled={savePurge.isPending || !purgeConfig}
+                onClick={() => {
+                  if (!purgeConfig) return;
+                  savePurge.mutate(purgeConfig);
+                }}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {savePurge.isPending ? "Saving..." : "Save"}
+              </Button>
+              {savePurge.isError ? (
+                <p className="mt-2 text-sm text-destructive">
+                  Could not save purge config. Please try again.
+                </p>
+              ) : null}
+            </div>
+          )}
+        </div>
       </section>
 
       <RuleDialog
