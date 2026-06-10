@@ -2,6 +2,7 @@ export const dashboardSectionIds = [
   "dashboard",
   "servers",
   "moderation",
+  "logs",
   "activity",
   "analytics",
   "premium",

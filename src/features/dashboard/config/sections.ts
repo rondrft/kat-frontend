@@ -6,6 +6,7 @@ import {
   PartyPopper,
   Crown,
   Shield,
+  ScrollText,
 } from "lucide-react";
 import type { DashboardSectionId } from "@/features/dashboard/types";
 
@@ -38,6 +39,13 @@ export const dashboardSections: DashboardSectionConfig[] = [
     title: "Moderation",
     description: "Rules, filters, and safety tools.",
     icon: Shield,
+  },
+  {
+    id: "logs",
+    label: "Logs",
+    title: "Logs",
+    description: "Configure which events to log and where.",
+    icon: ScrollText,
   },
   {
     id: "activity",

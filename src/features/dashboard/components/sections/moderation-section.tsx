@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   Ban,
@@ -43,9 +43,7 @@ import {
   useModerationConfig,
   useSaveModerationConfig,
 } from "@/features/moderation/hooks/use-moderation-config";
-import { apiClient } from "@/api";
 import { cn } from "@/lib/utils";
-import type { ApiResponse } from "@/types/api";
 import { useGuildStore } from "@/store/guild-store";
 import type { GuildRole } from "@/features/auto-roles/types/auto-roles-config";
 import { guildService } from "@/services/guild.service";
@@ -742,10 +740,10 @@ function UserTagInput({
   onChange: (ids: string[]) => void;
   guildId: string;
 }) {
+  const queryClient = useQueryClient();
   const [inputValue, setInputValue] = useState("");
   const [tags, setTags] = useState<MemberTag[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (userIds.length === 0) {
@@ -766,46 +764,41 @@ function UserTagInput({
     onChange(userIds.filter((uid) => uid !== id));
   };
 
-  const addUser = async (userId: string) => {
+  const addUser = (userId: string) => {
     const trimmed = userId.trim();
     if (!trimmed) return;
     if (userIds.includes(trimmed)) {
       setError("User already added");
       return;
     }
-    setLoading(true);
     setError(null);
-    try {
-      const { data } = await apiClient.get<ApiResponse<MemberTag> | unknown>(
-        `/guilds/${guildId}/members/${trimmed}`,
+
+    const member = queryClient
+      .getQueriesData({ queryKey: ["guilds", guildId, "members"] })
+      .flatMap(([, data]) => (Array.isArray(data) ? data : []))
+      .find(
+        (m: { id?: string; discordId?: string }) =>
+          m?.id === trimmed || m?.discordId === trimmed,
       );
-      const raw =
-        typeof data === "object" && data !== null && "data" in data
-          ? (data as ApiResponse<MemberTag>).data
-          : data;
-      if (!raw || typeof raw !== "object") {
-        setError("User not found in this server");
-        return;
-      }
-      const member = raw as Record<string, unknown>;
-      const id = String(member.id ?? "");
-      if (!id) {
-        setError("User not found in this server");
-        return;
-      }
+
+    if (member) {
       const tag: MemberTag = {
-        id,
-        username: String(member.username ?? "Unknown"),
+        id: member.id,
+        username: member.username ?? "Unknown",
         avatar: typeof member.avatar === "string" ? member.avatar : null,
       };
       setTags((prev) => [...prev, tag]);
-      onChange([...userIds, id]);
-      setInputValue("");
-    } catch {
-      setError("User not found in this server");
-    } finally {
-      setLoading(false);
+      onChange([...userIds, member.id]);
+    } else {
+      const tag: MemberTag = {
+        id: trimmed,
+        username: trimmed,
+        avatar: null,
+      };
+      setTags((prev) => [...prev, tag]);
+      onChange([...userIds, trimmed]);
     }
+    setInputValue("");
   };
 
   return (
@@ -828,9 +821,6 @@ function UserTagInput({
           className="flex h-10 w-full rounded-xl border border-black/[0.08] bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kat focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10"
         />
       </div>
-      {loading ? (
-        <p className="text-xs text-muted-foreground">Looking up user…</p>
-      ) : null}
       {error ? (
         <p className="text-xs text-destructive">{error}</p>
       ) : null}

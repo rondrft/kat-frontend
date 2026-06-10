@@ -31,7 +31,8 @@ export function usePremiumStatus(guildId: string | null) {
         typeof data === "object" && data !== null && "data" in data
           ? (data as { data: unknown }).data
           : data;
-      return { isPremium: Boolean((raw as Record<string, unknown>)?.isPremium ?? false) };
+      const rawData = raw as Record<string, unknown>;
+      return { isPremium: Boolean(rawData?.isPremium ?? rawData?.premium ?? false) };
     },
     enabled,
     staleTime: 5 * 60 * 1000,
