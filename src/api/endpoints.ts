@@ -33,6 +33,7 @@ export const endpoints = {
     auditLogs: (guildId: string) => `/guilds/${guildId}/audit-logs`,
     ranking: (guildId: string) => `/guilds/${guildId}/ranking`,
     logging: (guildId: string) => `/guilds/${guildId}/logging`,
+    leveling: (guildId: string) => `/guilds/${guildId}/leveling`,
     premium: (guildId: string) => `/guilds/${guildId}/premium`,
   },
   bot: {

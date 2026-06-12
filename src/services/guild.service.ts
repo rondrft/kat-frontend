@@ -21,6 +21,10 @@ import type {
   ActionsSaveRequest,
 } from "@/features/actions/types/actions-config";
 import type {
+  LevelingConfig,
+  LevelingSaveRequest,
+} from "@/features/leveling/types/leveling-config";
+import type {
   GuildCategory,
   TempVoiceConfig,
   TempVoiceSaveRequest,
@@ -219,6 +223,30 @@ export const guildService = {
       ApiResponse<ActionsConfig> | ActionsConfig
     >(endpoints.guilds.actions(guildId), payload);
     return unwrapApiData(data) as ActionsConfig;
+  },
+
+  async getLevelingConfig(guildId: string): Promise<LevelingConfig | null> {
+    try {
+      const { data } = await apiClient.get<
+        ApiResponse<LevelingConfig> | LevelingConfig
+      >(endpoints.guilds.leveling(guildId));
+      const config = unwrapApiData(data) as LevelingConfig;
+      if (!config || typeof config.enabled !== "boolean") return null;
+      return config;
+    } catch (error) {
+      if (error instanceof AppError && error.status === 404) return null;
+      throw error;
+    }
+  },
+
+  async saveLevelingConfig(
+    guildId: string,
+    payload: LevelingSaveRequest,
+  ): Promise<LevelingConfig> {
+    const { data } = await apiClient.put<
+      ApiResponse<LevelingConfig> | LevelingConfig
+    >(endpoints.guilds.leveling(guildId), payload);
+    return unwrapApiData(data) as LevelingConfig;
   },
 
   async getLoggingConfig(guildId: string): Promise<LoggingConfig | null> {
