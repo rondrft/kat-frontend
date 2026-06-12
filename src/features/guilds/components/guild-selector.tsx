@@ -58,11 +58,13 @@ function GuildSelectorComponent() {
   const selectedGuildId = useGuildStore((s) => s.selectedGuildId);
   const setSelectedGuildId = useGuildStore((s) => s.setSelectedGuildId);
 
-  const selected = guilds.find((g) => g.id === selectedGuildId) ?? null;
+  const manageableGuilds = guilds.filter((g) => g.canManage !== false);
+
+  const selected = manageableGuilds.find((g) => g.id === selectedGuildId) ?? null;
 
   useEffect(() => {
     if (!guilds.length || selectedGuildId) return;
-    const firstWithBot = guilds.find((g) => g.botJoined);
+    const firstWithBot = guilds.find((g) => g.botJoined && g.canManage !== false);
     if (firstWithBot) {
       setSelectedGuildId(firstWithBot.id);
     }
@@ -91,7 +93,7 @@ function GuildSelectorComponent() {
     );
   }
 
-  if (isError || guilds.length === 0) {
+  if (isError || manageableGuilds.length === 0) {
     return (
       <Button
         variant="outline"
@@ -148,7 +150,7 @@ function GuildSelectorComponent() {
       >
         <DropdownMenuLabel>Tus servidores</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {guilds.map((guild) => (
+        {manageableGuilds.map((guild) => (
           <DropdownMenuItem
             key={guild.id}
             className="flex cursor-pointer items-center gap-3 py-2.5"

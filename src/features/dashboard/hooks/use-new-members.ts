@@ -8,7 +8,7 @@ import { guildService } from "@/services/guild.service";
 export const newMembersQueryKey = (guildId: string) =>
   ["guilds", guildId, "members", "recent"] as const;
 
-export const RECENT_MEMBERS_WIDGET_LIMIT = 8;
+export const RECENT_MEMBERS_WIDGET_LIMIT = 10;
 export const MEMBER_ALERTS_LIMIT = 20;
 
 export function useNewMembers(guildId: string | null) {

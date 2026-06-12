@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useLayoutEffect } from "react";
+import { useCallback, useEffect, useLayoutEffect } from "react";
 import {
   hasRecoverableAuthSession,
   syncAuthFromStorage,
@@ -23,6 +23,19 @@ export function useAuth() {
       syncAuthFromStorage();
     }
   }, [session?.user?.id]);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      const { logout: storeLogout } = useAuthStore.getState();
+      storeLogout();
+      useGuildStore.getState().clearSelectedGuild();
+      queryClient.removeQueries({ queryKey: guildsQueryKey });
+      router.replace("/dashboard");
+    };
+
+    window.addEventListener("kat:unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("kat:unauthorized", handleUnauthorized);
+  }, [queryClient, router]);
 
   const loginWithDiscord = useCallback(() => {
     if (!isDiscordOAuthConfigured()) {

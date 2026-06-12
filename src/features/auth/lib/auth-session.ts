@@ -23,6 +23,12 @@ export function readPersistedAuthSession(): AuthSession | null {
     const session = parsed.state?.session ?? null;
     if (!session?.user?.id) return null;
 
+    if (session.expiresAt && Date.now() > session.expiresAt) {
+      localStorage.removeItem(PERSIST_KEY);
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      return null;
+    }
+
     const token = getStoredAccessToken() ?? session.accessToken ?? null;
     if (!token) return null;
 

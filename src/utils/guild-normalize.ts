@@ -15,7 +15,7 @@ export function normalizeGuild(raw: unknown): Guild {
     icon: (g.icon ?? g.iconHash ?? g.icon_hash ?? null) as string | null,
     memberCount: Number(g.memberCount ?? g.member_count ?? 0),
     botJoined: Boolean(g.botJoined ?? g.bot_joined ?? false),
-    canManage: Boolean(g.canManage ?? g.can_manage ?? g.hasManageGuild ?? false),
+    canManage: Boolean(g.canManage ?? g.can_manage ?? g.hasManageGuild ?? true),
     inviteUrl: (g.inviteUrl ?? g.invite_url ?? null) as string | null | undefined,
     premiumTier: g.premiumTier != null ? Number(g.premiumTier) : undefined,
   };
