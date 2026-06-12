@@ -1,7 +1,8 @@
 "use client";
 
 import { memo, useState } from "react";
-import { Crown, Shield } from "lucide-react";
+import { Crown, Sparkles } from "lucide-react";
+import { ActionsModal } from "@/features/actions/components/actions-modal";
 import { overviewExtraFeatures } from "@/features/dashboard/config/overview-extra-features";
 import { MonthlyJoinsChart } from "@/features/dashboard/components/widgets/monthly-joins-chart";
 import { NewMembersWidget } from "@/features/dashboard/components/widgets/new-members-widget";
@@ -27,6 +28,7 @@ function OverviewSectionComponent() {
   const hasGuild = Boolean(selectedGuildId);
   const [tempVoiceOpen, setTempVoiceOpen] = useState(false);
   const [autoRolesOpen, setAutoRolesOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
   const [boosterRolesOpen, setBoosterRolesOpen] = useState(false);
 
   const { data: premiumData } = usePremiumStatus(selectedGuildId);
@@ -73,11 +75,13 @@ function OverviewSectionComponent() {
 
             <div className="flex min-h-0 flex-1 gap-3">
               <OverviewFeatureCard
-                title="Moderation"
-                description="Rules, filters, and safety tools."
-                icon={Shield}
+                title="Actions"
+                description="Interactive action commands with GIFs (kiss, hug, pat, slap, cuddle, punch, bite, feed)"
+                icon={Sparkles}
                 className="h-full w-[46%] shrink-0"
-                badge="soon"
+                badge="configure"
+                disableHoverMotion
+                onClick={() => setActionsOpen(true)}
               />
               <OverviewFeatureCard
                 title="Booster Roles"
@@ -139,6 +143,12 @@ function OverviewSectionComponent() {
       <AutoRolesModal
         open={autoRolesOpen}
         onOpenChange={setAutoRolesOpen}
+        guildId={selectedGuildId}
+      />
+
+      <ActionsModal
+        open={actionsOpen}
+        onOpenChange={setActionsOpen}
         guildId={selectedGuildId}
       />
 

@@ -1,6 +1,7 @@
 import { apiClient, endpoints } from "@/api";
 import type { ApiResponse, PageResponse } from "@/types/api";
 import type { Guild, GuildSettings } from "@/types/guild";
+import type { LoggingConfig } from "@/types/logging";
 import type { MonthlyJoinStats } from "@/features/dashboard/types/monthly-joins";
 import type { NewMember } from "@/features/dashboard/types/new-member";
 import type {
@@ -15,6 +16,10 @@ import {
   type GuildTextChannel,
   type ReactionRoleMapping,
 } from "@/features/auto-roles/types/auto-roles-config";
+import type {
+  ActionsConfig,
+  ActionsSaveRequest,
+} from "@/features/actions/types/actions-config";
 import type {
   GuildCategory,
   TempVoiceConfig,
@@ -190,6 +195,52 @@ export const guildService = {
       ApiResponse<TempVoiceConfig> | TempVoiceConfig
     >(endpoints.guilds.tempVoice(guildId), payload);
     return unwrapApiData(data) as TempVoiceConfig;
+  },
+
+  async getActionsConfig(guildId: string): Promise<ActionsConfig | null> {
+    try {
+      const { data } = await apiClient.get<
+        ApiResponse<ActionsConfig> | ActionsConfig
+      >(endpoints.guilds.actions(guildId));
+      const config = unwrapApiData(data) as ActionsConfig;
+      if (!config || typeof config.enabled !== "boolean") return null;
+      return config;
+    } catch (error) {
+      if (error instanceof AppError && error.status === 404) return null;
+      throw error;
+    }
+  },
+
+  async saveActionsConfig(
+    guildId: string,
+    payload: ActionsSaveRequest,
+  ): Promise<ActionsConfig> {
+    const { data } = await apiClient.put<
+      ApiResponse<ActionsConfig> | ActionsConfig
+    >(endpoints.guilds.actions(guildId), payload);
+    return unwrapApiData(data) as ActionsConfig;
+  },
+
+  async getLoggingConfig(guildId: string): Promise<LoggingConfig | null> {
+    try {
+      const { data } = await apiClient.get<ApiResponse<LoggingConfig> | LoggingConfig>(
+        endpoints.guilds.logging(guildId),
+      );
+      const config = unwrapApiData(data) as LoggingConfig;
+      if (!config || !Array.isArray(config.entries)) return null;
+      return config;
+    } catch (error) {
+      if (error instanceof AppError && error.status === 404) return null;
+      throw error;
+    }
+  },
+
+  async saveLoggingConfig(guildId: string, config: LoggingConfig): Promise<LoggingConfig> {
+    const { data } = await apiClient.put<ApiResponse<LoggingConfig> | LoggingConfig>(
+      endpoints.guilds.logging(guildId),
+      config,
+    );
+    return unwrapApiData(data) as LoggingConfig;
   },
 
   async getRecentMembers(guildId: string, limit = 8): Promise<NewMember[]> {

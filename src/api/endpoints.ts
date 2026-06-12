@@ -18,6 +18,7 @@ export const endpoints = {
     boosterSettings: (guildId: string) => `/guilds/${guildId}/boosters/settings`,
     boosterSync: (guildId: string) => `/guilds/${guildId}/boosters/sync`,
     categories: (guildId: string) => `/guilds/${guildId}/channels/categories`,
+    actions: (guildId: string) => `/guilds/${guildId}/actions`,
     tempVoice: (guildId: string) => `/guilds/${guildId}/voice/temp`,
     roles: (guildId: string) => `/guilds/${guildId}/roles`,
     textChannels: (guildId: string) => `/guilds/${guildId}/channels/text`,
@@ -31,6 +32,7 @@ export const endpoints = {
     monthlyJoins: (guildId: string) => `/guilds/${guildId}/members/joins/monthly`,
     auditLogs: (guildId: string) => `/guilds/${guildId}/audit-logs`,
     ranking: (guildId: string) => `/guilds/${guildId}/ranking`,
+    logging: (guildId: string) => `/guilds/${guildId}/logging`,
     premium: (guildId: string) => `/guilds/${guildId}/premium`,
   },
   bot: {

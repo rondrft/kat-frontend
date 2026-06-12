@@ -37,6 +37,7 @@ function MemberAvatarChip({ member }: MemberAvatarChipProps) {
           fill
           className="object-cover"
           sizes="52px"
+          unoptimized
         />
       </div>
       <span

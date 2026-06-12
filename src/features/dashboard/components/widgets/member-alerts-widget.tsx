@@ -112,6 +112,7 @@ export function MemberAlertsWidgetComponent({
                         fill
                         className="object-cover"
                         sizes="32px"
+                        unoptimized
                       />
                     </div>
                     <div className="min-w-0 flex-1">

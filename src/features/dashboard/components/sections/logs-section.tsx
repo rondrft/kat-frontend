@@ -1,67 +1,67 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  AlertTriangle,
+  CheckCircle2,
+  ChevronDown,
   Hash,
-  MessageSquare,
-  Users,
+  Save,
+  XCircle,
+  Plus,
+  Minus,
+  Settings2,
   Shield,
-  Link2,
-  Volume2,
-  Bot,
-  Gavel,
+  MessageSquare,
   Trash2,
+  MessageCircleOff,
   Edit3,
-  UserMinus,
+  Users,
+  LogIn,
+  LogOut,
   UserCheck,
   Ban,
   Unlock,
-  Footprints,
-  Clock,
-  AlertOctagon,
-  Speaker,
-  MicOff,
-  Move,
-  LogIn,
-  LogOut,
-  Plus,
-  Minus,
-  RefreshCw,
-  Flag,
-  Save,
-  Settings2,
-  TreePine,
   BadgePlus,
   BadgeMinus,
   BadgeCheck,
-  MessageCircleOff,
-  MessageCircle,
+  UserMinus,
+  Link2,
+  Volume2,
+  Speaker,
   VolumeX,
-  ChevronDown,
-  FileCog,
+  Move,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useGuildStore } from "@/store/guild-store";
 import { guildService } from "@/services/guild.service";
+import type { LoggingEntry } from "@/types/logging";
 import type { GuildTextChannel } from "@/features/auto-roles/types/auto-roles-config";
+import { AppError } from "@/lib/errors";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+type LogsSectionProps = {
+  guildId?: string;
+};
 
-type LogEntryId = string;
-
-type LogEntry = {
-  id: LogEntryId;
+type LogEntryMeta = {
+  id: string;
   label: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
 };
 
-type LogCategory = {
+type CategoryConfig = {
   id: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -69,18 +69,12 @@ type LogCategory = {
   borderColor: string;
   bgColor: string;
   textColor: string;
-  logs: LogEntry[];
+  logs: LogEntryMeta[];
 };
 
-type LogsSectionProps = {
-  guildId?: string;
-};
-
-// ─── Category definitions ────────────────────────────────────────────────────
-
-const CATEGORIES: LogCategory[] = [
+const CATEGORIES: CategoryConfig[] = [
   {
-    id: "channel",
+    id: "channels",
     label: "Channel",
     icon: Hash,
     color: "border-l-sky-500",
@@ -90,13 +84,11 @@ const CATEGORIES: LogCategory[] = [
     logs: [
       { id: "channel_create", label: "Channel Created", description: "A new text or voice channel was created", icon: Plus },
       { id: "channel_delete", label: "Channel Deleted", description: "A channel was removed", icon: Minus },
-      { id: "channel_update", label: "Channel Updated", description: "Channel name, topic, or NSFW changed", icon: Settings2 },
-      { id: "channel_permission_update", label: "Permission Updated", description: "Channel-specific permissions changed", icon: Shield },
-      { id: "channel_limit_update", label: "Limit Updated", description: "Slowmode or user limit changed", icon: TreePine },
+      { id: "channel_update", label: "Channel Renamed", description: "Channel name or topic changed", icon: Settings2 },
     ],
   },
   {
-    id: "message",
+    id: "messages",
     label: "Message",
     icon: MessageSquare,
     color: "border-l-amber-500",
@@ -110,7 +102,7 @@ const CATEGORIES: LogCategory[] = [
     ],
   },
   {
-    id: "member",
+    id: "members",
     label: "Member",
     icon: Users,
     color: "border-l-violet-500",
@@ -118,18 +110,15 @@ const CATEGORIES: LogCategory[] = [
     bgColor: "bg-violet-500/8",
     textColor: "text-violet-600 dark:text-violet-400",
     logs: [
-      { id: "member_join", label: "Member Joined", description: "Includes invite tracker showing who invited them", icon: LogIn },
-      { id: "member_leave", label: "Member Left", description: "A member left or was removed from the server", icon: LogOut },
+      { id: "member_join", label: "Member Joined", description: "A member joined the server", icon: LogIn },
+      { id: "member_leave", label: "Member Left", description: "A member left the server", icon: LogOut },
       { id: "member_update", label: "Member Updated", description: "Nickname or avatar changed", icon: UserCheck },
       { id: "member_ban", label: "Member Banned", description: "A user was banned from the server", icon: Ban },
       { id: "member_unban", label: "Member Unbanned", description: "A user ban was lifted", icon: Unlock },
-      { id: "member_kick", label: "Member Kicked", description: "A member was kicked from the server", icon: Footprints },
-      { id: "member_timeout", label: "Member Timed Out", description: "A member was placed in timeout", icon: Clock },
-      { id: "member_untimeout", label: "Member Untimed Out", description: "A member timeout was removed", icon: RefreshCw },
     ],
   },
   {
-    id: "role",
+    id: "roles",
     label: "Role",
     icon: Shield,
     color: "border-l-indigo-500",
@@ -139,13 +128,13 @@ const CATEGORIES: LogCategory[] = [
     logs: [
       { id: "role_create", label: "Role Created", description: "A new role was created", icon: BadgePlus },
       { id: "role_delete", label: "Role Deleted", description: "A role was removed", icon: BadgeMinus },
-      { id: "role_update", label: "Role Updated", description: "Role name, color, or permissions changed", icon: Settings2 },
-      { id: "role_assign", label: "Role Assigned", description: "A role was given to a member", icon: BadgeCheck },
-      { id: "role_remove", label: "Role Removed", description: "A role was taken from a member", icon: UserMinus },
+      { id: "role_update", label: "Role Updated", description: "Role name or color changed", icon: Settings2 },
+      { id: "role_add", label: "Role Added", description: "When a member is given a role", icon: BadgeCheck },
+      { id: "role_remove", label: "Role Removed", description: "When a member is removed from a role", icon: UserMinus },
     ],
   },
   {
-    id: "invite",
+    id: "invites",
     label: "Invite",
     icon: Link2,
     color: "border-l-emerald-500",
@@ -155,7 +144,6 @@ const CATEGORIES: LogCategory[] = [
     logs: [
       { id: "invite_create", label: "Invite Created", description: "A new server invite was generated", icon: Plus },
       { id: "invite_delete", label: "Invite Deleted", description: "An invite link was revoked", icon: Minus },
-      { id: "invite_used", label: "Invite Used", description: "Someone joined through an invite link", icon: LogIn },
     ],
   },
   {
@@ -170,59 +158,11 @@ const CATEGORIES: LogCategory[] = [
       { id: "voice_join", label: "Voice Joined", description: "A member joined a voice channel", icon: Speaker },
       { id: "voice_leave", label: "Voice Left", description: "A member left a voice channel", icon: VolumeX },
       { id: "voice_move", label: "Voice Moved", description: "A member switched between voice channels", icon: Move },
-      { id: "voice_mute", label: "Voice Muted", description: "A member was server-muted in voice", icon: MicOff },
-    ],
-  },
-  {
-    id: "automod",
-    label: "AutoMod",
-    icon: Bot,
-    color: "border-l-pink-500",
-    borderColor: "border-pink-500/30",
-    bgColor: "bg-pink-500/8",
-    textColor: "text-pink-600 dark:text-pink-400",
-    logs: [
-      { id: "automod_rule_create", label: "Rule Created", description: "A new AutoMod rule was added", icon: FileCog },
-      { id: "automod_rule_update", label: "Rule Updated", description: "An AutoMod rule configuration changed", icon: Settings2 },
-      { id: "automod_rule_delete", label: "Rule Deleted", description: "An AutoMod rule was removed", icon: Trash2 },
-      { id: "automod_action", label: "AutoMod Action", description: "An automated moderation action was triggered", icon: AlertOctagon },
-    ],
-  },
-  {
-    id: "moderation",
-    label: "Moderation",
-    icon: Gavel,
-    color: "border-l-red-500",
-    borderColor: "border-red-500/30",
-    bgColor: "bg-red-500/8",
-    textColor: "text-red-600 dark:text-red-400",
-    logs: [
-      { id: "mod_mute", label: "Member Muted", description: "A member was muted in text channels", icon: MessageCircleOff },
-      { id: "mod_unmute", label: "Member Unmuted", description: "A member text mute was lifted", icon: MessageCircle },
-      { id: "mod_warn", label: "Member Warned", description: "A formal warning was issued to a member", icon: Flag },
-      { id: "mod_lockdown", label: "Channel Lockdown", description: "A channel was locked down from messages", icon: LockIcon },
-      { id: "mod_purge", label: "Channel Purged", description: "Messages were bulk-deleted from a channel", icon: Trash2 },
     ],
   },
 ];
 
-function LockIcon(props: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={props.className}
-    >
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  );
-}
+const ALL_EVENT_IDS = CATEGORIES.flatMap((cat) => cat.logs.map((log) => log.id));
 
 // ─── Channel Selector ────────────────────────────────────────────────────────
 
@@ -231,11 +171,13 @@ function ChannelSelect({
   value,
   onChange,
   placeholder,
+  invalid,
 }: {
   channels: GuildTextChannel[];
   value: string;
   onChange: (channelId: string) => void;
   placeholder?: string;
+  invalid?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -263,6 +205,7 @@ function ChannelSelect({
           value
             ? "border-kat/20 bg-kat/8 text-foreground"
             : "border-black/[0.06] bg-black/[0.02] text-muted-foreground hover:bg-black/[0.04] dark:border-white/[0.07] dark:bg-white/[0.02]",
+          invalid && "border-red-500/50 bg-red-500/5",
         )}
       >
         <Hash className="h-2.5 w-2.5 shrink-0 opacity-60" />
@@ -317,14 +260,16 @@ function LogTile({
   onToggle,
   onChannelChange,
   categoryColor,
+  channelInvalid,
 }: {
-  entry: LogEntry;
+  entry: LogEntryMeta;
   enabled: boolean;
   channelId: string;
   channels: GuildTextChannel[];
   onToggle: (id: string, enabled: boolean) => void;
   onChannelChange: (id: string, channelId: string) => void;
   categoryColor: string;
+  channelInvalid?: boolean;
 }) {
   const Icon = entry.icon;
 
@@ -333,7 +278,9 @@ function LogTile({
       className={cn(
         "dashboard-glass-card flex flex-col gap-2 p-3 transition-all",
         enabled ? "ring-1 ring-inset" : "opacity-60",
-        enabled ? categoryColor.replace("text-", "ring-").replace("dark:", "") : "ring-transparent",
+        enabled
+          ? categoryColor.replace("text-", "ring-").replace("dark:", "")
+          : "ring-transparent",
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -342,7 +289,9 @@ function LogTile({
             className={cn(
               "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[10px]",
               enabled
-                ? categoryColor.replace("text-", "bg-").replace("dark:", "/15 ") + " " + categoryColor
+                ? categoryColor.replace("text-", "bg-").replace("dark:", "/15 ") +
+                    " " +
+                    categoryColor
                 : "bg-black/[0.04] text-muted-foreground dark:bg-white/[0.05]",
             )}
           >
@@ -362,12 +311,26 @@ function LogTile({
         />
       </div>
 
-      <ChannelSelect
-        channels={channels}
-        value={channelId}
-        onChange={(id) => onChannelChange(entry.id, id)}
-        placeholder="Select channel"
-      />
+      <TooltipProvider>
+        <Tooltip open={channelInvalid && enabled ? undefined : false}>
+          <TooltipTrigger asChild>
+            <div>
+              <ChannelSelect
+                channels={channels}
+                value={channelId}
+                onChange={(id) => onChannelChange(entry.id, id)}
+                placeholder="Select channel"
+                invalid={channelInvalid && enabled}
+              />
+            </div>
+          </TooltipTrigger>
+          {channelInvalid && enabled && (
+            <TooltipContent>
+              <p>Channel no longer exists</p>
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 }
@@ -382,7 +345,7 @@ function CategorySection({
   onToggle,
   onChannelChange,
 }: {
-  category: LogCategory;
+  category: CategoryConfig;
   enabledLogs: Set<string>;
   channelMap: Map<string, string>;
   channels: GuildTextChannel[];
@@ -391,10 +354,11 @@ function CategorySection({
 }) {
   const Icon = category.icon;
   const enabledCount = category.logs.filter((log) => enabledLogs.has(log.id)).length;
+  const channelIdSet = new Set(channels.map((c) => c.id));
 
   return (
-    <section className="space-y-3">
-      <div className="flex items-center gap-3">
+    <section className="dashboard-glass-card p-4 sm:p-5">
+      <div className="mb-3 flex items-center gap-3">
         <div
           className={cn(
             "flex h-8 w-8 items-center justify-center rounded-xl",
@@ -430,6 +394,10 @@ function CategorySection({
             onToggle={onToggle}
             onChannelChange={onChannelChange}
             categoryColor={category.textColor}
+            channelInvalid={
+              Boolean(channelMap.get(entry.id)) &&
+              !channelIdSet.has(channelMap.get(entry.id) ?? "")
+            }
           />
         ))}
       </div>
@@ -439,11 +407,25 @@ function CategorySection({
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-const ALL_LOG_IDS = CATEGORIES.flatMap((cat) => cat.logs.map((log) => log.id));
-
 function LogsSectionComponent({ guildId: guildIdProp }: LogsSectionProps) {
+  const queryClient = useQueryClient();
   const selectedGuildId = useGuildStore((s) => s.selectedGuildId);
   const guildId = guildIdProp ?? selectedGuildId ?? null;
+
+  const [enabledLogs, setEnabledLogs] = useState<Set<string>>(new Set());
+  const [channelMap, setChannelMap] = useState<Map<string, string>>(new Map());
+  const [defaultChannel, setDefaultChannel] = useState("");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+  const savedConfigRef = useRef<{ enabledLogs: Set<string>; channelMap: Map<string, string>; defaultChannel: string }>({
+    enabledLogs: new Set(),
+    channelMap: new Map(),
+    defaultChannel: "",
+  });
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingRef = useRef(false);
+
+  // ── Queries ──────────────────────────────────────────────────────────────
 
   const { data: channels = [], isLoading: channelsLoading } = useQuery({
     queryKey: ["guilds", guildId, "text-channels"],
@@ -452,61 +434,213 @@ function LogsSectionComponent({ guildId: guildIdProp }: LogsSectionProps) {
     staleTime: 60 * 1000,
   });
 
-  const [enabledLogs, setEnabledLogs] = useState<Set<string>>(new Set());
-  const [channelMap, setChannelMap] = useState<Map<string, string>>(new Map());
-  const [defaultChannel, setDefaultChannel] = useState("");
-  const [saved, setSaved] = useState(true);
+  const { data: guildInfo } = useQuery({
+    queryKey: ["guilds", guildId],
+    queryFn: () => guildService.getById(guildId!),
+    enabled: Boolean(guildId),
+    staleTime: 60 * 1000,
+  });
 
-  const allEnabled = enabledLogs.size === ALL_LOG_IDS.length;
+  const {
+    data: fetchedConfig,
+    isLoading: configLoading,
+    isError: configIsError,
+    error: configFetchError,
+  } = useQuery({
+    queryKey: ["guilds", guildId, "logging"],
+    queryFn: () => guildService.getLoggingConfig(guildId!),
+    enabled: Boolean(guildId),
+    staleTime: 60 * 1000,
+  });
 
-  const applyDefaultToAll = useCallback(
-    (channelId: string) => {
-      setDefaultChannel(channelId);
-      if (!channelId) return;
-      setChannelMap((prev) => {
-        const next = new Map(prev);
-        for (const id of ALL_LOG_IDS) {
-          next.set(id, channelId);
+  const saveMutation = useMutation({
+    mutationFn: (payload: { defaultChannel: string; entries: LoggingEntry[] }) =>
+      guildService.saveLoggingConfig(guildId!, payload),
+    onSuccess: (result) => {
+      savedConfigRef.current = {
+        enabledLogs: new Set(enabledLogsRef.current),
+        channelMap: new Map(channelMapRef.current),
+        defaultChannel: defaultChannelRef.current,
+      };
+      setSaveStatus("success");
+      queryClient.setQueryData(["guilds", guildId, "logging"], result);
+      pendingRef.current = false;
+    },
+    onError: (err) => {
+      setEnabledLogs(new Set(savedConfigRef.current.enabledLogs));
+      setChannelMap(new Map(savedConfigRef.current.channelMap));
+      setDefaultChannel(savedConfigRef.current.defaultChannel);
+      setSaveStatus("error");
+      pendingRef.current = false;
+      if (err instanceof AppError) {
+        if (err.status === 403) {
+          setErrorMessage("Only server admins can configure logging.");
+        } else {
+          setErrorMessage(err.message || "Failed to save logging configuration.");
         }
+      } else {
+        setErrorMessage("Failed to save logging configuration.");
+      }
+    },
+  });
+
+  // Refs to track latest values for async operations
+  const enabledLogsRef = useRef(enabledLogs);
+  const channelMapRef = useRef(channelMap);
+  const defaultChannelRef = useRef(defaultChannel);
+  useEffect(() => { enabledLogsRef.current = enabledLogs; }, [enabledLogs]);
+  useEffect(() => { channelMapRef.current = channelMap; }, [channelMap]);
+  useEffect(() => { defaultChannelRef.current = defaultChannel; }, [defaultChannel]);
+
+  // ── Initialize config from API ─────────────────────────────────────────
+
+  useEffect(() => {
+    if (!fetchedConfig) {
+      if (configLoading || configIsError) return;
+      setEnabledLogs(new Set());
+      setChannelMap(new Map());
+      setDefaultChannel("");
+      savedConfigRef.current = {
+        enabledLogs: new Set(),
+        channelMap: new Map(),
+        defaultChannel: "",
+      };
+      return;
+    }
+    const enabled = new Set<string>();
+    const chanMap = new Map<string, string>();
+    for (const e of fetchedConfig.entries) {
+      if (e.enabled) enabled.add(e.id);
+      if (e.channelId) chanMap.set(e.id, e.channelId);
+    }
+    setEnabledLogs(enabled);
+    setChannelMap(chanMap);
+    const dc = fetchedConfig.defaultChannel || "";
+    setDefaultChannel(dc);
+    savedConfigRef.current = { enabledLogs: enabled, channelMap: chanMap, defaultChannel: dc };
+  }, [fetchedConfig, configLoading, configIsError]);
+
+  // ── Debounced save ────────────────────────────────────────────────────
+
+  const doSave = useCallback(() => {
+    if (pendingRef.current) return;
+    pendingRef.current = true;
+    const entries: LoggingEntry[] = ALL_EVENT_IDS.map((id) => ({
+      id,
+      enabled: enabledLogsRef.current.has(id),
+      channelId: channelMapRef.current.get(id) ?? "",
+    }));
+    saveMutation.mutate({
+      defaultChannel: defaultChannelRef.current,
+      entries,
+    });
+  }, [saveMutation]);
+
+  const scheduleSave = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(doSave, 300);
+  }, [doSave]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  // ── Auto-clear success message ───────────────────────────────────────
+
+  useEffect(() => {
+    if (saveStatus !== "success") return;
+    const t = setTimeout(() => setSaveStatus("idle"), 3000);
+    return () => clearTimeout(t);
+  }, [saveStatus]);
+
+  // ── Handlers ───────────────────────────────────────────────────────────
+
+  const handleToggle = useCallback(
+    (id: string, enabled: boolean) => {
+      setSaveStatus("idle");
+      setErrorMessage("");
+      setEnabledLogs((prev) => {
+        const next = new Set(prev);
+        if (enabled) next.add(id);
+        else next.delete(id);
         return next;
       });
+      scheduleSave();
     },
-    [],
+    [scheduleSave],
   );
 
-  const handleToggle = useCallback((id: string, enabled: boolean) => {
-    setSaved(false);
-    setEnabledLogs((prev) => {
-      const next = new Set(prev);
-      if (enabled) next.add(id);
-      else next.delete(id);
-      return next;
-    });
-  }, []);
+  const handleChannelChange = useCallback(
+    (id: string, channelId: string) => {
+      setSaveStatus("idle");
+      setErrorMessage("");
+      setChannelMap((prev) => {
+        const next = new Map(prev);
+        next.set(id, channelId);
+        return next;
+      });
+      scheduleSave();
+    },
+    [scheduleSave],
+  );
 
-  const handleChannelChange = useCallback((id: string, channelId: string) => {
-    setSaved(false);
-    setChannelMap((prev) => {
-      const next = new Map(prev);
-      next.set(id, channelId);
-      return next;
-    });
-  }, []);
+  const handleDefaultChannelChange = useCallback(
+    (channelId: string) => {
+      setDefaultChannel(channelId);
+      setSaveStatus("idle");
+      setErrorMessage("");
+      scheduleSave();
+    },
+    [scheduleSave],
+  );
 
   const handleToggleAll = useCallback(() => {
-    setSaved(false);
-    if (allEnabled) {
-      setEnabledLogs(new Set());
-    } else {
-      setEnabledLogs(new Set(ALL_LOG_IDS));
-    }
-  }, [allEnabled]);
+    setSaveStatus("idle");
+    setErrorMessage("");
+    setEnabledLogs((prev) => {
+      if (prev.size === ALL_EVENT_IDS.length) return new Set();
+      return new Set(ALL_EVENT_IDS);
+    });
+    scheduleSave();
+  }, [scheduleSave]);
 
-  const handleSave = useCallback(() => {
-    setSaved(true);
-  }, []);
+  const handleSaveNow = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!defaultChannelRef.current) return;
+    doSave();
+  }, [doSave]);
+
+  // ── Derived state ──────────────────────────────────────────────────────
 
   const totalEnabled = enabledLogs.size;
+  const allEnabled = totalEnabled === ALL_EVENT_IDS.length;
+  const isAdmin = guildInfo?.canManage ?? true;
+  const cannotSave = !defaultChannel || saveMutation.isPending || !isAdmin;
+  const channelIdSet = useMemo(() => new Set(channels.map((c) => c.id)), [channels]);
+  const defaultChannelMissing = Boolean(defaultChannel) && !channelIdSet.has(defaultChannel);
+
+  // ── Loading state ──────────────────────────────────────────────────────
+
+  if (configLoading) {
+    return (
+      <div className="min-h-0 space-y-5">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-kat">Logs</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight">Log configuration</h1>
+        </div>
+        <div className="space-y-4">
+          <Skeleton className="h-20 w-full rounded-[1.75rem]" />
+          <div className="grid gap-4 md:grid-cols-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-48 rounded-[1.75rem]" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-0 space-y-5">
@@ -522,13 +656,37 @@ function LogsSectionComponent({ guildId: guildIdProp }: LogsSectionProps) {
         </p>
       </div>
 
+      {/* Config fetch error */}
+      {configIsError && !configLoading && (
+        <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+          <XCircle className="h-4 w-4 shrink-0" />
+          {configFetchError instanceof AppError
+            ? configFetchError.message
+            : "Failed to load logging configuration."}
+        </div>
+      )}
+
+      {/* Save status messages */}
+      {saveStatus === "success" && (
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-400">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          Configuration saved successfully.
+        </div>
+      )}
+      {saveStatus === "error" && (
+        <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+          <XCircle className="h-4 w-4 shrink-0" />
+          {errorMessage}
+        </div>
+      )}
+
       {/* Default Channel + Controls */}
       <div className="dashboard-glass-card p-4 sm:p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0 flex-1 space-y-2">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Default channel for all logs
-            </Label>
+            </label>
             <div className="max-w-xs">
               {channelsLoading ? (
                 <div className="flex h-10 items-center rounded-xl border border-black/[0.08] bg-background px-3 text-xs text-muted-foreground dark:border-white/10">
@@ -538,15 +696,25 @@ function LogsSectionComponent({ guildId: guildIdProp }: LogsSectionProps) {
                 <ChannelSelect
                   channels={channels}
                   value={defaultChannel}
-                  onChange={applyDefaultToAll}
+                  onChange={handleDefaultChannelChange}
                   placeholder="Select default channel"
+                  invalid={defaultChannelMissing}
                 />
               )}
             </div>
-            <p className="text-[11px] text-muted-foreground">
-              Sets the same channel for every log type below. You can still customize each
-              individually.
-            </p>
+
+            {!defaultChannel && (
+              <p className="flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400">
+                <AlertTriangle className="h-3 w-3" />
+                No default channel set. Events without a custom channel will not be logged.
+              </p>
+            )}
+            {defaultChannelMissing && (
+              <p className="flex items-center gap-1.5 text-[11px] text-red-600 dark:text-red-400">
+                <AlertTriangle className="h-3 w-3" />
+                Default channel no longer exists. Please select a new one.
+              </p>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -562,15 +730,29 @@ function LogsSectionComponent({ guildId: guildIdProp }: LogsSectionProps) {
             >
               {allEnabled ? "Disable all" : "Enable all"}
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              disabled={saved}
-              onClick={handleSave}
-            >
-              <Save className="mr-1.5 h-3.5 w-3.5" />
-              {saved ? "Saved" : "Save changes"}
-            </Button>
+
+            <TooltipProvider>
+              <Tooltip open={!isAdmin ? undefined : false}>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={cannotSave}
+                      onClick={handleSaveNow}
+                    >
+                      <Save className="mr-1.5 h-3.5 w-3.5" />
+                      {saveMutation.isPending ? "Saving…" : "Save changes"}
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                {!isAdmin && (
+                  <TooltipContent>
+                    <p>Only server admins can configure logging.</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
       </div>
