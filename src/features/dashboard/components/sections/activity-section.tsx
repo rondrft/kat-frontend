@@ -118,6 +118,30 @@ function formatFullTimestamp(timestamp: string) {
   return dateTimeFormatter.format(date);
 }
 
+const ACTION_LABELS: Record<string, string> = {
+  BAN: "Ban",
+  UNBAN: "Unban",
+  KICK: "Kick",
+  TIMEOUT: "Timeout",
+  UNTIMEOUT: "Untimeout",
+  MUTE: "Mute",
+  UNMUTE: "Unmute",
+  WARN: "Warn",
+  MESSAGE_DELETE: "Message Deleted",
+  MESSAGE_BULK_DELETE: "Bulk Delete",
+  ROLE_ADD: "Role Added",
+  ROLE_REMOVE: "Role Removed",
+  AUTO_MOD: "Auto Mod",
+  VOICE_MOVE: "Voice Moved",
+  VOICE_KICK: "Voice Kicked",
+  VOICE_MUTE: "Voice Muted",
+  VOICE_DEAFEN: "Voice Deafened",
+};
+
+function getActionLabel(action: string): string {
+  return ACTION_LABELS[action] ?? action;
+}
+
 function getActionBadgeClassName(action: string) {
   const normalizedAction = action.toUpperCase();
 
@@ -138,6 +162,10 @@ function getActionBadgeClassName(action: string) {
 
   if (normalizedAction.includes("AUTO_MOD")) {
     return "border-muted-foreground/20 bg-muted text-muted-foreground";
+  }
+
+  if (normalizedAction.startsWith("VOICE_")) {
+    return "border-violet-500/20 bg-violet-500/10 text-violet-600 dark:text-violet-300";
   }
 
   return "border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-300";
@@ -235,11 +263,11 @@ function AuditLogEntryRow({ entry }: { entry: AuditLogEntry }) {
                 getActionBadgeClassName(entry.action),
               )}
             >
-              {entry.action}
+              {getActionLabel(entry.action)}
             </Badge>
           </div>
           <p className="mt-1 truncate text-xs text-muted-foreground">
-            by {entry.executorUsername}
+            by {entry.executorUsername ?? "Unknown"}
           </p>
           {entry.reason ? (
             <p className="mt-1 truncate text-xs text-foreground/75">{entry.reason}</p>

@@ -11,7 +11,11 @@ export type AuditLogAction =
   | "MESSAGE_BULK_DELETE"
   | "ROLE_ADD"
   | "ROLE_REMOVE"
-  | "AUTO_MOD";
+  | "AUTO_MOD"
+  | "VOICE_MOVE"
+  | "VOICE_KICK"
+  | "VOICE_MUTE"
+  | "VOICE_DEAFEN";
 
 export type AuditLogEntry = {
   id: string;
@@ -19,8 +23,8 @@ export type AuditLogEntry = {
   targetDiscordId: string;
   targetUsername: string;
   targetAvatar: string | null;
-  executorDiscordId: string;
-  executorUsername: string;
+  executorDiscordId: string | null;
+  executorUsername: string | null;
   action: AuditLogAction;
   reason: string | null;
   durationMinutes: number | null;

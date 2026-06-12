@@ -41,14 +41,17 @@ function normalizeAuditLogEntry(raw: unknown, index: number): AuditLogEntry {
   const row =
     typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>) : {};
 
+  const executorId = getString(row, ["executorDiscordId"]);
+  const executorName = getString(row, ["executorUsername"]);
+
   return {
     id: getString(row, ["id"], `audit-log-${index}`),
     guildId: getString(row, ["guildId"], ""),
     targetDiscordId: getString(row, ["targetDiscordId"], ""),
     targetUsername: getString(row, ["targetUsername"], "Unknown user"),
     targetAvatar: getNullableString(row, ["targetAvatar"]),
-    executorDiscordId: getString(row, ["executorDiscordId"], ""),
-    executorUsername: getString(row, ["executorUsername"], "Unknown executor"),
+    executorDiscordId: executorId || null,
+    executorUsername: executorName || null,
     action: getString(row, ["action"], "UNKNOWN").toUpperCase() as AuditLogAction,
     reason: getNullableString(row, ["reason"]),
     durationMinutes:
