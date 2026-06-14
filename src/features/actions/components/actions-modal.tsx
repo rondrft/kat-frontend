@@ -221,7 +221,7 @@ export function ActionsModal({ open, onOpenChange, guildId }: ActionsModalProps)
                   <code className="rounded bg-black/[0.04] px-1 py-0.5 font-mono dark:bg-white/10">
                     xkiss @TargetUser
                   </code>
-                  , Kat posts a message with a kiss GIF and a "Kiss Back" button.
+                  , Kat posts a message with a kiss GIF and a &quot;Kiss Back&quot; button.
                 </p>
               </div>
 

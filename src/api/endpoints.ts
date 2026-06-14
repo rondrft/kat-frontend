@@ -34,6 +34,11 @@ export const endpoints = {
     ranking: (guildId: string) => `/guilds/${guildId}/ranking`,
     logging: (guildId: string) => `/guilds/${guildId}/logging`,
     leveling: (guildId: string) => `/guilds/${guildId}/leveling`,
+    messageSender: (guildId: string) => `/guilds/${guildId}/messages/send`,
+    giveaways: (guildId: string) => `/guilds/${guildId}/giveaways`,
+    giveawayById: (guildId: string, giveawayId: string) => `/guilds/${guildId}/giveaways/${giveawayId}`,
+    giveawayParticipants: (guildId: string, giveawayId: string) => `/guilds/${guildId}/giveaways/${giveawayId}/participants`,
+    giveawayRoll: (guildId: string, giveawayId: string) => `/guilds/${guildId}/giveaways/${giveawayId}/roll`,
     premium: (guildId: string) => `/guilds/${guildId}/premium`,
   },
   bot: {

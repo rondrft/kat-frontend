@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   AlertCircle,
@@ -263,20 +263,108 @@ function ModulesPanel({ modules }: { modules: string[] }) {
   );
 }
 
+const WEEKS_TO_SHOW = 26;
+
+function groupIntoWeeks(days: ActivityDay[]) {
+  const weeks: (ActivityDay | null)[][] = [];
+  let w: (ActivityDay | null)[] = [];
+
+  for (const day of days) {
+    const date = new Date(day.date + "T00:00:00");
+    const dow = date.getDay();
+
+    if (dow === 0 && w.length > 0) {
+      weeks.push(w);
+      w = [];
+    }
+
+    if (w.length === 0 && dow > 0 && resultEmpty(weeks, w)) {
+      for (let i = 0; i < dow; i++) w.push(null);
+    }
+
+    w.push(day);
+
+    if (dow === 6) {
+      weeks.push(w);
+      w = [];
+    }
+  }
+
+  if (w.length > 0) weeks.push(w);
+  return weeks;
+}
+
+function resultEmpty(weeks: unknown[][], w: unknown[]) {
+  return weeks.length === 0 && w.length === 0;
+}
+
+function getMonthLabel(dateStr: string) {
+  return new Date(dateStr + "T00:00:00").toLocaleString("en-US", { month: "short" });
+}
+
+const DAY_LABELS: (string | null)[] = [null, "Mon", null, "Wed", null, "Fri", null];
+const CELL = "h-3 w-3 rounded-[3px] ring-1 ring-black/[0.04] transition-transform hover:scale-110 dark:ring-white/10 sm:h-3.5 sm:w-3.5";
+
 function ActivityYearPanel({ days }: { days: ActivityDay[] }) {
-  const total = days.reduce((sum, day) => sum + day.total, 0);
-  const joinsTotal = days.reduce((sum, day) => sum + day.joins, 0);
-  const voiceTotal = days.reduce((sum, day) => sum + day.voiceJoins, 0);
-  const max = Math.max(1, ...days.map((day) => day.total));
+  const total = days.reduce((sum, d) => sum + d.total, 0);
+  const joinsTotal = days.reduce((sum, d) => sum + d.joins, 0);
+  const voiceTotal = days.reduce((sum, d) => sum + d.voiceJoins, 0);
+  const max = Math.max(1, ...days.map((d) => d.total));
 
   const getTone = (count: number) => {
     if (count <= 0) return "bg-slate-200/70 dark:bg-slate-800";
-    const intensity = count / max;
-    if (intensity < 0.25) return "bg-sky-200 dark:bg-sky-900";
-    if (intensity < 0.5) return "bg-sky-300 dark:bg-sky-700";
-    if (intensity < 0.75) return "bg-sky-500 dark:bg-sky-500";
+    const i = count / max;
+    if (i < 0.25) return "bg-sky-200 dark:bg-sky-900";
+    if (i < 0.5) return "bg-sky-300 dark:bg-sky-700";
+    if (i < 0.75) return "bg-sky-500 dark:bg-sky-500";
     return "bg-blue-600 dark:bg-blue-400";
   };
+
+  const allWeeks = useMemo(() => groupIntoWeeks(days), [days]);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [visibleWeeks, setVisibleWeeks] = useState(WEEKS_TO_SHOW);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const calc = () => {
+      const cellW = 14 + 4;
+      const pad = 36 + 8;
+      const n = Math.max(8, Math.floor((el.clientWidth - pad) / cellW));
+      setVisibleWeeks(n);
+    };
+    calc();
+    const ro = new ResizeObserver(calc);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const visible = useMemo(() => {
+    if (allWeeks.length <= visibleWeeks) return allWeeks;
+    return allWeeks.slice(-visibleWeeks);
+  }, [allWeeks, visibleWeeks]);
+
+  const monthLabels = useMemo(() => {
+    const labels: { label: string; span: number }[] = [];
+    let cur = "";
+    for (const week of visible) {
+      const first = week.find((d): d is ActivityDay => d !== null);
+      const m = first ? getMonthLabel(first.date) : "";
+      if (m !== cur) {
+        cur = m;
+        labels.push({ label: m, span: 1 });
+      } else {
+        labels[labels.length - 1]!.span++;
+      }
+    }
+    return labels;
+  }, [visible]);
+
+  const gapPx = 4;
+  const cellPx = 14;
+  const colW = cellPx + gapPx;
+  const dayLabelW = 36;
 
   return (
     <section className="dashboard-glass-card min-w-0 p-5 sm:p-6">
@@ -297,17 +385,45 @@ function ActivityYearPanel({ days }: { days: ActivityDay[] }) {
         </div>
       </div>
 
-      <div className="mt-5 overflow-x-auto pb-1">
-        <div className="grid w-max grid-flow-col grid-rows-7 gap-1">
-          {days.map((day) => (
-            <span
-              key={day.date}
-              title={`${formatShortDate(day.date)}: ${day.total} total, ${day.joins} joins, ${day.voiceJoins} voice joins`}
-              className={cn(
-                "h-3 w-3 rounded-[3px] ring-1 ring-black/[0.04] transition-transform hover:scale-110 dark:ring-white/10 sm:h-3.5 sm:w-3.5",
-                getTone(day.total),
+      <div className="mt-5" ref={containerRef}>
+        <div className="flex" style={{ marginLeft: dayLabelW, marginBottom: 2 }}>
+          {monthLabels.map((ml, i) => (
+            <div
+              key={i}
+              style={{ width: ml.span * colW - gapPx }}
+              className="shrink-0 text-[10px] font-medium text-muted-foreground"
+            >
+              {ml.label}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-1">
+          <div className="flex shrink-0 flex-col gap-1" style={{ width: dayLabelW - 4 }}>
+            {DAY_LABELS.map((label, i) => (
+              <div
+                key={i}
+                className="flex h-3 items-start justify-end pr-1 text-[10px] leading-none text-muted-foreground sm:h-3.5"
+              >
+                {label ?? ""}
+              </div>
+            ))}
+          </div>
+
+          {visible.map((week, wi) => (
+            <div key={wi} className="grid shrink-0 grid-rows-7 gap-1">
+              {week.map((day, di) =>
+                day ? (
+                  <span
+                    key={day.date}
+                    title={`${formatShortDate(day.date)}: ${day.total} total, ${day.joins} joins, ${day.voiceJoins} voice joins`}
+                    className={cn(CELL, getTone(day.total))}
+                  />
+                ) : (
+                  <span key={di} className={cn(CELL, "opacity-0")} />
+                ),
               )}
-            />
+            </div>
           ))}
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useState } from "react";
-import { ArrowUp, Crown, Sparkles } from "lucide-react";
+import { ArrowUp, Crown, Gift, MessageSquare, Sparkles } from "lucide-react";
 import { ActionsModal } from "@/features/actions/components/actions-modal";
 import { overviewExtraFeatures } from "@/features/dashboard/config/overview-extra-features";
 import { MonthlyJoinsChart } from "@/features/dashboard/components/widgets/monthly-joins-chart";
@@ -17,6 +17,8 @@ import { TempVoiceChannelModal } from "@/features/voice/components/temp-voice-ch
 import { AutoRolesModal } from "@/features/auto-roles/components/auto-roles-modal";
 import { BoosterRoleModal } from "@/features/boosters/components/booster-role-modal";
 import { LevelingModal } from "@/features/leveling/components/leveling-modal";
+import { MessageSenderModal } from "@/features/message-sender/components/message-sender-modal";
+import { GiveawayModal } from "@/features/giveaways/components/giveaway-modal";
 import { usePremiumStatus } from "@/features/guilds/hooks/use-premium-status";
 import { useGuildStore } from "@/store/guild-store";
 import { cn } from "@/lib/utils";
@@ -32,6 +34,8 @@ function OverviewSectionComponent() {
   const [actionsOpen, setActionsOpen] = useState(false);
   const [boosterRolesOpen, setBoosterRolesOpen] = useState(false);
   const [levelingOpen, setLevelingOpen] = useState(false);
+  const [messageSenderOpen, setMessageSenderOpen] = useState(false);
+  const [giveawayOpen, setGiveawayOpen] = useState(false);
 
   const { data: premiumData } = usePremiumStatus(selectedGuildId);
   const isPremium = premiumData?.isPremium ?? false;
@@ -139,15 +143,35 @@ function OverviewSectionComponent() {
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <OverviewFeatureCard
+            title="Message Sender"
+            description="Send plain messages or rich embeds to any text channel."
+            icon={MessageSquare}
+            className={cn("h-full w-full sm:min-w-0 sm:flex-1", BOTTOM_PANEL_HEIGHT)}
+            badge="configure"
+            disableHoverMotion
+            onClick={() => setMessageSenderOpen(true)}
+          />
+          <OverviewFeatureCard
+            title="Giveaways"
+            description="Run reaction giveaways and spin the wheel to pick winners."
+            icon={Gift}
+            className={cn("h-full w-full sm:min-w-0 sm:flex-1", BOTTOM_PANEL_HEIGHT)}
+            badge="configure"
+            disableHoverMotion
+            onClick={() => setGiveawayOpen(true)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <OverviewFeatureCard
             title="Leveling"
             description="Members earn XP, level up, and compete on the leaderboard."
             icon={ArrowUp}
-            className={cn("h-full w-full sm:w-[46%] sm:shrink-0", BOTTOM_PANEL_HEIGHT)}
+            className={cn("h-full w-full", BOTTOM_PANEL_HEIGHT)}
             badge="configure"
             disableHoverMotion
             onClick={() => setLevelingOpen(true)}
           />
-          <div className="flex-1" />
         </div>
       </div>
 
@@ -178,6 +202,18 @@ function OverviewSectionComponent() {
       <LevelingModal
         open={levelingOpen}
         onOpenChange={setLevelingOpen}
+        guildId={selectedGuildId}
+      />
+
+      <MessageSenderModal
+        open={messageSenderOpen}
+        onOpenChange={setMessageSenderOpen}
+        guildId={selectedGuildId}
+      />
+
+      <GiveawayModal
+        open={giveawayOpen}
+        onOpenChange={setGiveawayOpen}
         guildId={selectedGuildId}
       />
     </>
