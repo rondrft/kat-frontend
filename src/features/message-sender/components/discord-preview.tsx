@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { isSafeImageUrl } from "@/lib/url";
 import type { MessageFormat, EmbedContent } from "../types/message-sender-types";
 
 type DiscordPreviewProps = {
@@ -83,7 +84,7 @@ function EmbedPreview({ embed }: { embed: EmbedContent }) {
         style={{ backgroundColor: embed.color || "#5865F2" }}
       />
       <div className="ml-3 min-w-0 space-y-1.5">
-        {embed.thumbnailUrl && (
+        {isSafeImageUrl(embed.thumbnailUrl) && (
           <img
             src={embed.thumbnailUrl}
             alt=""
@@ -98,7 +99,7 @@ function EmbedPreview({ embed }: { embed: EmbedContent }) {
             {embed.description}
           </p>
         )}
-        {embed.imageUrl && (
+        {isSafeImageUrl(embed.imageUrl) && (
           <img
             src={embed.imageUrl}
             alt=""

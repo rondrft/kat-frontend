@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { isSafeImageUrl } from "@/lib/url";
 import { useGuildTextChannels } from "@/features/auto-roles/hooks/use-guild-text-channels";
 import {
   useCreateGiveaway,
@@ -71,7 +72,11 @@ export function GiveawayModal({ open, onOpenChange, guildId }: GiveawayModalProp
 
   const { data: channels = [], isLoading: channelsLoading } = useGuildTextChannels(guildId, open);
   const { data: giveaway } = useGiveaway(guildId, giveawayId);
-  const { data: participants = [] } = useGiveawayParticipants(guildId, giveawayId);
+  const { data: participants = [] } = useGiveawayParticipants(
+    guildId,
+    giveawayId,
+    giveaway?.ended ?? false,
+  );
 
   const channelOptions = useMemo(() => {
     const list = channels.map((c) => ({ id: c.id, name: c.name }));
@@ -407,7 +412,11 @@ export function GiveawayModal({ open, onOpenChange, guildId }: GiveawayModalProp
                 <div className="flex flex-col items-center rounded-2xl border border-kat/30 bg-kat/10 p-5">
                   <div
                     className="h-20 w-20 rounded-full bg-cover bg-center ring-4 ring-kat/30"
-                    style={{ backgroundImage: `url(${wheelWinner.avatarUrl})` }}
+                    style={{
+                      backgroundImage: isSafeImageUrl(wheelWinner.avatarUrl)
+                        ? `url(${wheelWinner.avatarUrl})`
+                        : undefined,
+                    }}
                   />
                   <p className="mt-3 text-lg font-bold text-foreground">Winner</p>
                   <p className="text-sm text-kat">@{wheelWinner.username}</p>

@@ -18,6 +18,7 @@ export type Giveaway = {
   endTime: string | null;
   winnerCount: number;
   boosterOnly: boolean;
+  participantCount: number;
   participantIds: string[];
   winnerIds: string[];
   ended: boolean;

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isSafeImageUrl } from "@/lib/url";
 import type { GiveawayParticipant } from "@/features/giveaways/types/giveaway";
 
 type GiveawayWheelProps = {
@@ -107,7 +108,11 @@ export function GiveawayWheel({
             >
               <div
                 className="h-10 w-10 rounded-full bg-cover bg-center ring-2 ring-white/10"
-                style={{ backgroundImage: `url(${participant.avatarUrl})` }}
+                style={{
+                  backgroundImage: isSafeImageUrl(participant.avatarUrl)
+                    ? `url(${participant.avatarUrl})`
+                    : undefined,
+                }}
               />
               <span className="mt-2 max-w-full truncate text-[10px] font-medium text-foreground">
                 {participant.globalName ?? participant.username}
@@ -122,7 +127,11 @@ export function GiveawayWheel({
           <div className="flex flex-col items-center rounded-2xl border border-kat/30 bg-white p-6 shadow-xl dark:bg-[#1e1f22]">
             <div
               className="h-20 w-20 rounded-full bg-cover bg-center ring-4 ring-kat/30"
-              style={{ backgroundImage: `url(${winner.avatarUrl})` }}
+              style={{
+                backgroundImage: isSafeImageUrl(winner.avatarUrl)
+                  ? `url(${winner.avatarUrl})`
+                  : undefined,
+              }}
             />
             <p className="mt-4 text-lg font-bold text-foreground">Winner</p>
             <p className="text-sm text-kat">@{winner.username}</p>

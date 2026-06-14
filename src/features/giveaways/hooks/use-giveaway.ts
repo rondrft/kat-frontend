@@ -32,12 +32,16 @@ export function useGiveaway(guildId: string | null, giveawayId: string | null) {
   });
 }
 
-export function useGiveawayParticipants(guildId: string | null, giveawayId: string | null) {
+export function useGiveawayParticipants(
+  guildId: string | null,
+  giveawayId: string | null,
+  ended = false,
+) {
   return useQuery<GiveawayParticipant[], Error>({
     queryKey: giveawayParticipantsQueryKey(guildId ?? "", giveawayId ?? ""),
     queryFn: () => giveawayService.getParticipants(guildId!, giveawayId!),
     enabled: Boolean(guildId) && Boolean(giveawayId),
-    refetchInterval: 3000,
+    refetchInterval: ended ? false : 3000,
   });
 }
 

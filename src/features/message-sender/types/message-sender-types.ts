@@ -18,7 +18,7 @@ export type EmbedContent = {
   imageUrl?: string;
   thumbnailUrl?: string;
   footer?: string;
-  timestamp?: boolean;
+  timestamp: boolean;
 };
 
 export type SendMessageRequest = {
