@@ -120,6 +120,7 @@ function OverviewSectionComponent() {
                 )}
                 badge="configure"
                 disableHoverMotion
+                bgImage={feature.bgImage}
                 onClick={
                   feature.id === "temp-voice"
                     ? () => setTempVoiceOpen(true)
@@ -161,14 +162,11 @@ function OverviewSectionComponent() {
             disableHoverMotion
             onClick={() => setGiveawayOpen(true)}
           />
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row">
           <OverviewFeatureCard
             title="Leveling"
             description="Members earn XP, level up, and compete on the leaderboard."
             icon={ArrowUp}
-            className={cn("h-full w-full", BOTTOM_PANEL_HEIGHT)}
+            className={cn("h-full w-full sm:min-w-0 sm:flex-1", BOTTOM_PANEL_HEIGHT)}
             badge="configure"
             disableHoverMotion
             onClick={() => setLevelingOpen(true)}

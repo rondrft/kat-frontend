@@ -7,6 +7,7 @@ export type OverviewExtraFeature = {
   description: string;
   icon: LucideIcon;
   actionable?: boolean;
+  bgImage?: string;
 };
 
 export const overviewExtraFeatures: OverviewExtraFeature[] = [
@@ -16,6 +17,7 @@ export const overviewExtraFeatures: OverviewExtraFeature[] = [
     description: "Join-to-create personal voice rooms under a category.",
     icon: Mic2,
     actionable: true,
+    bgImage: "/bunnybg.jpeg",
   },
   {
     id: "auto-roles",

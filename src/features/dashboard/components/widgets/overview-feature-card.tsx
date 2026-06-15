@@ -59,7 +59,7 @@ function OverviewFeatureCardComponent({
             src={bgImage}
             alt=""
             fill
-            className="object-cover opacity-[0.06] dark:opacity-[0.04]"
+            className="object-cover opacity-[0.15] dark:opacity-[0.04]"
             sizes="300px"
           />
         </div>
