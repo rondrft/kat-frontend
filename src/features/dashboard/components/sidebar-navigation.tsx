@@ -4,6 +4,7 @@ import { memo, useCallback } from "react";
 import { dashboardSections } from "@/features/dashboard/config/sections";
 import { NavigationButton } from "@/features/dashboard/components/navigation-button";
 import { SidebarThemeToggle } from "@/features/dashboard/components/sidebar-theme-toggle";
+import { SidebarSettingsButton } from "@/features/dashboard/components/general-settings-dialog";
 import { useDashboardNavStore } from "@/features/dashboard/store/dashboard-nav-store";
 import type { DashboardSectionId } from "@/features/dashboard/types";
 
@@ -37,6 +38,7 @@ function SidebarNavigationComponent() {
 
       <div className="my-1 h-px w-8 bg-black/[0.08] dark:bg-white/10" />
       <SidebarThemeToggle />
+      <SidebarSettingsButton />
     </nav>
   );
 }
