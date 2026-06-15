@@ -87,6 +87,7 @@ function OverviewSectionComponent() {
                 className="h-full w-[46%] shrink-0"
                 badge="configure"
                 disableHoverMotion
+                bgImage="/catbg.jpeg"
                 onClick={() => setActionsOpen(true)}
               />
               <OverviewFeatureCard
