@@ -63,7 +63,7 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background pr-2 text-foreground antialiased;
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
@@ -196,8 +196,8 @@
 
 /* ── Scrollbar ─────────────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
