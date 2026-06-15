@@ -169,6 +169,7 @@ function OverviewSectionComponent() {
             className={cn("h-full w-full sm:min-w-0 sm:flex-1", BOTTOM_PANEL_HEIGHT)}
             badge="configure"
             disableHoverMotion
+            bgImage="/handbg.jpeg"
             onClick={() => setLevelingOpen(true)}
           />
         </div>
