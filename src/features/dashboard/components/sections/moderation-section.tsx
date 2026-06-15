@@ -34,6 +34,14 @@ import {
   AlertCircle,
   ScrollText,
   Megaphone,
+  UserPlus,
+  Image as ImageIcon,
+  Copy,
+  CalendarClock,
+  DoorOpen,
+  Layout,
+  ShieldAlert,
+  UserMinus,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -105,12 +113,16 @@ type ModerationMode =
   | "delete"
   | "timeout"
   | "deleteAndTimeout"
-  | "lockdown";
+  | "lockdown"
+  | "kick"
+  | "ban";
 
 type RuleId =
   | "spam" | "links" | "invites" | "mentions" | "caps"
   | "repetition" | "wallOfText" | "newlines" | "spoilers"
-  | "everyoneHere" | "formatting" | "emojis" | "badWords" | "phishing";
+  | "everyoneHere" | "formatting" | "emojis" | "badWords" | "phishing"
+  | "massMention" | "imageSpam" | "copyPasta" | "accountAge"
+  | "joinRaid" | "channelRaid" | "roleRaid";
 
 const RULE_DEFINITIONS: {
   id: RuleId;
@@ -133,6 +145,13 @@ const RULE_DEFINITIONS: {
   { id: "emojis", title: "Emojis", description: "Emoji spam and reaction baiting.", icon: Smile, apiType: "EMOJIS" },
   { id: "badWords", title: "Bad Words", description: "Custom profanity and blacklisted terms.", icon: VolumeX, apiType: "BAD_WORDS" },
   { id: "phishing", title: "Phishing", description: "Known phishing domains and scam links.", icon: Search, apiType: "PHISHING" },
+  { id: "massMention", title: "Mass Mention", description: "Messages that ping many distinct users at once.", icon: UserPlus, apiType: "MASS_MENTION" },
+  { id: "imageSpam", title: "Image Spam", description: "Excessive image and file attachments in messages.", icon: ImageIcon, apiType: "IMAGE_SPAM" },
+  { id: "copyPasta", title: "Copy-Pasta", description: "Same message pasted across multiple channels.", icon: Copy, apiType: "COPY_PASTA" },
+  { id: "accountAge", title: "Account Age", description: "Blocks messages from accounts younger than X days.", icon: CalendarClock, apiType: "ACCOUNT_AGE" },
+  { id: "joinRaid", title: "Join Raid", description: "Detects rapid member joins and auto-actions raiders.", icon: DoorOpen, apiType: "JOIN_RAID" },
+  { id: "channelRaid", title: "Channel Raid", description: "Detects mass channel creation or deletion.", icon: Layout, apiType: "CHANNEL_RAID" },
+  { id: "roleRaid", title: "Role Raid", description: "Detects mass role creation or deletion.", icon: ShieldAlert, apiType: "ROLE_RAID" },
 ];
 
 const ACTIONS: {
@@ -146,13 +165,37 @@ const ACTIONS: {
   { id: "timeout", label: "Timeout", description: "Mute user", icon: TimerReset },
   { id: "deleteAndTimeout", label: "Delete & Timeout", description: "Remove + mute", icon: TimerReset },
   { id: "lockdown", label: "Lockdown", description: "Freeze channels", icon: LockKeyhole },
+  { id: "kick", label: "Kick", description: "Remove member", icon: UserMinus },
+  { id: "ban", label: "Ban", description: "Ban member", icon: Ban },
 ];
+
+function defaultMode(apiType: ModerationRuleType): ModerationMode {
+  if (apiType === "CAPS") return "monitor";
+  if (apiType === "MENTIONS" || apiType === "EVERYONE_HERE") return "timeout";
+  if (apiType === "ACCOUNT_AGE") return "timeout";
+  if (apiType === "MASS_MENTION") return "timeout";
+  if (apiType === "JOIN_RAID") return "kick";
+  if (apiType === "CHANNEL_RAID" || apiType === "ROLE_RAID") return "monitor";
+  return "delete";
+}
+
+function defaultThreshold(apiType: ModerationRuleType): number {
+  if (apiType === "SPAM") return 6;
+  if (apiType === "CAPS") return 80;
+  if (apiType === "WALL_OF_TEXT") return 500;
+  if (apiType === "ACCOUNT_AGE") return 7;
+  if (apiType === "MASS_MENTION") return 5;
+  if (apiType === "IMAGE_SPAM") return 3;
+  if (apiType === "JOIN_RAID") return 10;
+  if (apiType === "CHANNEL_RAID" || apiType === "ROLE_RAID") return 5;
+  return 3;
+}
 
 const INITIAL_RULES: ModerationRule[] = RULE_DEFINITIONS.map((def) => ({
   ...def,
   enabled: false,
-  mode: def.apiType === "CAPS" ? "monitor" : def.apiType === "MENTIONS" || def.apiType === "EVERYONE_HERE" ? "timeout" : "delete",
-  threshold: def.apiType === "SPAM" ? 6 : def.apiType === "CAPS" ? 80 : def.apiType === "WALL_OF_TEXT" ? 500 : 3,
+  mode: defaultMode(def.apiType),
+  threshold: defaultThreshold(def.apiType),
   timeoutMinutes: null,
 }));
 
@@ -160,6 +203,8 @@ const BACKEND_RULE_IDS: Partial<Record<RuleId, ModerationRuleType>> = {
   spam: "SPAM", links: "LINKS", invites: "INVITES", mentions: "MENTIONS", caps: "CAPS",
   repetition: "REPETITION", wallOfText: "WALL_OF_TEXT", newlines: "NEWLINES", spoilers: "SPOILERS",
   everyoneHere: "EVERYONE_HERE", formatting: "FORMATTING", emojis: "EMOJIS", badWords: "BAD_WORDS", phishing: "PHISHING",
+  massMention: "MASS_MENTION", imageSpam: "IMAGE_SPAM", copyPasta: "COPY_PASTA", accountAge: "ACCOUNT_AGE",
+  joinRaid: "JOIN_RAID", channelRaid: "CHANNEL_RAID", roleRaid: "ROLE_RAID",
 };
 
 type ModerationRule = {
@@ -177,7 +222,7 @@ type ModerationRule = {
 function toUiAction(action: ModerationAction): ModerationMode {
   if (action === "DELETE_AND_TIMEOUT") return "deleteAndTimeout";
   const lower = action.toLowerCase();
-  if (lower === "warn" || lower === "kick" || lower === "ban") return "delete";
+  if (lower === "warn") return "delete";
   return lower as ModerationMode;
 }
 
@@ -185,6 +230,8 @@ function toApiAction(mode: ModerationMode): ModerationAction {
   if (mode === "deleteAndTimeout") return "DELETE_AND_TIMEOUT";
   if (mode === "lockdown") return "TIMEOUT";
   if (mode === "delete") return "DELETE";
+  if (mode === "kick") return "KICK";
+  if (mode === "ban") return "BAN";
   return mode.toUpperCase() as ModerationAction;
 }
 

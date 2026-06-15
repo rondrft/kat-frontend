@@ -16,10 +16,12 @@ const RULE_TYPES = new Set<ModerationRuleType>([
   "SPAM", "LINKS", "INVITES", "MENTIONS", "CAPS",
   "REPETITION", "WALL_OF_TEXT", "NEWLINES", "SPOILERS",
   "EVERYONE_HERE", "FORMATTING", "EMOJIS", "BAD_WORDS", "PHISHING",
+  "MASS_MENTION", "IMAGE_SPAM", "COPY_PASTA", "ACCOUNT_AGE",
+  "JOIN_RAID", "CHANNEL_RAID", "ROLE_RAID",
 ]);
 
 const ACTIONS = new Set<ModerationAction>([
-  "MONITOR", "DELETE", "TIMEOUT", "DELETE_AND_TIMEOUT",
+  "MONITOR", "DELETE", "TIMEOUT", "DELETE_AND_TIMEOUT", "WARN", "KICK", "BAN",
 ]);
 
 const DEFAULT_RULES: ModerationRuleConfig[] = [
@@ -37,6 +39,13 @@ const DEFAULT_RULES: ModerationRuleConfig[] = [
   { id: "EMOJIS", enabled: false, action: "WARN", threshold: 5, timeoutMinutes: null, premium: true },
   { id: "BAD_WORDS", enabled: false, action: "DELETE", threshold: 1, timeoutMinutes: null, premium: true },
   { id: "PHISHING", enabled: false, action: "DELETE", threshold: 1, timeoutMinutes: null },
+  { id: "MASS_MENTION", enabled: false, action: "WARN", threshold: 5, timeoutMinutes: null, premium: true },
+  { id: "IMAGE_SPAM", enabled: false, action: "DELETE", threshold: 3, timeoutMinutes: null, premium: true },
+  { id: "COPY_PASTA", enabled: false, action: "DELETE", threshold: 1, timeoutMinutes: null },
+  { id: "ACCOUNT_AGE", enabled: false, action: "TIMEOUT", threshold: 7, timeoutMinutes: null, premium: true },
+  { id: "JOIN_RAID", enabled: false, action: "KICK", threshold: 10, timeoutMinutes: null, premium: true },
+  { id: "CHANNEL_RAID", enabled: false, action: "MONITOR", threshold: 5, timeoutMinutes: null, premium: true },
+  { id: "ROLE_RAID", enabled: false, action: "MONITOR", threshold: 5, timeoutMinutes: null, premium: true },
 ];
 
 export const DEFAULT_MODERATION_CONFIG: ModerationConfig = {

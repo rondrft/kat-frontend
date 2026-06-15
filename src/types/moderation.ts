@@ -12,7 +12,14 @@ export type ModerationRuleType =
   | "FORMATTING"
   | "EMOJIS"
   | "BAD_WORDS"
-  | "PHISHING";
+  | "PHISHING"
+  | "MASS_MENTION"
+  | "IMAGE_SPAM"
+  | "COPY_PASTA"
+  | "ACCOUNT_AGE"
+  | "JOIN_RAID"
+  | "CHANNEL_RAID"
+  | "ROLE_RAID";
 
 export const RULE_PREMIUM: Record<ModerationRuleType, boolean> = {
   SPAM: false,
@@ -29,6 +36,13 @@ export const RULE_PREMIUM: Record<ModerationRuleType, boolean> = {
   EMOJIS: true,
   BAD_WORDS: true,
   PHISHING: false,
+  MASS_MENTION: true,
+  IMAGE_SPAM: true,
+  COPY_PASTA: false,
+  ACCOUNT_AGE: true,
+  JOIN_RAID: true,
+  CHANNEL_RAID: true,
+  ROLE_RAID: true,
 };
 
 export type ModerationAction = "MONITOR" | "DELETE" | "TIMEOUT" | "DELETE_AND_TIMEOUT" | "WARN" | "KICK" | "BAN";
