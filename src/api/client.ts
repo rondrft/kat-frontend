@@ -41,6 +41,18 @@ async function onResponseError(error: AxiosError<ApiErrorBody>): Promise<never> 
   const status = error.response?.status ?? 500;
   const body = error.response?.data;
 
+  if (status === 401) {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("kat:unauthorized"));
+    }
+    throw AppError.fromApiBody({
+      status: 401,
+      error: "UNAUTHORIZED",
+      message: body?.message ?? "Sesión expirada. Iniciá sesión de nuevo.",
+      path: body?.path ?? "",
+    });
+  }
+
   if (body?.message) {
     throw AppError.fromApiBody({
       status,
