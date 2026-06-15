@@ -925,6 +925,7 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
   const [strictness, setStrictness] = useState(50);
   const [muteMinutes, setMuteMinutes] = useState(10);
   const [saved, setSaved] = useState(false);
+  const [tab, setTab] = useState<"free" | "premium">("free");
 
   const {
     data: permissionsData,
@@ -1248,43 +1249,52 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
         </div>
       </section>
 
-      {/* Free Rules Grid */}
-      <section>
-        <div className="mb-3 flex items-center gap-2">
-          <Shield className="h-4 w-4 text-kat" />
-          <h3 className="text-sm font-bold tracking-tight">Free Protections</h3>
-        </div>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
-          {freeRules.map((rule) => (
-            <RuleTile
-              key={rule.id}
-              rule={rule}
-              onOpen={(nextRule) => setSelectedRuleId(nextRule.id)}
-              onToggle={(id, enabled) => updateRule(id, { enabled })}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* Premium Rules Grid */}
-      <section className="relative">
-        <div className="mb-3 flex items-center gap-2">
-          <Crown className="h-4 w-4 text-violet-500" />
-          <h3 className="text-sm font-bold tracking-tight">Premium Protections</h3>
-          {!isPremium ? (
-            <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">
+      {/* Tab Bar: Free / Premium */}
+      <div className="flex gap-1 rounded-2xl bg-black/[0.03] p-1 dark:bg-white/[0.05]">
+        <button
+          type="button"
+          onClick={() => setTab("free")}
+          className={cn(
+            "flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all",
+            tab === "free"
+              ? "bg-background text-kat shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <Shield className="h-4 w-4" />
+          Free
+          <span className="ml-1 rounded-full bg-kat/10 px-1.5 py-0.5 text-[10px] font-bold text-kat">
+            {freeRules.length}
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("premium")}
+          className={cn(
+            "flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all",
+            tab === "premium"
+              ? "bg-background text-violet-500 shadow-sm"
+              : "text-muted-foreground hover:text-violet-400",
+          )}
+        >
+          <Crown className="h-4 w-4" />
+          Premium
+          {!isPremium && tab !== "premium" ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400/20 to-violet-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-500 shadow-[0_0_12px_rgba(251,191,36,0.15)]">
               <Crown className="h-3 w-3" />
               Premium
             </span>
           ) : null}
-        </div>
-        <div
-          className={cn(
-            "grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5",
-            !isPremium && "pointer-events-none opacity-50",
-          )}
-        >
-          {premiumRules.map((rule) => (
+          <span className="ml-1 rounded-full bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-bold text-violet-500">
+            {premiumRules.length}
+          </span>
+        </button>
+      </div>
+
+      {/* Rules Grid */}
+      <section>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+          {(tab === "free" ? freeRules : premiumRules).map((rule) => (
             <RuleTile
               key={rule.id}
               rule={rule}
@@ -1295,175 +1305,131 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
         </div>
       </section>
 
-      {/* Whitelist Section */}
-      <section className="dashboard-glass-card p-5 sm:p-6">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <UserCheck className="mt-0.5 h-5 w-5 shrink-0 text-kat" />
-            <div>
-              <h2 className="text-lg font-bold tracking-tight">Whitelist</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Exempt channels and users from moderation rules.
-              </p>
+      {/* Config Grid: Whitelist + Filters + Auto-Punishment */}
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="dashboard-glass-card p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <UserCheck className="h-4 w-4 shrink-0 text-kat" />
+              <h3 className="text-sm font-bold">Whitelist</h3>
             </div>
-          </div>
-          <Button type="button" size="sm" onClick={() => setWhitelistOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add
-          </Button>
-        </div>
-        <div className="mt-4">
-          {whitelistLoading ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <TimerReset className="h-4 w-4 animate-spin" />
-              Loading whitelist…
-            </div>
-          ) : !whitelistData || whitelistData.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No whitelist entries yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {whitelistData.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="flex items-center justify-between rounded-xl bg-black/[0.025] p-3 dark:bg-white/[0.03]"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold">
-                      {entry.channelId ? `#${entry.channelId}` : entry.userId ? `User ${entry.userId}` : "Unknown"}
-                    </p>
-                    {entry.reason ? (
-                      <p className="text-xs text-muted-foreground truncate">{entry.reason}</p>
-                    ) : null}
-                  </div>
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 text-destructive"
-                    onClick={() => {
-                      if (entry.id) removeWhitelistEntry.mutate(entry.id);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        <AddWhitelistDialog
-          open={whitelistOpen}
-          onOpenChange={setWhitelistOpen}
-          guildId={guildId ?? ""}
-        />
-      </section>
-
-      {/* Word Filters Section */}
-      <section className="dashboard-glass-card p-5 sm:p-6">
-        <div className="flex items-start gap-3">
-          <ListFilter className="mt-0.5 h-5 w-5 shrink-0 text-kat" />
-          <div>
-            <h2 className="text-lg font-bold tracking-tight">Word Filters</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Block or warn on specific words and patterns.
-            </p>
-          </div>
-        </div>
-        <div className="mt-4 space-y-4">
-          <div className="flex gap-2">
-            <Input
-              value={newFilterPattern}
-              onChange={(e) => setNewFilterPattern(e.target.value)}
-              placeholder="Enter word or regex pattern…"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") { e.preventDefault(); addFilter(); }
-              }}
-            />
-            <Button type="button" size="sm" onClick={addFilter} disabled={addFilterMut.isPending || !newFilterPattern.trim()}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add
+            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => setWhitelistOpen(true)}>
+              <Plus className="h-3.5 w-3.5" />
             </Button>
           </div>
-          {filtersLoading ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <TimerReset className="h-4 w-4 animate-spin" />
-              Loading filters…
-            </div>
-          ) : !filtersData || filtersData.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No custom filters configured.</p>
-          ) : (
-            <div className="space-y-2">
-              {filtersData.map((filter) => (
+          <div className="mt-3 max-h-40 overflow-y-auto space-y-1.5">
+            {whitelistLoading ? (
+              <p className="text-xs text-muted-foreground animate-pulse">Loading…</p>
+            ) : !whitelistData || whitelistData.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No entries yet.</p>
+            ) : (
+              whitelistData.map((entry) => (
                 <div
-                  key={filter.id}
-                  className="flex items-center justify-between rounded-xl bg-black/[0.025] p-3 dark:bg-white/[0.03]"
+                  key={entry.id}
+                  className="flex items-center justify-between rounded-lg bg-black/[0.025] px-2.5 py-1.5 dark:bg-white/[0.03]"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <code className="rounded-md bg-background px-2 py-1 text-xs font-semibold">
-                      {filter.pattern}
-                    </code>
-                    <span className={cn(
-                      "text-xs",
-                      filter.enabled ? "text-emerald-500" : "text-muted-foreground",
-                    )}>
-                      {filter.enabled ? "Active" : "Inactive"}
-                    </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold truncate">
+                      {entry.channelId ? `#${entry.channelId}` : entry.userId ? `User ${entry.userId.slice(0, 8)}…` : "Unknown"}
+                    </p>
+                    {entry.reason ? (
+                      <p className="text-[10px] text-muted-foreground truncate">{entry.reason}</p>
+                    ) : null}
                   </div>
-                  <Button
+                  <button
                     type="button"
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 text-destructive"
-                    onClick={() => {
-                      if (filter.id) deleteFilterMut.mutate(filter.id);
-                    }}
+                    onClick={() => { if (entry.id) removeWhitelistEntry.mutate(entry.id); }}
+                    className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-destructive"
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                    <X className="h-3 w-3" />
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
+          <AddWhitelistDialog
+            open={whitelistOpen}
+            onOpenChange={setWhitelistOpen}
+            guildId={guildId ?? ""}
+          />
         </div>
-      </section>
 
-      {/* Auto-Punishment Section */}
-      <section className="dashboard-glass-card p-5 sm:p-6">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-kat" />
-          <div>
-            <h2 className="text-lg font-bold tracking-tight">Auto-Punishment</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Escalate penalties as users accumulate violations.
-            </p>
+        <div className="dashboard-glass-card p-4 sm:p-5">
+          <div className="flex items-center gap-2">
+            <ListFilter className="h-4 w-4 shrink-0 text-kat" />
+            <h3 className="text-sm font-bold">Filters</h3>
+          </div>
+          <div className="mt-3 space-y-2">
+            <div className="flex gap-1.5">
+              <Input
+                value={newFilterPattern}
+                onChange={(e) => setNewFilterPattern(e.target.value)}
+                placeholder="word or regex…"
+                className="h-8 text-xs"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") { e.preventDefault(); addFilter(); }
+                }}
+              />
+              <Button type="button" size="icon" className="h-8 w-8 shrink-0" onClick={addFilter} disabled={addFilterMut.isPending || !newFilterPattern.trim()}>
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <div className="max-h-32 overflow-y-auto space-y-1">
+              {filtersLoading ? (
+                <p className="text-xs text-muted-foreground animate-pulse">Loading…</p>
+              ) : !filtersData || filtersData.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No filters yet.</p>
+              ) : (
+                filtersData.map((filter) => (
+                  <div
+                    key={filter.id}
+                    className="flex items-center justify-between rounded-lg bg-black/[0.025] px-2.5 py-1.5 dark:bg-white/[0.03]"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <code className="truncate text-[11px] font-semibold">{filter.pattern}</code>
+                      <span className={cn("text-[10px]", filter.enabled ? "text-emerald-500" : "text-muted-foreground")}>
+                        {filter.enabled ? "On" : "Off"}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { if (filter.id) deleteFilterMut.mutate(filter.id); }}
+                      className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-destructive"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
-        <div className="mt-4">
-          {autoPunishLoading ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <TimerReset className="h-4 w-4 animate-spin" />
-              Loading auto-punishments…
-            </div>
-          ) : !autoPunishments || autoPunishments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No auto-punishment rules configured.</p>
-          ) : (
-            <div className="space-y-3">
-              {autoPunishments.map((ap, idx) => (
+
+        <div className="dashboard-glass-card p-4 sm:p-5">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0 text-kat" />
+            <h3 className="text-sm font-bold">Auto-Punishment</h3>
+          </div>
+          <div className="mt-3 max-h-40 overflow-y-auto space-y-1.5">
+            {autoPunishLoading ? (
+              <p className="text-xs text-muted-foreground animate-pulse">Loading…</p>
+            ) : !autoPunishments || autoPunishments.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No rules configured.</p>
+            ) : (
+              autoPunishments.map((ap, idx) => (
                 <div
                   key={ap.id ?? idx}
-                  className="flex flex-wrap items-center gap-3 rounded-xl bg-black/[0.025] p-3 dark:bg-white/[0.03]"
+                  className="flex items-center gap-2 rounded-lg bg-black/[0.025] px-2.5 py-1.5 dark:bg-white/[0.03]"
                 >
-                  <span className="text-sm font-bold text-kat min-w-[4rem]">
-                    {ap.ruleType}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    After {ap.threshold} violations → {ap.action}
-                    {ap.timeoutMinutes ? ` (${ap.timeoutMinutes}m)` : ""}
+                  <span className="text-[11px] font-bold text-kat shrink-0">{ap.ruleType}</span>
+                  <span className="text-[11px] text-muted-foreground truncate">
+                    {ap.threshold}x → {ap.action}
+                    {ap.timeoutMinutes ? ` ${ap.timeoutMinutes}m` : ""}
                   </span>
                 </div>
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </div>
       </section>
 
