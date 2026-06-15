@@ -10,6 +10,23 @@ import type { ModPermissions } from "@/types/moderation";
 export const modPermissionsQueryKey = (guildId: string) =>
   ["guilds", guildId, "moderation", "permissions"] as const;
 
+const PERM_FIELDS: (keyof ModPermissions)[] = [
+  "xkick", "xban", "xsoftban", "xtempban", "xunban",
+  "xmute", "xunmute", "xwarn", "xhistory", "xwarnings",
+  "xclearwarns", "xnuke", "xslowmode", "xlock", "xunlock",
+  "xfilter", "xwhitelist", "xmodconfig",
+];
+
+function normalizePermissions(raw: unknown): ModPermissions {
+  const obj = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const result = {} as ModPermissions;
+  for (const field of PERM_FIELDS) {
+    const val = obj[field];
+    result[field] = Array.isArray(val) ? val.filter((v): v is string => typeof v === "string") : [];
+  }
+  return result;
+}
+
 function useQueryEnabled(guildId: string | null) {
   const status = useAuthStore((s) => s.status);
   const userId = useAuthStore((s) => s.session?.user?.id);
@@ -34,13 +51,7 @@ export function useModPermissions(guildId: string | null) {
         typeof data === "object" && data !== null && "data" in data
           ? (data as ApiResponse<ModPermissions>).data
           : (data as ModPermissions);
-      return {
-        xkick: Array.isArray(raw.xkick) ? raw.xkick : [],
-        xban: Array.isArray(raw.xban) ? raw.xban : [],
-        xmute: Array.isArray(raw.xmute) ? raw.xmute : [],
-        xwarn: Array.isArray(raw.xwarn) ? raw.xwarn : [],
-        xhistory: Array.isArray(raw.xhistory) ? raw.xhistory : [],
-      } satisfies ModPermissions;
+      return normalizePermissions(raw);
     },
     enabled,
     staleTime: 60 * 1000,
@@ -62,13 +73,7 @@ export function useSaveModPermissions(guildId: string | null) {
         typeof data === "object" && data !== null && "data" in data
           ? (data as ApiResponse<ModPermissions>).data
           : (data as ModPermissions);
-      return {
-        xkick: Array.isArray(raw.xkick) ? raw.xkick : [],
-        xban: Array.isArray(raw.xban) ? raw.xban : [],
-        xmute: Array.isArray(raw.xmute) ? raw.xmute : [],
-        xwarn: Array.isArray(raw.xwarn) ? raw.xwarn : [],
-        xhistory: Array.isArray(raw.xhistory) ? raw.xhistory : [],
-      } satisfies ModPermissions;
+      return normalizePermissions(raw);
     },
     onMutate: async (payload) => {
       await queryClient.cancelQueries({ queryKey: guildId ? modPermissionsQueryKey(guildId) : ["guilds", "moderation", "permissions"] });

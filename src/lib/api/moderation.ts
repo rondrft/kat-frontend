@@ -6,47 +6,37 @@ import type {
   ModerationRuleConfig,
   ModerationRuleType,
   SaveModerationConfigPayload,
+  ModerationWhitelist,
+  ModerationFilter,
+  ModerationAutoPunishment,
+  ModerationLogPage,
 } from "@/types/moderation";
 
 const RULE_TYPES = new Set<ModerationRuleType>([
-  "SPAM",
-  "LINKS",
-  "INVITES",
-  "MENTIONS",
-  "CAPS",
+  "SPAM", "LINKS", "INVITES", "MENTIONS", "CAPS",
+  "REPETITION", "WALL_OF_TEXT", "NEWLINES", "SPOILERS",
+  "EVERYONE_HERE", "FORMATTING", "EMOJIS", "BAD_WORDS", "PHISHING",
 ]);
 
 const ACTIONS = new Set<ModerationAction>([
-  "MONITOR",
-  "DELETE",
-  "TIMEOUT",
-  "DELETE_AND_TIMEOUT",
+  "MONITOR", "DELETE", "TIMEOUT", "DELETE_AND_TIMEOUT",
 ]);
 
 const DEFAULT_RULES: ModerationRuleConfig[] = [
   { id: "SPAM", enabled: false, action: "DELETE", threshold: 6, timeoutMinutes: null },
   { id: "LINKS", enabled: false, action: "DELETE", threshold: 2, timeoutMinutes: null },
-  {
-    id: "INVITES",
-    enabled: false,
-    action: "DELETE",
-    threshold: 1,
-    timeoutMinutes: null,
-  },
-  {
-    id: "MENTIONS",
-    enabled: false,
-    action: "TIMEOUT",
-    threshold: 5,
-    timeoutMinutes: null,
-  },
-  {
-    id: "CAPS",
-    enabled: false,
-    action: "MONITOR",
-    threshold: 80,
-    timeoutMinutes: null,
-  },
+  { id: "INVITES", enabled: false, action: "DELETE", threshold: 1, timeoutMinutes: null },
+  { id: "MENTIONS", enabled: false, action: "TIMEOUT", threshold: 5, timeoutMinutes: null },
+  { id: "CAPS", enabled: false, action: "MONITOR", threshold: 80, timeoutMinutes: null },
+  { id: "REPETITION", enabled: false, action: "WARN", threshold: 5, timeoutMinutes: null, premium: true },
+  { id: "WALL_OF_TEXT", enabled: false, action: "WARN", threshold: 500, timeoutMinutes: null, premium: true },
+  { id: "NEWLINES", enabled: false, action: "DELETE", threshold: 5, timeoutMinutes: null, premium: true },
+  { id: "SPOILERS", enabled: false, action: "WARN", threshold: 5, timeoutMinutes: null, premium: true },
+  { id: "EVERYONE_HERE", enabled: false, action: "TIMEOUT", threshold: 1, timeoutMinutes: null, premium: true },
+  { id: "FORMATTING", enabled: false, action: "WARN", threshold: 5, timeoutMinutes: null, premium: true },
+  { id: "EMOJIS", enabled: false, action: "WARN", threshold: 5, timeoutMinutes: null, premium: true },
+  { id: "BAD_WORDS", enabled: false, action: "DELETE", threshold: 1, timeoutMinutes: null, premium: true },
+  { id: "PHISHING", enabled: false, action: "DELETE", threshold: 1, timeoutMinutes: null },
 ];
 
 export const DEFAULT_MODERATION_CONFIG: ModerationConfig = {
@@ -78,7 +68,7 @@ function normalizeAction(value: unknown, fallback: ModerationAction): Moderation
 function normalizeRule(raw: unknown): ModerationRuleConfig | null {
   if (!raw || typeof raw !== "object") return null;
   const row = raw as Record<string, unknown>;
-  const id = String(row.id ?? "").toUpperCase() as ModerationRuleType;
+  const id = String(row.id ?? row.ruleType ?? "").toUpperCase() as ModerationRuleType;
   if (!RULE_TYPES.has(id)) return null;
   const fallback = DEFAULT_RULES.find((rule) => rule.id === id)!;
 
@@ -93,6 +83,7 @@ function normalizeRule(raw: unknown): ModerationRuleConfig | null {
       row.timeoutMinutes === ""
         ? null
         : numberInRange(row.timeoutMinutes, fallback.timeoutMinutes ?? 10, 1, 1440),
+    premium: Boolean(row.premium ?? fallback.premium),
   };
 }
 
@@ -114,19 +105,11 @@ export function normalizeModerationConfig(
   return {
     guildId: String(row.guildId ?? guildId),
     enabled: Boolean(row.enabled),
-    strictness: numberInRange(
-      row.strictness,
-      DEFAULT_MODERATION_CONFIG.strictness,
-      0,
-      100,
-    ),
-    defaultTimeoutMinutes: numberInRange(
-      row.defaultTimeoutMinutes,
-      DEFAULT_MODERATION_CONFIG.defaultTimeoutMinutes,
-      1,
-      1440,
-    ),
+    strictness: numberInRange(row.strictness, DEFAULT_MODERATION_CONFIG.strictness, 0, 100),
+    defaultTimeoutMinutes: numberInRange(row.defaultTimeoutMinutes, DEFAULT_MODERATION_CONFIG.defaultTimeoutMinutes, 1, 1440),
     rules,
+    logChannelId: typeof row.logChannelId === "string" ? row.logChannelId : undefined,
+    muteRoleId: typeof row.muteRoleId === "string" ? row.muteRoleId : undefined,
   };
 }
 
@@ -146,4 +129,122 @@ export async function saveModerationConfig(
     payload,
   );
   return normalizeModerationConfig(unwrapApiData(data), guildId);
+}
+
+export async function getModerationLogs(
+  guildId: string,
+  page = 0,
+  size = 20,
+): Promise<ModerationLogPage> {
+  const { data } = await apiClient.get<ApiResponse<ModerationLogPage> | unknown>(
+    endpoints.guilds.moderationLogs(guildId),
+    { params: { page, size } },
+  );
+  return unwrapApiData(data) as ModerationLogPage;
+}
+
+export async function getWhitelist(guildId: string): Promise<ModerationWhitelist[]> {
+  const { data } = await apiClient.get<ApiResponse<ModerationWhitelist[]> | unknown>(
+    endpoints.guilds.moderationWhitelist(guildId),
+  );
+  return Array.isArray(unwrapApiData(data)) ? unwrapApiData(data) as ModerationWhitelist[] : [];
+}
+
+export async function addWhitelist(
+  guildId: string,
+  entry: Omit<ModerationWhitelist, "id" | "guildId" | "createdAt">,
+): Promise<ModerationWhitelist> {
+  const { data } = await apiClient.post<ApiResponse<ModerationWhitelist> | unknown>(
+    endpoints.guilds.moderationWhitelist(guildId),
+    entry,
+  );
+  return unwrapApiData(data) as ModerationWhitelist;
+}
+
+export async function removeWhitelist(
+  guildId: string,
+  entryId: string,
+): Promise<void> {
+  await apiClient.delete(
+    `${endpoints.guilds.moderationWhitelist(guildId)}/${entryId}`,
+  );
+}
+
+export async function getFilters(guildId: string): Promise<ModerationFilter[]> {
+  const { data } = await apiClient.get<ApiResponse<ModerationFilter[]> | unknown>(
+    endpoints.guilds.moderationFilters(guildId),
+  );
+  return Array.isArray(unwrapApiData(data)) ? unwrapApiData(data) as ModerationFilter[] : [];
+}
+
+export async function addFilter(
+  guildId: string,
+  filter: Omit<ModerationFilter, "id" | "guildId" | "createdAt">,
+): Promise<ModerationFilter> {
+  const { data } = await apiClient.post<ApiResponse<ModerationFilter> | unknown>(
+    endpoints.guilds.moderationFilters(guildId),
+    filter,
+  );
+  return unwrapApiData(data) as ModerationFilter;
+}
+
+export async function updateFilter(
+  guildId: string,
+  filterId: string,
+  filter: Partial<ModerationFilter>,
+): Promise<ModerationFilter> {
+  const { data } = await apiClient.put<ApiResponse<ModerationFilter> | unknown>(
+    `${endpoints.guilds.moderationFilters(guildId)}/${filterId}`,
+    filter,
+  );
+  return unwrapApiData(data) as ModerationFilter;
+}
+
+export async function deleteFilter(
+  guildId: string,
+  filterId: string,
+): Promise<void> {
+  await apiClient.delete(
+    `${endpoints.guilds.moderationFilters(guildId)}/${filterId}`,
+  );
+}
+
+export async function getAutoPunishments(
+  guildId: string,
+): Promise<ModerationAutoPunishment[]> {
+  const { data } = await apiClient.get<ApiResponse<ModerationAutoPunishment[]> | unknown>(
+    endpoints.guilds.moderationAutoPunishments(guildId),
+  );
+  return Array.isArray(unwrapApiData(data)) ? unwrapApiData(data) as ModerationAutoPunishment[] : [];
+}
+
+export async function saveAutoPunishments(
+  guildId: string,
+  punishments: Omit<ModerationAutoPunishment, "id" | "guildId">[],
+): Promise<ModerationAutoPunishment[]> {
+  const { data } = await apiClient.put<ApiResponse<ModerationAutoPunishment[]> | unknown>(
+    endpoints.guilds.moderationAutoPunishments(guildId),
+    punishments,
+  );
+  return unwrapApiData(data) as ModerationAutoPunishment[];
+}
+
+export async function getLogChannel(guildId: string): Promise<{
+  logChannelId: string | null;
+  premiumLogChannelId: string | null;
+}> {
+  const { data } = await apiClient.get<ApiResponse<{ logChannelId: string | null; premiumLogChannelId: string | null }> | unknown>(
+    endpoints.guilds.moderationLogChannel(guildId),
+  );
+  return unwrapApiData(data) as { logChannelId: string | null; premiumLogChannelId: string | null };
+}
+
+export async function saveLogChannel(
+  guildId: string,
+  config: { logChannelId?: string | null; premiumLogChannelId?: string | null },
+): Promise<void> {
+  await apiClient.put(
+    endpoints.guilds.moderationLogChannel(guildId),
+    config,
+  );
 }

@@ -1,23 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  AlertTriangle,
   Ban,
-  Bot,
   Crown,
   Eye,
   FileWarning,
-  Gauge,
   Link2,
   LockKeyhole,
   MessageSquareWarning,
   Plus,
   Save,
-  ShieldAlert,
-  ShieldCheck,
   TimerReset,
   Trash2,
   ChevronDown,
@@ -25,6 +20,20 @@ import {
   Users,
   Shield,
   X,
+  UserCheck,
+  ListFilter,
+  Repeat,
+  TextQuote,
+  TextSelect,
+  EyeOff,
+  AtSign,
+  Bold,
+  Smile,
+  Search,
+  VolumeX,
+  AlertCircle,
+  ScrollText,
+  Megaphone,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,6 +69,24 @@ import {
   useNukeConfig,
   useSaveNukeConfig,
 } from "@/features/moderation/hooks/use-nuke-config";
+import {
+  useWhitelist,
+  useAddWhitelist,
+  useRemoveWhitelist,
+} from "@/features/moderation/hooks/use-whitelist";
+import {
+  useFilters,
+  useAddFilter,
+  useDeleteFilter,
+} from "@/features/moderation/hooks/use-filters";
+import {
+  useAutoPunishments,
+  useSaveAutoPunishments,
+} from "@/features/moderation/hooks/use-auto-punishments";
+import {
+  useLogChannel,
+  useSaveLogChannel,
+} from "@/features/moderation/hooks/use-log-channel";
 import type {
   ModerationAction,
   ModerationConfig,
@@ -68,7 +95,9 @@ import type {
   ModPermissions,
   PurgeConfig,
   NukeConfig,
+  ModerationAutoPunishment,
 } from "@/types/moderation";
+import { RULE_PREMIUM } from "@/types/moderation";
 import { getDiscordAvatarUrl } from "@/utils/discord";
 
 type ModerationMode =
@@ -79,26 +108,32 @@ type ModerationMode =
   | "lockdown";
 
 type RuleId =
-  | "spam"
-  | "links"
-  | "invites"
-  | "mentions"
-  | "caps"
-  | "newAccounts"
-  | "raid"
-  | "aiToxicity";
+  | "spam" | "links" | "invites" | "mentions" | "caps"
+  | "repetition" | "wallOfText" | "newlines" | "spoilers"
+  | "everyoneHere" | "formatting" | "emojis" | "badWords" | "phishing";
 
-type ModerationRule = {
+const RULE_DEFINITIONS: {
   id: RuleId;
   title: string;
   description: string;
-  icon: typeof ShieldAlert;
-  premium?: boolean;
-  enabled: boolean;
-  mode: ModerationMode;
-  threshold: number;
-  timeoutMinutes: number | null;
-};
+  icon: typeof Shield;
+  apiType: ModerationRuleType;
+}[] = [
+  { id: "spam", title: "Spam", description: "Repeated messages, emoji flooding, and fast sends.", icon: MessageSquareWarning, apiType: "SPAM" },
+  { id: "links", title: "Links", description: "Suspicious URLs, phishing domains, and link flooding.", icon: Link2, apiType: "LINKS" },
+  { id: "invites", title: "Invites", description: "Discord invite links outside allowed channels.", icon: Ban, apiType: "INVITES" },
+  { id: "mentions", title: "Mentions", description: "Role/@everyone abuse and large mention bursts.", icon: AtSign, apiType: "MENTIONS" },
+  { id: "caps", title: "Caps", description: "All-caps messages and visual noise.", icon: FileWarning, apiType: "CAPS" },
+  { id: "repetition", title: "Repetition", description: "Repeated characters, words, or spammy patterns.", icon: Repeat, apiType: "REPETITION" },
+  { id: "wallOfText", title: "Wall of Text", description: "Massive unbroken text blocks with no line breaks.", icon: TextQuote, apiType: "WALL_OF_TEXT" },
+  { id: "newlines", title: "Newlines", description: "Excessive line breaks that disrupt chat.", icon: TextSelect, apiType: "NEWLINES" },
+  { id: "spoilers", title: "Spoilers", description: "Excessive spoiler-tagged content.", icon: EyeOff, apiType: "SPOILERS" },
+  { id: "everyoneHere", title: "@everyone/@here", description: "Mass-ping abuse and mention spam.", icon: Megaphone, apiType: "EVERYONE_HERE" },
+  { id: "formatting", title: "Formatting", description: "Excessive markdown, bold, italic, code blocks.", icon: Bold, apiType: "FORMATTING" },
+  { id: "emojis", title: "Emojis", description: "Emoji spam and reaction baiting.", icon: Smile, apiType: "EMOJIS" },
+  { id: "badWords", title: "Bad Words", description: "Custom profanity and blacklisted terms.", icon: VolumeX, apiType: "BAD_WORDS" },
+  { id: "phishing", title: "Phishing", description: "Known phishing domains and scam links.", icon: Search, apiType: "PHISHING" },
+];
 
 const ACTIONS: {
   id: ModerationMode;
@@ -109,128 +144,47 @@ const ACTIONS: {
   { id: "monitor", label: "Monitor", description: "Log only", icon: Eye },
   { id: "delete", label: "Delete", description: "Remove message", icon: Trash2 },
   { id: "timeout", label: "Timeout", description: "Mute user", icon: TimerReset },
-  {
-    id: "deleteAndTimeout",
-    label: "Delete & Timeout",
-    description: "Remove + mute",
-    icon: TimerReset,
-  },
-  {
-    id: "lockdown",
-    label: "Lockdown",
-    description: "Freeze channels",
-    icon: LockKeyhole,
-  },
+  { id: "deleteAndTimeout", label: "Delete & Timeout", description: "Remove + mute", icon: TimerReset },
+  { id: "lockdown", label: "Lockdown", description: "Freeze channels", icon: LockKeyhole },
 ];
 
-const INITIAL_RULES: ModerationRule[] = [
-  {
-    id: "spam",
-    title: "Spam",
-    description: "Repeated messages, emoji flooding, and fast sends.",
-    icon: MessageSquareWarning,
-    enabled: false,
-    mode: "delete",
-    threshold: 6,
-    timeoutMinutes: null,
-  },
-  {
-    id: "links",
-    title: "Links",
-    description: "Suspicious URLs, phishing domains, and link flooding.",
-    icon: Link2,
-    enabled: false,
-    mode: "delete",
-    threshold: 2,
-    timeoutMinutes: null,
-  },
-  {
-    id: "invites",
-    title: "Invites",
-    description: "Discord invite links outside allowed channels.",
-    icon: Ban,
-    enabled: false,
-    mode: "delete",
-    threshold: 1,
-    timeoutMinutes: null,
-  },
-  {
-    id: "mentions",
-    title: "Mentions",
-    description: "@everyone abuse and large mention bursts.",
-    icon: AlertTriangle,
-    enabled: false,
-    mode: "timeout",
-    threshold: 5,
-    timeoutMinutes: null,
-  },
-  {
-    id: "caps",
-    title: "Caps",
-    description: "All-caps messages, repeated symbols, and visual noise.",
-    icon: FileWarning,
-    enabled: false,
-    mode: "monitor",
-    threshold: 80,
-    timeoutMinutes: null,
-  },
-  {
-    id: "newAccounts",
-    title: "New accounts",
-    description: "Stricter moderation for fresh or untrusted accounts.",
-    icon: ShieldCheck,
-    premium: true,
-    enabled: false,
-    mode: "timeout",
-    threshold: 7,
-    timeoutMinutes: null,
-  },
-  {
-    id: "raid",
-    title: "Raid shield",
-    description: "Join spikes, channel lockdowns, and staff alerts.",
-    icon: Gauge,
-    premium: true,
-    enabled: false,
-    mode: "lockdown",
-    threshold: 10,
-    timeoutMinutes: null,
-  },
-  {
-    id: "aiToxicity",
-    title: "AI scan",
-    description: "Harassment, hate, threats, and evasion patterns.",
-    icon: Bot,
-    premium: true,
-    enabled: false,
-    mode: "monitor",
-    threshold: 70,
-    timeoutMinutes: null,
-  },
-];
-
-const CUSTOM_RULES = [
-  { pattern: "free nitro", action: "Delete + warn", premium: false },
-  { pattern: "discord.gg/*", action: "Delete message", premium: false },
-  { pattern: "new account + link", action: "Timeout 10m", premium: true },
-];
+const INITIAL_RULES: ModerationRule[] = RULE_DEFINITIONS.map((def) => ({
+  ...def,
+  enabled: false,
+  mode: def.apiType === "CAPS" ? "monitor" : def.apiType === "MENTIONS" || def.apiType === "EVERYONE_HERE" ? "timeout" : "delete",
+  threshold: def.apiType === "SPAM" ? 6 : def.apiType === "CAPS" ? 80 : def.apiType === "WALL_OF_TEXT" ? 500 : 3,
+  timeoutMinutes: null,
+}));
 
 const BACKEND_RULE_IDS: Partial<Record<RuleId, ModerationRuleType>> = {
-  spam: "SPAM",
-  links: "LINKS",
-  invites: "INVITES",
-  mentions: "MENTIONS",
-  caps: "CAPS",
+  spam: "SPAM", links: "LINKS", invites: "INVITES", mentions: "MENTIONS", caps: "CAPS",
+  repetition: "REPETITION", wallOfText: "WALL_OF_TEXT", newlines: "NEWLINES", spoilers: "SPOILERS",
+  everyoneHere: "EVERYONE_HERE", formatting: "FORMATTING", emojis: "EMOJIS", badWords: "BAD_WORDS", phishing: "PHISHING",
+};
+
+type ModerationRule = {
+  id: RuleId;
+  title: string;
+  description: string;
+  icon: typeof Shield;
+  apiType: ModerationRuleType;
+  enabled: boolean;
+  mode: ModerationMode;
+  threshold: number;
+  timeoutMinutes: number | null;
 };
 
 function toUiAction(action: ModerationAction): ModerationMode {
   if (action === "DELETE_AND_TIMEOUT") return "deleteAndTimeout";
-  return action.toLowerCase() as ModerationMode;
+  const lower = action.toLowerCase();
+  if (lower === "warn" || lower === "kick" || lower === "ban") return "delete";
+  return lower as ModerationMode;
 }
 
 function toApiAction(mode: ModerationMode): ModerationAction {
   if (mode === "deleteAndTimeout") return "DELETE_AND_TIMEOUT";
   if (mode === "lockdown") return "TIMEOUT";
+  if (mode === "delete") return "DELETE";
   return mode.toUpperCase() as ModerationAction;
 }
 
@@ -251,7 +205,6 @@ function applyModerationConfigToRules(
     if (!apiId) return rule;
     const saved = config.rules.find((item) => item.id === apiId);
     if (!saved) return rule;
-
     return {
       ...rule,
       enabled: saved.enabled,
@@ -321,6 +274,7 @@ function RuleTile({
   onToggle: (id: RuleId, enabled: boolean) => void;
 }) {
   const Icon = rule.icon;
+  const premium = RULE_PREMIUM[rule.apiType];
 
   return (
     <article
@@ -348,7 +302,7 @@ function RuleTile({
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="truncate text-sm font-bold">{rule.title}</h3>
-              {rule.premium ? <PremiumBadge /> : <FreeBadge />}
+              {premium ? <PremiumBadge /> : <FreeBadge />}
             </div>
             <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
               {rule.description}
@@ -361,7 +315,6 @@ function RuleTile({
           onCheckedChange={(enabled) => onToggle(rule.id, enabled)}
         />
       </div>
-
       <div className="mt-3 flex items-center justify-between text-xs">
         <span className="rounded-full bg-black/[0.04] px-2 py-1 font-semibold text-muted-foreground dark:bg-white/[0.05]">
           {getActionLabel(rule.mode)}
@@ -387,6 +340,7 @@ function RuleDialog({
 }) {
   if (!rule) return null;
   const Icon = rule.icon;
+  const premium = RULE_PREMIUM[rule.apiType];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -402,7 +356,6 @@ function RuleDialog({
             </div>
           </div>
         </DialogHeader>
-
         <div className="space-y-5">
           <div className="flex items-center justify-between rounded-2xl bg-black/[0.025] p-3 dark:bg-white/[0.03]">
             <div>
@@ -416,7 +369,6 @@ function RuleDialog({
               onCheckedChange={(enabled) => onUpdate(rule.id, { enabled })}
             />
           </div>
-
           <div className="space-y-2">
             <Label>Action</Label>
             <ActionSelector
@@ -424,7 +376,6 @@ function RuleDialog({
               onChange={(mode) => onUpdate(rule.id, { mode })}
             />
           </div>
-
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_128px]">
             <div className="space-y-2">
               <Label htmlFor={`${rule.id}-threshold`}>Threshold</Label>
@@ -432,7 +383,7 @@ function RuleDialog({
                 id={`${rule.id}-threshold`}
                 type="range"
                 min={1}
-                max={100}
+                max={rule.apiType === "CAPS" || rule.apiType === "WALL_OF_TEXT" ? 1000 : 100}
                 value={rule.threshold}
                 onChange={(event) =>
                   onUpdate(rule.id, { threshold: Number(event.target.value) })
@@ -446,7 +397,7 @@ function RuleDialog({
                 id={`${rule.id}-threshold-number`}
                 type="number"
                 min={1}
-                max={100}
+                max={rule.apiType === "CAPS" || rule.apiType === "WALL_OF_TEXT" ? 1000 : 100}
                 value={rule.threshold}
                 onChange={(event) =>
                   onUpdate(rule.id, { threshold: Number(event.target.value) })
@@ -454,7 +405,6 @@ function RuleDialog({
               />
             </div>
           </div>
-
           {usesTimeout(rule.mode) ? (
             <div className="space-y-2">
               <Label htmlFor={`${rule.id}-timeout`}>Timeout (minutes)</Label>
@@ -477,21 +427,20 @@ function RuleDialog({
               </p>
             </div>
           ) : null}
-
-          {rule.premium ? (
+          {premium ? (
             <div className="rounded-2xl border border-violet-500/15 bg-violet-500/10 p-4">
               <div className="flex items-center gap-2 text-sm font-bold text-violet-500">
                 <Crown className="h-4 w-4" />
                 Premium rule
               </div>
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                This can be visible in Free mode, but server-side saving should require
-                Premium before activation.
+                This detector requires Premium to activate. Non-premium servers can see
+                it but the server-side enforcement will only engage with an active
+                Premium subscription.
               </p>
             </div>
           ) : null}
         </div>
-
         <DialogFooter>
           <Button type="button" onClick={() => onOpenChange(false)}>
             Done
@@ -503,11 +452,10 @@ function RuleDialog({
 }
 
 const emptyPermissions: ModPermissions = {
-  xkick: [],
-  xban: [],
-  xmute: [],
-  xwarn: [],
-  xhistory: [],
+  xkick: [], xban: [], xsoftban: [], xtempban: [], xunban: [],
+  xmute: [], xunmute: [], xwarn: [], xhistory: [], xwarnings: [],
+  xclearwarns: [], xnuke: [], xslowmode: [], xlock: [], xunlock: [],
+  xfilter: [], xwhitelist: [], xmodconfig: [],
 };
 
 const defaultPurgeConfig: PurgeConfig = {
@@ -679,12 +627,10 @@ function SingleRoleSelect({
       </button>
       {open && (
         <div className="absolute right-0 z-50 mt-1 max-h-60 w-72 overflow-y-auto rounded-xl border border-black/[0.08] bg-background p-1 shadow-lg dark:border-white/10">
-          <label
-            className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.04]"
-          >
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.04]">
             <input
               type="radio"
-              name="nuke-role"
+              name="single-role"
               className="accent-[hsl(var(--kat-brand))]"
               checked={selectedId === null}
               onChange={() => onChange(null)}
@@ -705,7 +651,7 @@ function SingleRoleSelect({
                 >
                   <input
                     type="radio"
-                    name="nuke-role"
+                    name="single-role"
                     className="accent-[hsl(var(--kat-brand))]"
                     checked={checked}
                     onChange={() => onChange(role.id)}
@@ -855,6 +801,110 @@ function UserTagInput({
   );
 }
 
+function ChannelSelect({
+  guildId,
+  value,
+  onChange,
+}: {
+  guildId: string;
+  value: string | null;
+  onChange: (id: string | null) => void;
+}) {
+  const { data: channels = [], isLoading } = useQuery({
+    queryKey: ["guilds", guildId, "channels", "text"],
+    queryFn: () => guildService.getGuildTextChannels(guildId),
+    enabled: Boolean(guildId),
+    staleTime: 60 * 1000,
+  });
+
+  return (
+    <select
+      value={value ?? ""}
+      onChange={(e) => onChange(e.target.value || null)}
+      className="flex h-10 w-full rounded-xl border border-black/[0.08] bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kat focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10"
+    >
+      <option value="">Not configured</option>
+      {isLoading ? (
+        <option disabled>Loading channels…</option>
+      ) : (
+        channels.map((ch: { id: string; name: string }) => (
+          <option key={ch.id} value={ch.id}>
+            #{ch.name}
+          </option>
+        ))
+      )}
+    </select>
+  );
+}
+
+function AddWhitelistDialog({
+  open,
+  onOpenChange,
+  guildId,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  guildId: string;
+}) {
+  const addMutation = useAddWhitelist(guildId);
+  const [channelId, setChannelId] = useState("");
+  const [userId, setUserId] = useState("");
+  const [reason, setReason] = useState("");
+
+  const handleSave = useCallback(() => {
+    if (!channelId && !userId) return;
+    addMutation.mutate(
+      { channelId: channelId || null, userId: userId || null, reason: reason || undefined, ruleType: null },
+      { onSuccess: () => { onOpenChange(false); setChannelId(""); setUserId(""); setReason(""); } },
+    );
+  }, [channelId, userId, reason, addMutation, onOpenChange]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Whitelist Entry</DialogTitle>
+          <DialogDescription>Exempt a channel or user from moderation.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Channel</Label>
+            <select
+              value={channelId}
+              onChange={(e) => setChannelId(e.target.value)}
+              className="flex h-10 w-full rounded-xl border border-black/[0.08] bg-background px-3 py-2 text-sm dark:border-white/10"
+            >
+              <option value="">Any channel</option>
+              {/* channels are resolved server-side */}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label>User ID</Label>
+            <Input
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              placeholder="Discord user ID (optional if channel is set)"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Reason</Label>
+            <Input
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Why is this exempt?"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button type="button" onClick={handleSave} disabled={addMutation.isPending}>
+            {addMutation.isPending ? "Adding…" : "Add"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 type ModerationSectionProps = {
   guildId?: string;
 };
@@ -862,6 +912,7 @@ type ModerationSectionProps = {
 function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionProps) {
   const selectedGuildId = useGuildStore((s) => s.selectedGuildId);
   const guildId = guildIdProp ?? selectedGuildId;
+
   const {
     data: moderationConfig,
     isLoading,
@@ -871,7 +922,7 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
   const saveMutation = useSaveModerationConfig(guildId);
   const [rules, setRules] = useState(INITIAL_RULES);
   const [selectedRuleId, setSelectedRuleId] = useState<RuleId | null>(null);
-  const [strictness, setStrictness] = useState(62);
+  const [strictness, setStrictness] = useState(50);
   const [muteMinutes, setMuteMinutes] = useState(10);
   const [saved, setSaved] = useState(false);
 
@@ -891,10 +942,42 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
 
   const {
     data: nukeData,
-    isLoading: nukeLoading,
   } = useNukeConfig(guildId);
   const saveNuke = useSaveNukeConfig(guildId);
   const [nukeConfig, setNukeConfig] = useState<NukeConfig | null>(null);
+
+  const {
+    data: whitelistData,
+    isLoading: whitelistLoading,
+  } = useWhitelist(guildId);
+  const removeWhitelistEntry = useRemoveWhitelist(guildId);
+  const [whitelistOpen, setWhitelistOpen] = useState(false);
+
+  const {
+    data: filtersData,
+    isLoading: filtersLoading,
+  } = useFilters(guildId);
+  const addFilterMut = useAddFilter(guildId);
+  const deleteFilterMut = useDeleteFilter(guildId);
+  const [newFilterPattern, setNewFilterPattern] = useState("");
+
+  const {
+    data: autoPunishData,
+    isLoading: autoPunishLoading,
+  } = useAutoPunishments(guildId);
+  const _saveAutoPunish = useSaveAutoPunishments(guildId);
+  const [autoPunishments, setAutoPunishments] = useState<ModerationAutoPunishment[] | null>(null);
+
+  const {
+    data: logChannelData,
+    isLoading: logChannelLoading,
+  } = useLogChannel(guildId);
+  const saveLogChannelMut = useSaveLogChannel(guildId);
+  const [logChannelId, setLogChannelId] = useState<string | null>(null);
+  const [premiumLogChannelId, setPremiumLogChannelId] = useState<string | null>(null);
+
+  const premiumQuery = usePremiumStatus(guildId);
+  const isPremium = premiumQuery.data?.isPremium ?? false;
 
   const { data: guildRoles = [], isLoading: rolesLoading } = useQuery({
     queryKey: ["guilds", guildId, "roles"],
@@ -902,9 +985,6 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
     enabled: Boolean(guildId),
     staleTime: 60 * 1000,
   });
-
-  const { data: premiumData } = usePremiumStatus(guildId);
-  const isPremium = premiumData?.isPremium ?? false;
 
   useEffect(() => {
     if (!moderationConfig) return;
@@ -915,22 +995,27 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
   }, [moderationConfig]);
 
   useEffect(() => {
-    if (permissionsData) {
-      setPermissions(permissionsData);
-    }
+    if (permissionsData) setPermissions(permissionsData);
   }, [permissionsData]);
 
   useEffect(() => {
-    if (purgeData) {
-      setPurgeConfig(purgeData);
-    }
+    if (purgeData) setPurgeConfig(purgeData);
   }, [purgeData]);
 
   useEffect(() => {
-    if (nukeData) {
-      setNukeConfig(nukeData);
-    }
+    if (nukeData) setNukeConfig(nukeData);
   }, [nukeData]);
+
+  useEffect(() => {
+    if (autoPunishData) setAutoPunishments(autoPunishData);
+  }, [autoPunishData]);
+
+  useEffect(() => {
+    if (logChannelData) {
+      setLogChannelId(logChannelData.logChannelId ?? null);
+      setPremiumLogChannelId(logChannelData.premiumLogChannelId ?? null);
+    }
+  }, [logChannelData]);
 
   const selectedRule = rules.find((rule) => rule.id === selectedRuleId) ?? null;
 
@@ -939,7 +1024,7 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
     [rules],
   );
   const premiumCount = useMemo(
-    () => rules.filter((rule) => rule.premium).length,
+    () => rules.filter((rule) => RULE_PREMIUM[rule.apiType]).length,
     [rules],
   );
 
@@ -954,7 +1039,7 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
     if (!guildId) return;
 
     const payload = {
-      enabled: rules.some((rule) => BACKEND_RULE_IDS[rule.id] && rule.enabled),
+      enabled: rules.some((rule) => rule.enabled),
       strictness,
       defaultTimeoutMinutes: muteMinutes,
       rules: rules
@@ -979,14 +1064,24 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
         setRules((current) => applyModerationConfigToRules(current, config));
         setSaved(true);
       },
-      onError: () => {
-        setSaved(false);
-      },
+      onError: () => setSaved(false),
     });
   };
 
+  const freeRules = rules.filter((r) => !RULE_PREMIUM[r.apiType]);
+  const premiumRules = rules.filter((r) => RULE_PREMIUM[r.apiType]);
+
+  const addFilter = useCallback(() => {
+    if (!guildId || !newFilterPattern.trim()) return;
+    addFilterMut.mutate(
+      { pattern: newFilterPattern.trim(), enabled: true },
+      { onSuccess: () => setNewFilterPattern("") },
+    );
+  }, [guildId, newFilterPattern, addFilterMut]);
+
   return (
     <div className="space-y-4">
+      {/* Header + Global Settings */}
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(280px,0.85fr)_minmax(260px,0.65fr)]">
         <div className="dashboard-glass-card p-5 sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -1001,7 +1096,6 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
                 Open each protection to tune thresholds, actions, and premium behavior.
               </p>
             </div>
-
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="bg-kat/10 text-kat shadow-none">
                 {enabledCount} active
@@ -1010,9 +1104,7 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
                 {premiumCount} premium
               </Badge>
               {isLoading ? (
-                <Badge className="bg-slate-500/10 text-slate-500 shadow-none">
-                  Loading
-                </Badge>
+                <Badge className="bg-slate-500/10 text-slate-500 shadow-none">Loading</Badge>
               ) : null}
               {saved && !saveMutation.isPending ? (
                 <Badge className="bg-emerald-500/10 text-emerald-600 shadow-none dark:text-emerald-400">
@@ -1020,19 +1112,13 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
                 </Badge>
               ) : null}
               {isError ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => void refetch()}
-                >
+                <Button type="button" variant="outline" size="sm" onClick={() => void refetch()}>
                   Retry
                 </Button>
               ) : null}
             </div>
           </div>
-
-          <div className="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_8.5rem]">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl bg-black/[0.025] p-3 dark:bg-white/[0.03]">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Strictness
@@ -1055,11 +1141,8 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
                 </span>
               </div>
             </div>
-
             <div className="rounded-2xl bg-black/[0.025] p-3 dark:bg-white/[0.03]">
-              <Label htmlFor="muteMinutes" className="text-xs">
-                Default timeout
-              </Label>
+              <Label htmlFor="muteMinutes" className="text-xs">Default timeout</Label>
               <Input
                 id="muteMinutes"
                 type="number"
@@ -1074,20 +1157,11 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
               />
             </div>
           </div>
-
-          <div className="mt-3 rounded-2xl bg-violet-500/10 p-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-violet-500">
-              Premium automation
-            </p>
-            <p className="mt-1 text-sm font-semibold">Raid mode + AI scan</p>
-          </div>
-
           {saveMutation.isError ? (
             <p className="mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
               Could not save moderation config. Please try again.
             </p>
           ) : null}
-
           <Button
             type="button"
             className="mt-4 w-full sm:w-auto"
@@ -1099,41 +1173,55 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
           </Button>
         </div>
 
+        {/* Log Channels */}
         <div className="dashboard-glass-card p-5 sm:p-6">
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <ScrollText className="mt-0.5 h-5 w-5 shrink-0 text-kat" />
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-kat">
-                Custom rules
-              </p>
-              <h2 className="mt-1 text-xl font-bold tracking-tight">Pattern rules</h2>
+              <h2 className="text-lg font-bold tracking-tight">Log Channels</h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                Match words, domains, links, or combined conditions.
+                Where moderation actions are reported.
               </p>
             </div>
-            <Button type="button" size="sm" variant="outline">
-              <Plus className="mr-2 h-4 w-4" />
-              Add
-            </Button>
           </div>
-
-          <div className="mt-4 space-y-2">
-            {CUSTOM_RULES.map((rule) => (
-              <div
-                key={rule.pattern}
-                className="rounded-2xl bg-black/[0.025] p-3 dark:bg-white/[0.03]"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <code className="rounded-md bg-background px-2 py-1 text-xs font-semibold">
-                    {rule.pattern}
-                  </code>
-                  {rule.premium ? <PremiumBadge /> : <FreeBadge />}
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">{rule.action}</p>
+          <div className="mt-4 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Standard Log Channel</Label>
+              <ChannelSelect
+                guildId={guildId ?? ""}
+                value={logChannelId}
+                onChange={(id) => setLogChannelId(id)}
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label className="text-xs">Premium Log Channel</Label>
+                {!isPremium ? <PremiumBadge /> : null}
               </div>
-            ))}
+              <ChannelSelect
+                guildId={guildId ?? ""}
+                value={premiumLogChannelId}
+                onChange={(id) => setPremiumLogChannelId(id)}
+              />
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              disabled={saveLogChannelMut.isPending || logChannelLoading}
+              onClick={() => {
+                saveLogChannelMut.mutate({
+                  logChannelId,
+                  premiumLogChannelId,
+                });
+              }}
+            >
+              <Save className="mr-2 h-4 w-4" />
+              {saveLogChannelMut.isPending ? "Saving..." : "Save"}
+            </Button>
           </div>
         </div>
 
+        {/* Escalation */}
         <div className="dashboard-glass-card p-5 sm:p-6">
           <p className="text-xs font-semibold uppercase tracking-wider text-kat">
             Escalation
@@ -1141,10 +1229,10 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
           <h2 className="mt-1 text-xl font-bold tracking-tight">Repeat offenders</h2>
           <div className="mt-4 grid gap-2">
             {[
-              ["1st", "Delete + warn"],
+              ["1st", "Warn"],
               ["2nd", `Timeout ${muteMinutes}m`],
-              ["3rd", "Timeout 1h + log"],
-              ["Premium", "Case + staff alert"],
+              ["3rd", "Timeout 1h + notify"],
+              ["4th+", "Kick / Temp ban"],
             ].map(([step, action]) => (
               <div
                 key={step}
@@ -1160,35 +1248,14 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
         </div>
       </section>
 
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {rules.filter((rule) => !rule.premium).map((rule) => (
-          <RuleTile
-            key={rule.id}
-            rule={rule}
-            onOpen={(nextRule) => setSelectedRuleId(nextRule.id)}
-            onToggle={(id, enabled) => updateRule(id, { enabled })}
-          />
-        ))}
-      </section>
-
-      <section className="relative">
+      {/* Free Rules Grid */}
+      <section>
         <div className="mb-3 flex items-center gap-2">
-          <Shield className="h-4 w-4 text-violet-500" />
-          <h3 className="text-sm font-bold tracking-tight">Anti-Raid</h3>
-          {!isPremium ? (
-            <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">
-              <Crown className="h-3 w-3" />
-              Premium
-            </span>
-          ) : null}
+          <Shield className="h-4 w-4 text-kat" />
+          <h3 className="text-sm font-bold tracking-tight">Free Protections</h3>
         </div>
-        <div
-          className={cn(
-            "grid gap-3 md:grid-cols-2 xl:grid-cols-4",
-            !isPremium && "pointer-events-none opacity-50",
-          )}
-        >
-          {rules.filter((rule) => rule.premium).map((rule) => (
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+          {freeRules.map((rule) => (
             <RuleTile
               key={rule.id}
               rule={rule}
@@ -1199,25 +1266,225 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
         </div>
       </section>
 
-      {/* Command Permissions + Purge Command */}
+      {/* Premium Rules Grid */}
+      <section className="relative">
+        <div className="mb-3 flex items-center gap-2">
+          <Crown className="h-4 w-4 text-violet-500" />
+          <h3 className="text-sm font-bold tracking-tight">Premium Protections</h3>
+          {!isPremium ? (
+            <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">
+              <Crown className="h-3 w-3" />
+              Premium
+            </span>
+          ) : null}
+        </div>
+        <div
+          className={cn(
+            "grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5",
+            !isPremium && "pointer-events-none opacity-50",
+          )}
+        >
+          {premiumRules.map((rule) => (
+            <RuleTile
+              key={rule.id}
+              rule={rule}
+              onOpen={(nextRule) => setSelectedRuleId(nextRule.id)}
+              onToggle={(id, enabled) => updateRule(id, { enabled })}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* Whitelist Section */}
+      <section className="dashboard-glass-card p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <UserCheck className="mt-0.5 h-5 w-5 shrink-0 text-kat" />
+            <div>
+              <h2 className="text-lg font-bold tracking-tight">Whitelist</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Exempt channels and users from moderation rules.
+              </p>
+            </div>
+          </div>
+          <Button type="button" size="sm" onClick={() => setWhitelistOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add
+          </Button>
+        </div>
+        <div className="mt-4">
+          {whitelistLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <TimerReset className="h-4 w-4 animate-spin" />
+              Loading whitelist…
+            </div>
+          ) : !whitelistData || whitelistData.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No whitelist entries yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {whitelistData.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="flex items-center justify-between rounded-xl bg-black/[0.025] p-3 dark:bg-white/[0.03]"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold">
+                      {entry.channelId ? `#${entry.channelId}` : entry.userId ? `User ${entry.userId}` : "Unknown"}
+                    </p>
+                    {entry.reason ? (
+                      <p className="text-xs text-muted-foreground truncate">{entry.reason}</p>
+                    ) : null}
+                  </div>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-destructive"
+                    onClick={() => {
+                      if (entry.id) removeWhitelistEntry.mutate(entry.id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <AddWhitelistDialog
+          open={whitelistOpen}
+          onOpenChange={setWhitelistOpen}
+          guildId={guildId ?? ""}
+        />
+      </section>
+
+      {/* Word Filters Section */}
+      <section className="dashboard-glass-card p-5 sm:p-6">
+        <div className="flex items-start gap-3">
+          <ListFilter className="mt-0.5 h-5 w-5 shrink-0 text-kat" />
+          <div>
+            <h2 className="text-lg font-bold tracking-tight">Word Filters</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Block or warn on specific words and patterns.
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 space-y-4">
+          <div className="flex gap-2">
+            <Input
+              value={newFilterPattern}
+              onChange={(e) => setNewFilterPattern(e.target.value)}
+              placeholder="Enter word or regex pattern…"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") { e.preventDefault(); addFilter(); }
+              }}
+            />
+            <Button type="button" size="sm" onClick={addFilter} disabled={addFilterMut.isPending || !newFilterPattern.trim()}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add
+            </Button>
+          </div>
+          {filtersLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <TimerReset className="h-4 w-4 animate-spin" />
+              Loading filters…
+            </div>
+          ) : !filtersData || filtersData.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No custom filters configured.</p>
+          ) : (
+            <div className="space-y-2">
+              {filtersData.map((filter) => (
+                <div
+                  key={filter.id}
+                  className="flex items-center justify-between rounded-xl bg-black/[0.025] p-3 dark:bg-white/[0.03]"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <code className="rounded-md bg-background px-2 py-1 text-xs font-semibold">
+                      {filter.pattern}
+                    </code>
+                    <span className={cn(
+                      "text-xs",
+                      filter.enabled ? "text-emerald-500" : "text-muted-foreground",
+                    )}>
+                      {filter.enabled ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-destructive"
+                    onClick={() => {
+                      if (filter.id) deleteFilterMut.mutate(filter.id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Auto-Punishment Section */}
+      <section className="dashboard-glass-card p-5 sm:p-6">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-kat" />
+          <div>
+            <h2 className="text-lg font-bold tracking-tight">Auto-Punishment</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Escalate penalties as users accumulate violations.
+            </p>
+          </div>
+        </div>
+        <div className="mt-4">
+          {autoPunishLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <TimerReset className="h-4 w-4 animate-spin" />
+              Loading auto-punishments…
+            </div>
+          ) : !autoPunishments || autoPunishments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No auto-punishment rules configured.</p>
+          ) : (
+            <div className="space-y-3">
+              {autoPunishments.map((ap, idx) => (
+                <div
+                  key={ap.id ?? idx}
+                  className="flex flex-wrap items-center gap-3 rounded-xl bg-black/[0.025] p-3 dark:bg-white/[0.03]"
+                >
+                  <span className="text-sm font-bold text-kat min-w-[4rem]">
+                    {ap.ruleType}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    After {ap.threshold} violations → {ap.action}
+                    {ap.timeoutMinutes ? ` (${ap.timeoutMinutes}m)` : ""}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Command Permissions + Purge + Nuke */}
       <section className="grid gap-4 md:grid-cols-2">
         <div className={cn("dashboard-glass-card p-5 sm:p-6", !isPremium && "relative")}>
+          {!isPremium ? (
+            <span className="pointer-events-none absolute right-4 top-4 z-10 inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">
+              <Crown className="h-3 w-3" />
+              Premium
+            </span>
+          ) : null}
           <div className="flex items-start gap-3">
-            {!isPremium ? (
-              <span className="pointer-events-none absolute right-4 top-4 z-10 inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">
-                <Crown className="h-3 w-3" />
-                Premium
-              </span>
-            ) : null}
             <Users className="mt-0.5 h-5 w-5 shrink-0 text-kat" />
             <div className="min-w-0 flex-1">
               <h2 className="text-lg font-bold tracking-tight">Command Permissions</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Allow specific roles to use moderation commands without Discord permissions
+                Allow specific roles to use moderation commands without Discord permissions.
               </p>
             </div>
           </div>
-
           {permissionsLoading ? (
             <div className="mt-4 space-y-3">
               {Array.from({ length: 5 }).map((_, i) => (
@@ -1227,56 +1494,53 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
           ) : (
             <div className={cn("mt-4 space-y-4", !isPremium && "pointer-events-none opacity-50")}>
               <div className="grid grid-cols-2 gap-2">
-                {(["xkick", "xban", "xmute", "xwarn", "xhistory"] as const).map(
-                  (cmd) => (
-                    <div
-                      key={cmd}
-                      className="rounded-xl bg-black/[0.025] p-2 dark:bg-white/[0.03]"
-                    >
-                      <p className="mb-1.5 text-xs font-semibold text-kat">{cmd}</p>
-                      <CommandRoleSelect
-                        roles={guildRoles}
-                        selectedIds={(permissions ?? emptyPermissions)[cmd]}
-                        isLoading={rolesLoading}
-                        onChange={(ids) =>
-                          setPermissions((prev) =>
-                            prev
-                              ? { ...prev, [cmd]: ids }
-                              : { ...emptyPermissions, [cmd]: ids },
-                          )
-                        }
-                      />
-                    </div>
-                  ),
-                )}
-
-                <div className="rounded-xl bg-black/[0.025] p-2 dark:bg-white/[0.03]">
-                  <p className="mb-1.5 text-xs font-semibold text-kat">xnuke</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <SingleRoleSelect
+                {(Object.keys(emptyPermissions) as (keyof ModPermissions)[]).map((cmd) => (
+                  <div
+                    key={cmd}
+                    className="rounded-xl bg-black/[0.025] p-2 dark:bg-white/[0.03]"
+                  >
+                    <p className="mb-1.5 text-xs font-semibold text-kat">{cmd}</p>
+                    <CommandRoleSelect
                       roles={guildRoles}
-                      selectedId={(nukeConfig ?? defaultNukeConfig).allowedRoleId}
+                      selectedIds={(permissions ?? emptyPermissions)[cmd]}
                       isLoading={rolesLoading}
-                      onChange={(id) =>
-                        setNukeConfig((prev) =>
-                          prev
-                            ? { ...prev, allowedRoleId: id }
-                            : { ...defaultNukeConfig, allowedRoleId: id },
-                        )
-                      }
-                    />
-                    <UserTagInput
-                      guildId={guildId ?? ""}
-                      userIds={(nukeConfig ?? defaultNukeConfig).allowedUserIds}
                       onChange={(ids) =>
-                        setNukeConfig((prev) =>
+                        setPermissions((prev) =>
                           prev
-                            ? { ...prev, allowedUserIds: ids }
-                            : { ...defaultNukeConfig, allowedUserIds: ids },
+                            ? { ...prev, [cmd]: ids }
+                            : { ...emptyPermissions, [cmd]: ids },
                         )
                       }
                     />
                   </div>
+                ))}
+              </div>
+              <div className="rounded-xl bg-black/[0.025] p-2 dark:bg-white/[0.03]">
+                <p className="mb-1.5 text-xs font-semibold text-kat">xnuke (allowed users)</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <SingleRoleSelect
+                    roles={guildRoles}
+                    selectedId={(nukeConfig ?? defaultNukeConfig).allowedRoleId}
+                    isLoading={rolesLoading}
+                    onChange={(id) =>
+                      setNukeConfig((prev) =>
+                        prev
+                          ? { ...prev, allowedRoleId: id }
+                          : { ...defaultNukeConfig, allowedRoleId: id },
+                      )
+                    }
+                  />
+                  <UserTagInput
+                    guildId={guildId ?? ""}
+                    userIds={(nukeConfig ?? defaultNukeConfig).allowedUserIds}
+                    onChange={(ids) =>
+                      setNukeConfig((prev) =>
+                        prev
+                          ? { ...prev, allowedUserIds: ids }
+                          : { ...defaultNukeConfig, allowedUserIds: ids },
+                      )
+                    }
+                  />
                 </div>
               </div>
               <div className="space-y-2">
@@ -1288,9 +1552,7 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
                     if (!permissions) return;
                     savePermissions.mutate(permissions, {
                       onSuccess: () => {
-                        if (nukeConfig) {
-                          saveNuke.mutate(nukeConfig);
-                        }
+                        if (nukeConfig) saveNuke.mutate(nukeConfig);
                       },
                     });
                   }}
@@ -1299,9 +1561,7 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
                   {savePermissions.isPending || saveNuke.isPending ? "Saving..." : "Save"}
                 </Button>
                 {savePermissions.isError || saveNuke.isError ? (
-                  <p className="text-sm text-destructive">
-                    Could not save. Please try again.
-                  </p>
+                  <p className="text-sm text-destructive">Could not save. Please try again.</p>
                 ) : null}
               </div>
             </div>
@@ -1312,13 +1572,12 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
           <div className="flex items-start gap-3">
             <ToggleLeft className="mt-0.5 h-5 w-5 shrink-0 text-kat" />
             <div className="min-w-0 flex-1">
-              <h2 className="text-lg font-bold tracking-tight">Purge Command (purgeenme)</h2>
+              <h2 className="text-lg font-bold tracking-tight">Purge Command</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Let a specific role delete their own recent messages by typing purgeenme
+                Let a specific role delete their own recent messages by typing a command.
               </p>
             </div>
           </div>
-
           {purgeLoading ? (
             <div className="mt-4 space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -1331,7 +1590,7 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
                 <div>
                   <p className="text-sm font-semibold">Enable Purge Command</p>
                   <p className="text-xs text-muted-foreground">
-                    Allow members with the selected role to use purgeenme
+                    Allow members with the selected role to delete their own messages.
                   </p>
                 </div>
                 <Switch
@@ -1343,7 +1602,6 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
                   }
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="allowed-role">Allowed Role</Label>
                 <select
@@ -1360,17 +1618,14 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
                 >
                   <option value="">No role</option>
                   {guildRoles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.name}
-                    </option>
+                    <option key={role.id} value={role.id}>{role.name}</option>
                   ))}
                 </select>
               </div>
-
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="max-messages">Max Messages</Label>
-                  <input
+                  <Input
                     id="max-messages"
                     type="number"
                     min={1}
@@ -1379,23 +1634,16 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
                     onChange={(e) =>
                       setPurgeConfig((prev) =>
                         prev
-                          ? {
-                              ...prev,
-                              maxMessages: Math.min(40, Math.max(1, Number(e.target.value))),
-                            }
-                          : {
-                              ...defaultPurgeConfig,
-                              maxMessages: Math.min(40, Math.max(1, Number(e.target.value))),
-                            },
+                          ? { ...prev, maxMessages: Math.min(40, Math.max(1, Number(e.target.value))) }
+                          : { ...defaultPurgeConfig, maxMessages: Math.min(40, Math.max(1, Number(e.target.value))) },
                       )
                     }
-                    className="flex h-10 w-full rounded-xl border border-black/[0.08] bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kat focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10"
                   />
                   <p className="text-xs text-muted-foreground">Between 1 and 40</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="max-age">Max Age (seconds)</Label>
-                  <input
+                  <Input
                     id="max-age"
                     type="number"
                     min={10}
@@ -1404,28 +1652,14 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
                     onChange={(e) =>
                       setPurgeConfig((prev) =>
                         prev
-                          ? {
-                              ...prev,
-                              maxAgeSeconds: Math.min(
-                                86400,
-                                Math.max(10, Number(e.target.value)),
-                              ),
-                            }
-                          : {
-                              ...defaultPurgeConfig,
-                              maxAgeSeconds: Math.min(
-                                86400,
-                                Math.max(10, Number(e.target.value)),
-                              ),
-                            },
+                          ? { ...prev, maxAgeSeconds: Math.min(86400, Math.max(10, Number(e.target.value))) }
+                          : { ...defaultPurgeConfig, maxAgeSeconds: Math.min(86400, Math.max(10, Number(e.target.value))) },
                       )
                     }
-                    className="flex h-10 w-full rounded-xl border border-black/[0.08] bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kat focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10"
                   />
                   <p className="text-xs text-muted-foreground">Between 10 and 86400</p>
                 </div>
               </div>
-
               <Button
                 type="button"
                 size="sm"
@@ -1439,9 +1673,7 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
                 {savePurge.isPending ? "Saving..." : "Save"}
               </Button>
               {savePurge.isError ? (
-                <p className="mt-2 text-sm text-destructive">
-                  Could not save purge config. Please try again.
-                </p>
+                <p className="mt-2 text-sm text-destructive">Could not save purge config. Please try again.</p>
               ) : null}
             </div>
           )}
