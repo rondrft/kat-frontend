@@ -45,6 +45,7 @@ export const endpoints = {
     giveawayParticipants: (guildId: string, giveawayId: string) => `/guilds/${guildId}/giveaways/${giveawayId}/participants`,
     giveawayRoll: (guildId: string, giveawayId: string) => `/guilds/${guildId}/giveaways/${giveawayId}/roll`,
     premium: (guildId: string) => `/guilds/${guildId}/premium`,
+    works: (guildId: string) => `/guilds/${guildId}/works`,
   },
   bot: {
     status: "/bot/status",

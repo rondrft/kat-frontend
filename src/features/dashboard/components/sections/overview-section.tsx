@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useState } from "react";
-import { ArrowUp, Crown, Gift, MessageSquare, Sparkles } from "lucide-react";
+import { ArrowUp, Coins, Crown, Gift, MessageSquare, Sparkles } from "lucide-react";
 import { ActionsModal } from "@/features/actions/components/actions-modal";
 import { overviewExtraFeatures } from "@/features/dashboard/config/overview-extra-features";
 import { MonthlyJoinsChart } from "@/features/dashboard/components/widgets/monthly-joins-chart";
@@ -17,6 +17,7 @@ import { TempVoiceChannelModal } from "@/features/voice/components/temp-voice-ch
 import { AutoRolesModal } from "@/features/auto-roles/components/auto-roles-modal";
 import { BoosterRoleModal } from "@/features/boosters/components/booster-role-modal";
 import { LevelingModal } from "@/features/leveling/components/leveling-modal";
+import { WorkModal } from "@/features/works/components/work-modal";
 import { MessageSenderModal } from "@/features/message-sender/components/message-sender-modal";
 import { GiveawayModal } from "@/features/giveaways/components/giveaway-modal";
 import { usePremiumStatus } from "@/features/guilds/hooks/use-premium-status";
@@ -36,6 +37,7 @@ function OverviewSectionComponent() {
   const [levelingOpen, setLevelingOpen] = useState(false);
   const [messageSenderOpen, setMessageSenderOpen] = useState(false);
   const [giveawayOpen, setGiveawayOpen] = useState(false);
+  const [workOpen, setWorkOpen] = useState(false);
 
   const { data: premiumData } = usePremiumStatus(selectedGuildId);
   const isPremium = premiumData?.isPremium ?? false;
@@ -172,6 +174,15 @@ function OverviewSectionComponent() {
             bgImage="/handbg.jpeg"
             onClick={() => setLevelingOpen(true)}
           />
+          <OverviewFeatureCard
+            title="KatWorks"
+            description="Earn coins by completing contracts. Level up for bigger payouts."
+            icon={Coins}
+            className={cn("h-full w-full sm:min-w-0 sm:flex-1", BOTTOM_PANEL_HEIGHT)}
+            badge="configure"
+            disableHoverMotion
+            onClick={() => setWorkOpen(true)}
+          />
         </div>
       </div>
 
@@ -214,6 +225,11 @@ function OverviewSectionComponent() {
       <GiveawayModal
         open={giveawayOpen}
         onOpenChange={setGiveawayOpen}
+        guildId={selectedGuildId}
+      />
+      <WorkModal
+        open={workOpen}
+        onOpenChange={setWorkOpen}
         guildId={selectedGuildId}
       />
     </>

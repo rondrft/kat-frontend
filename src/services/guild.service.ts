@@ -21,6 +21,10 @@ import type {
   ActionsSaveRequest,
 } from "@/features/actions/types/actions-config";
 import type {
+  WorkConfig,
+  WorkSaveRequest,
+} from "@/features/works/types/work-config";
+import type {
   LevelingConfig,
   LevelingSaveRequest,
 } from "@/features/leveling/types/leveling-config";
@@ -269,6 +273,30 @@ export const guildService = {
       config,
     );
     return unwrapApiData(data) as LoggingConfig;
+  },
+
+  async getWorkConfig(guildId: string): Promise<WorkConfig | null> {
+    try {
+      const { data } = await apiClient.get<
+        ApiResponse<WorkConfig> | WorkConfig
+      >(endpoints.guilds.works(guildId));
+      const config = unwrapApiData(data) as WorkConfig;
+      if (!config || typeof config.enabled !== "boolean") return null;
+      return config;
+    } catch (error) {
+      if (error instanceof AppError && error.status === 404) return null;
+      throw error;
+    }
+  },
+
+  async saveWorkConfig(
+    guildId: string,
+    payload: WorkSaveRequest,
+  ): Promise<WorkConfig> {
+    const { data } = await apiClient.put<
+      ApiResponse<WorkConfig> | WorkConfig
+    >(endpoints.guilds.works(guildId), payload);
+    return unwrapApiData(data) as WorkConfig;
   },
 
   async getRecentMembers(guildId: string, limit = 8): Promise<NewMember[]> {
