@@ -6,9 +6,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   CheckCircle2,
   Coins,
+  Flame,
+  Gift,
   Loader2,
+  ShoppingBag,
   Shield,
   Sword,
+  TrendingUp,
   Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -178,11 +182,52 @@ export function WorkModal({ open, onOpenChange, guildId }: WorkModalProps) {
               <p className="text-sm font-medium text-foreground">How it works</p>
               <p className="text-xs leading-relaxed text-muted-foreground">
                 Use <code className="rounded bg-muted px-1">xworks</code> to list
-                all available contracts, <code className="rounded bg-muted px-1">xwork &lt;name&gt;</code>{" "}
-                to complete one, and <code className="rounded bg-muted px-1">xprofile</code>{" "}
+                contracts, <code className="rounded bg-muted px-1">xwork &lt;name&gt;</code>{" "}
+                to complete one, and <code className="rounded bg-muted px-1">xworkprofile</code>{" "}
                 to see your stats. Each contract has a cooldown — time passes in
                 real minutes. Level up to access harder contracts with bigger rewards.
               </p>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-foreground">Features</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div className="flex items-start gap-2 rounded-lg border border-black/[0.06] bg-black/[0.02] p-3 dark:border-white/[0.06] dark:bg-white/[0.02]">
+                  <Flame className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold">Streak</p>
+                    <p className="text-xs text-muted-foreground">Work daily to build a streak worth up to 3x rewards</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 rounded-lg border border-black/[0.06] bg-black/[0.02] p-3 dark:border-white/[0.06] dark:bg-white/[0.02]">
+                  <ShoppingBag className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold">Shop</p>
+                    <p className="text-xs text-muted-foreground"><code className="rounded bg-muted px-0.5">xworkshop</code> — buy upgrades like Coffee (-cooldown) or category boosters</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 rounded-lg border border-black/[0.06] bg-black/[0.02] p-3 dark:border-white/[0.06] dark:bg-white/[0.02]">
+                  <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold">Skills</p>
+                    <p className="text-xs text-muted-foreground"><code className="rounded bg-muted px-0.5">xworkskills</code> — spend skill points every 5 levels for +10% per category</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 rounded-lg border border-black/[0.06] bg-black/[0.02] p-3 dark:border-white/[0.06] dark:bg-white/[0.02]">
+                  <Gift className="mt-0.5 h-4 w-4 shrink-0 text-pink-500" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold">Daily Missions</p>
+                    <p className="text-xs text-muted-foreground"><code className="rounded bg-muted px-0.5">xworkmissions</code> — complete random daily goals for bonus coins &amp; XP</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 rounded-lg border border-black/[0.06] bg-black/[0.02] p-3 dark:border-white/[0.06] dark:bg-white/[0.02]">
+                  <Coins className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold">Gamble</p>
+                    <p className="text-xs text-muted-foreground">Add <code className="rounded bg-muted px-0.5">!</code> to gamble — 50% double or 50% half (60% win on streak 3+)</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="flex flex-col gap-5 lg:flex-row">

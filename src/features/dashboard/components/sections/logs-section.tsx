@@ -146,6 +146,7 @@ const CATEGORIES: CategoryConfig[] = [
     logs: [
       { id: "invite_create", label: "Invite Created", description: "A new server invite was generated", icon: Plus },
       { id: "invite_delete", label: "Invite Deleted", description: "An invite link was revoked", icon: Minus },
+      { id: "invite_used", label: "Invite Used", description: "A member joined using an invite link", icon: LogIn },
     ],
   },
   {
