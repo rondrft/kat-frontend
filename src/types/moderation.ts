@@ -170,3 +170,34 @@ export type WarningEntry = {
   createdAt: string;
   active: boolean;
 };
+
+export type SecurityScanSeverity = "CRITICAL" | "WARNING" | "INFO" | "SUCCESS";
+
+export type SecurityScanCategory = "CHANNEL" | "ROLE" | "MEMBER" | "GENERAL";
+
+export type SecurityScanFinding = {
+  id: string;
+  category: SecurityScanCategory;
+  severity: SecurityScanSeverity;
+  title: string;
+  description: string;
+  targetId: string;
+  targetName: string;
+  recommendation: string;
+};
+
+export type SecurityScanSummary = {
+  total: number;
+  critical: number;
+  warning: number;
+  info: number;
+  success: number;
+};
+
+export type SecurityScanResult = {
+  scannedAt: string;
+  score: number;
+  summary: SecurityScanSummary;
+  findings: SecurityScanFinding[];
+  topRecommendations: string[];
+};

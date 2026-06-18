@@ -42,7 +42,15 @@ import {
   Layout,
   ShieldAlert,
   UserMinus,
+  Scan,
 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import dynamic from "next/dynamic";
+
+const SecurityScanner = dynamic(
+  () => import("@/features/moderation/components/security-scanner").then((m) => ({ default: m.SecurityScanner })),
+  { ssr: false },
+);
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -972,7 +980,9 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
   const [strictness, setStrictness] = useState(50);
   const [muteMinutes, setMuteMinutes] = useState(10);
   const [saved, setSaved] = useState(false);
-  const [tab, setTab] = useState<"free" | "premium">("free");
+  const [tab, setTab] = useState<"free" | "premium" | "security">("free");
+  const [rulePage, setRulePage] = useState(0);
+  const RULES_PER_PAGE = 9;
 
   const {
     data: permissionsData,
@@ -1118,6 +1128,10 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
 
   const freeRules = rules.filter((r) => !RULE_PREMIUM[r.apiType]);
   const premiumRules = rules.filter((r) => RULE_PREMIUM[r.apiType]);
+  const currentRules = tab === "free" ? freeRules : premiumRules;
+  const totalPages = Math.max(1, Math.ceil(currentRules.length / RULES_PER_PAGE));
+  const safePage = Math.min(rulePage, totalPages - 1);
+  const paginatedRules = currentRules.slice(safePage * RULES_PER_PAGE, (safePage + 1) * RULES_PER_PAGE);
 
   const addFilter = useCallback(() => {
     if (!guildId || !newFilterPattern.trim()) return;
@@ -1129,174 +1143,182 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
 
   return (
     <div className="space-y-4">
-      {/* Header + Global Settings */}
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(280px,0.85fr)_minmax(260px,0.65fr)]">
-        <div className="dashboard-glass-card p-5 sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-kat">
-                Moderation center
-              </p>
-              <h2 className="mt-1 text-2xl font-black tracking-tight">
-                Protections by module
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                Open each protection to tune thresholds, actions, and premium behavior.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className="bg-kat/10 text-kat shadow-none">
-                {enabledCount} active
-              </Badge>
-              <Badge className="bg-violet-500/10 text-violet-500 shadow-none">
-                {premiumCount} premium
-              </Badge>
-              {isLoading ? (
-                <Badge className="bg-slate-500/10 text-slate-500 shadow-none">Loading</Badge>
-              ) : null}
-              {saved && !saveMutation.isPending ? (
-                <Badge className="bg-emerald-500/10 text-emerald-600 shadow-none dark:text-emerald-400">
-                  Saved
-                </Badge>
-              ) : null}
-              {isError ? (
-                <Button type="button" variant="outline" size="sm" onClick={() => void refetch()}>
-                  Retry
-                </Button>
-              ) : null}
-            </div>
-          </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl bg-black/[0.025] p-3 dark:bg-white/[0.03]">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Strictness
-              </p>
-              <div className="mt-2 flex items-center gap-3">
-                <input
-                  aria-label="Strictness"
-                  type="range"
-                  min={0}
-                  max={100}
-                  value={strictness}
-                  onChange={(event) => {
-                    setSaved(false);
-                    setStrictness(Number(event.target.value));
-                  }}
-                  className="w-full accent-[hsl(var(--kat))]"
-                />
-                <span className="w-10 text-right text-sm font-bold text-kat">
-                  {strictness}%
-                </span>
-              </div>
-            </div>
-            <div className="rounded-2xl bg-black/[0.025] p-3 dark:bg-white/[0.03]">
-              <Label htmlFor="muteMinutes" className="text-xs">Default timeout</Label>
-              <Input
-                id="muteMinutes"
-                type="number"
-                min={1}
-                max={1440}
-                value={muteMinutes}
-                onChange={(event) => {
-                  setSaved(false);
-                  setMuteMinutes(Number(event.target.value));
-                }}
-                className="mt-1 h-9"
-              />
-            </div>
-          </div>
-          {saveMutation.isError ? (
-            <p className="mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              Could not save moderation config. Please try again.
-            </p>
-          ) : null}
-          <Button
-            type="button"
-            className="mt-4 w-full sm:w-auto"
-            disabled={!guildId || isLoading || saveMutation.isPending}
-            onClick={saveDraft}
+      <AnimatePresence>
+        {tab !== "security" ? (
+          <motion.section
+            key="header-cards"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="grid gap-4 overflow-hidden xl:grid-cols-[minmax(0,1.25fr)_minmax(280px,0.85fr)_minmax(260px,0.65fr)]"
           >
-            <Save className="mr-2 h-4 w-4" />
-            {saveMutation.isPending ? "Saving..." : "Save changes"}
-          </Button>
-        </div>
-
-        {/* Log Channels */}
-        <div className="dashboard-glass-card p-5 sm:p-6">
-          <div className="flex items-start gap-3">
-            <ScrollText className="mt-0.5 h-5 w-5 shrink-0 text-kat" />
-            <div>
-              <h2 className="text-lg font-bold tracking-tight">Log Channels</h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Where moderation actions are reported.
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 space-y-4">
-            <div className="space-y-2">
-              <Label className="text-xs">Standard Log Channel</Label>
-              <ChannelSelect
-                guildId={guildId ?? ""}
-                value={logChannelId}
-                onChange={(id) => setLogChannelId(id)}
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label className="text-xs">Premium Log Channel</Label>
-                {!isPremium ? <PremiumBadge /> : null}
-              </div>
-              <ChannelSelect
-                guildId={guildId ?? ""}
-                value={premiumLogChannelId}
-                onChange={(id) => setPremiumLogChannelId(id)}
-              />
-            </div>
-            <Button
-              type="button"
-              size="sm"
-              disabled={saveLogChannelMut.isPending || logChannelLoading}
-              onClick={() => {
-                saveLogChannelMut.mutate({
-                  logChannelId,
-                  premiumLogChannelId,
-                });
-              }}
-            >
-              <Save className="mr-2 h-4 w-4" />
-              {saveLogChannelMut.isPending ? "Saving..." : "Save"}
-            </Button>
-          </div>
-        </div>
-
-        {/* Escalation */}
-        <div className="dashboard-glass-card p-5 sm:p-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-kat">
-            Escalation
-          </p>
-          <h2 className="mt-1 text-xl font-bold tracking-tight">Repeat offenders</h2>
-          <div className="mt-4 grid gap-2">
-            {[
-              ["1st", "Warn"],
-              ["2nd", `Timeout ${muteMinutes}m`],
-              ["3rd", "Timeout 1h + notify"],
-              ["4th+", "Kick / Temp ban"],
-            ].map(([step, action]) => (
-              <div
-                key={step}
-                className="flex items-center gap-3 rounded-xl bg-black/[0.025] p-2 dark:bg-white/[0.03]"
-              >
-                <div className="flex h-8 w-12 shrink-0 items-center justify-center rounded-lg bg-kat/10 text-xs font-black text-kat">
-                  {step}
+            <div className="dashboard-glass-card p-5 sm:p-6">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-kat">
+                    Moderation center
+                  </p>
+                  <h2 className="mt-1 text-2xl font-black tracking-tight">
+                    Protections by module
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                    Open each protection to tune thresholds, actions, and premium behavior.
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground">{action}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className="bg-kat/10 text-kat shadow-none">
+                    {enabledCount} active
+                  </Badge>
+                  <Badge className="bg-violet-500/10 text-violet-500 shadow-none">
+                    {premiumCount} premium
+                  </Badge>
+                  {isLoading ? (
+                    <Badge className="bg-slate-500/10 text-slate-500 shadow-none">Loading</Badge>
+                  ) : null}
+                  {saved && !saveMutation.isPending ? (
+                    <Badge className="bg-emerald-500/10 text-emerald-600 shadow-none dark:text-emerald-400">
+                      Saved
+                    </Badge>
+                  ) : null}
+                  {isError ? (
+                    <Button type="button" variant="outline" size="sm" onClick={() => void refetch()}>
+                      Retry
+                    </Button>
+                  ) : null}
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl bg-black/[0.025] p-3 dark:bg-white/[0.03]">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Strictness
+                  </p>
+                  <div className="mt-2 flex items-center gap-3">
+                    <input
+                      aria-label="Strictness"
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={strictness}
+                      onChange={(event) => {
+                        setSaved(false);
+                        setStrictness(Number(event.target.value));
+                      }}
+                      className="w-full accent-[hsl(var(--kat))]"
+                    />
+                    <span className="w-10 text-right text-sm font-bold text-kat">
+                      {strictness}%
+                    </span>
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-black/[0.025] p-3 dark:bg-white/[0.03]">
+                  <Label htmlFor="muteMinutes" className="text-xs">Default timeout</Label>
+                  <Input
+                    id="muteMinutes"
+                    type="number"
+                    min={1}
+                    max={1440}
+                    value={muteMinutes}
+                    onChange={(event) => {
+                      setSaved(false);
+                      setMuteMinutes(Number(event.target.value));
+                    }}
+                    className="mt-1 h-9"
+                  />
+                </div>
+              </div>
+              {saveMutation.isError ? (
+                <p className="mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  Could not save moderation config. Please try again.
+                </p>
+              ) : null}
+              <Button
+                type="button"
+                className="mt-4 w-full sm:w-auto"
+                disabled={!guildId || isLoading || saveMutation.isPending}
+                onClick={saveDraft}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {saveMutation.isPending ? "Saving..." : "Save changes"}
+              </Button>
+            </div>
 
-      {/* Tab Bar: Free / Premium */}
+            <div className="dashboard-glass-card p-5 sm:p-6">
+              <div className="flex items-start gap-3">
+                <ScrollText className="mt-0.5 h-5 w-5 shrink-0 text-kat" />
+                <div>
+                  <h2 className="text-lg font-bold tracking-tight">Log Channels</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Where moderation actions are reported.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-xs">Standard Log Channel</Label>
+                  <ChannelSelect
+                    guildId={guildId ?? ""}
+                    value={logChannelId}
+                    onChange={(id) => setLogChannelId(id)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs">Premium Log Channel</Label>
+                    {!isPremium ? <PremiumBadge /> : null}
+                  </div>
+                  <ChannelSelect
+                    guildId={guildId ?? ""}
+                    value={premiumLogChannelId}
+                    onChange={(id) => setPremiumLogChannelId(id)}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={saveLogChannelMut.isPending || logChannelLoading}
+                  onClick={() => {
+                    saveLogChannelMut.mutate({
+                      logChannelId,
+                      premiumLogChannelId,
+                    });
+                  }}
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {saveLogChannelMut.isPending ? "Saving..." : "Save"}
+                </Button>
+              </div>
+            </div>
+
+            <div className="dashboard-glass-card p-5 sm:p-6">
+              <p className="text-xs font-semibold uppercase tracking-wider text-kat">
+                Escalation
+              </p>
+              <h2 className="mt-1 text-xl font-bold tracking-tight">Repeat offenders</h2>
+              <div className="mt-4 grid gap-2">
+                {[
+                  ["1st", "Warn"],
+                  ["2nd", `Timeout ${muteMinutes}m`],
+                  ["3rd", "Timeout 1h + notify"],
+                  ["4th+", "Kick / Temp ban"],
+                ].map(([step, action]) => (
+                  <div
+                    key={step}
+                    className="flex items-center gap-3 rounded-xl bg-black/[0.025] p-2 dark:bg-white/[0.03]"
+                  >
+                    <div className="flex h-8 w-12 shrink-0 items-center justify-center rounded-lg bg-kat/10 text-xs font-black text-kat">
+                      {step}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{action}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.section>
+        ) : null}
+      </AnimatePresence>
+
+      {/* Tab Bar: Free / Premium / Security */}
       <div className="flex gap-1 rounded-2xl bg-black/[0.03] p-1 dark:bg-white/[0.05]">
         <button
           type="button"
@@ -1327,371 +1349,419 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
           <Crown className="h-4 w-4" />
           Premium
           {!isPremium && tab !== "premium" ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400/20 to-violet-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-500 shadow-[0_0_12px_rgba(251,191,36,0.15)]">
-              <Crown className="h-3 w-3" />
-              Premium
-            </span>
+            <Crown className="h-3.5 w-3.5 text-amber-500" />
           ) : null}
           <span className="ml-1 rounded-full bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-bold text-violet-500">
             {premiumRules.length}
           </span>
         </button>
+        <button
+          type="button"
+          onClick={() => setTab("security")}
+          className={cn(
+            "flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all",
+            tab === "security"
+              ? "bg-background text-rose-500 shadow-sm"
+              : "text-muted-foreground hover:text-rose-400",
+          )}
+        >
+          <Scan className="h-4 w-4" />
+          Security Scan
+        </button>
       </div>
 
-      {/* Rules Grid */}
-      <section>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
-          {(tab === "free" ? freeRules : premiumRules).map((rule) => (
-            <RuleTile
-              key={rule.id}
-              rule={rule}
-              onOpen={(nextRule) => setSelectedRuleId(nextRule.id)}
-              onToggle={(id, enabled) => updateRule(id, { enabled })}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* Config Grid: Whitelist + Filters + Auto-Punishment */}
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <div className="dashboard-glass-card p-4 sm:p-5">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <UserCheck className="h-4 w-4 shrink-0 text-kat" />
-              <h3 className="text-sm font-bold">Whitelist</h3>
-            </div>
-            <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => setWhitelistOpen(true)}>
-              <Plus className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-          <div className="mt-3 max-h-40 overflow-y-auto space-y-1.5">
-            {whitelistLoading ? (
-              <p className="text-xs text-muted-foreground animate-pulse">Loading…</p>
-            ) : !whitelistData || whitelistData.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No entries yet.</p>
-            ) : (
-              whitelistData.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="flex items-center justify-between rounded-lg bg-black/[0.025] px-2.5 py-1.5 dark:bg-white/[0.03]"
-                >
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold truncate">
-                      {entry.channelId ? `#${entry.channelId}` : entry.userId ? `User ${entry.userId.slice(0, 8)}…` : "Unknown"}
-                    </p>
-                    {entry.reason ? (
-                      <p className="text-[10px] text-muted-foreground truncate">{entry.reason}</p>
-                    ) : null}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => { if (entry.id) removeWhitelistEntry.mutate(entry.id); }}
-                    className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-destructive"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-          <AddWhitelistDialog
-            open={whitelistOpen}
-            onOpenChange={setWhitelistOpen}
-            guildId={guildId ?? ""}
-          />
-        </div>
-
-        <div className="dashboard-glass-card p-4 sm:p-5">
-          <div className="flex items-center gap-2">
-            <ListFilter className="h-4 w-4 shrink-0 text-kat" />
-            <h3 className="text-sm font-bold">Filters</h3>
-          </div>
-          <div className="mt-3 space-y-2">
-            <div className="flex gap-1.5">
-              <Input
-                value={newFilterPattern}
-                onChange={(e) => setNewFilterPattern(e.target.value)}
-                placeholder="word or regex…"
-                className="h-8 text-xs"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") { e.preventDefault(); addFilter(); }
-                }}
-              />
-              <Button type="button" size="icon" className="h-8 w-8 shrink-0" onClick={addFilter} disabled={addFilterMut.isPending || !newFilterPattern.trim()}>
-                <Plus className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-            <div className="max-h-32 overflow-y-auto space-y-1">
-              {filtersLoading ? (
-                <p className="text-xs text-muted-foreground animate-pulse">Loading…</p>
-              ) : !filtersData || filtersData.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No filters yet.</p>
-              ) : (
-                filtersData.map((filter) => (
-                  <div
-                    key={filter.id}
-                    className="flex items-center justify-between rounded-lg bg-black/[0.025] px-2.5 py-1.5 dark:bg-white/[0.03]"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <code className="truncate text-[11px] font-semibold">{filter.pattern}</code>
-                      <span className={cn("text-[10px]", filter.enabled ? "text-emerald-500" : "text-muted-foreground")}>
-                        {filter.enabled ? "On" : "Off"}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => { if (filter.id) deleteFilterMut.mutate(filter.id); }}
-                      className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-destructive"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="dashboard-glass-card p-4 sm:p-5">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 shrink-0 text-kat" />
-            <h3 className="text-sm font-bold">Auto-Punishment</h3>
-          </div>
-          <div className="mt-3 max-h-40 overflow-y-auto space-y-1.5">
-            {autoPunishLoading ? (
-              <p className="text-xs text-muted-foreground animate-pulse">Loading…</p>
-            ) : !autoPunishments || autoPunishments.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No rules configured.</p>
-            ) : (
-              autoPunishments.map((ap, idx) => (
-                <div
-                  key={ap.id ?? idx}
-                  className="flex items-center gap-2 rounded-lg bg-black/[0.025] px-2.5 py-1.5 dark:bg-white/[0.03]"
-                >
-                  <span className="text-[11px] font-bold text-kat shrink-0">{ap.ruleType}</span>
-                  <span className="text-[11px] text-muted-foreground truncate">
-                    {ap.threshold}x → {ap.action}
-                    {ap.timeoutMinutes ? ` ${ap.timeoutMinutes}m` : ""}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Command Permissions + Purge + Nuke */}
-      <section className="grid gap-4 md:grid-cols-2">
-        <div className={cn("dashboard-glass-card p-5 sm:p-6", !isPremium && "relative")}>
-          {!isPremium ? (
-            <span className="pointer-events-none absolute right-4 top-4 z-10 inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">
-              <Crown className="h-3 w-3" />
-              Premium
-            </span>
-          ) : null}
-          <div className="flex items-start gap-3">
-            <Users className="mt-0.5 h-5 w-5 shrink-0 text-kat" />
-            <div className="min-w-0 flex-1">
-              <h2 className="text-lg font-bold tracking-tight">Command Permissions</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Allow specific roles to use moderation commands without Discord permissions.
-              </p>
-            </div>
-          </div>
-          {permissionsLoading ? (
-            <div className="mt-4 space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-12 animate-pulse rounded-xl bg-white/[0.05]" />
+      {tab !== "security" ? (
+        <section className="grid gap-4 lg:grid-cols-[1fr_minmax(340px,420px)]">
+          <div>
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {paginatedRules.map((rule) => (
+                <RuleTile
+                  key={rule.id}
+                  rule={rule}
+                  onOpen={(nextRule) => setSelectedRuleId(nextRule.id)}
+                  onToggle={(id, enabled) => updateRule(id, { enabled })}
+                />
               ))}
             </div>
-          ) : (
-            <div className={cn("mt-4 space-y-4", !isPremium && "pointer-events-none opacity-50")}>
-              <div className="grid grid-cols-2 gap-2">
-                {(Object.keys(emptyPermissions) as (keyof ModPermissions)[]).map((cmd) => (
-                  <div
-                    key={cmd}
-                    className="rounded-xl bg-black/[0.025] p-2 dark:bg-white/[0.03]"
+            {totalPages > 1 ? (
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={safePage === 0}
+                  onClick={() => setRulePage((prev) => Math.max(0, prev - 1))}
+                >
+                  Previous
+                </Button>
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <Button
+                    key={i}
+                    type="button"
+                    variant={safePage === i ? "default" : "outline"}
+                    size="sm"
+                    className="min-w-[36px]"
+                    onClick={() => setRulePage(i)}
                   >
-                    <p className="mb-1.5 text-xs font-semibold text-kat">{cmd}</p>
-                    <CommandRoleSelect
+                    {i + 1}
+                  </Button>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={safePage >= totalPages - 1}
+                  onClick={() => setRulePage((prev) => Math.min(totalPages - 1, prev + 1))}
+                >
+                  Next
+                </Button>
+              </div>
+            ) : null}
+          </div>
+          <div className="space-y-4">
+            <div className="dashboard-glass-card p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <UserCheck className="h-4 w-4 shrink-0 text-kat" />
+                  <h3 className="text-sm font-bold">Whitelist</h3>
+                </div>
+                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => setWhitelistOpen(true)}>
+                  <Plus className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <div className="mt-3 max-h-40 overflow-y-auto space-y-1.5">
+                {whitelistLoading ? (
+                  <p className="text-xs text-muted-foreground animate-pulse">Loading…</p>
+                ) : !whitelistData || whitelistData.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No entries yet.</p>
+                ) : (
+                  whitelistData.map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="flex items-center justify-between rounded-lg bg-black/[0.025] px-2.5 py-1.5 dark:bg-white/[0.03]"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold truncate">
+                          {entry.channelId ? `#${entry.channelId}` : entry.userId ? `User ${entry.userId.slice(0, 8)}…` : "Unknown"}
+                        </p>
+                        {entry.reason ? (
+                          <p className="text-[10px] text-muted-foreground truncate">{entry.reason}</p>
+                        ) : null}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => { if (entry.id) removeWhitelistEntry.mutate(entry.id); }}
+                        className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+              <AddWhitelistDialog
+                open={whitelistOpen}
+                onOpenChange={setWhitelistOpen}
+                guildId={guildId ?? ""}
+              />
+            </div>
+
+            <div className="dashboard-glass-card p-4 sm:p-5">
+              <div className="flex items-center gap-2">
+                <ListFilter className="h-4 w-4 shrink-0 text-kat" />
+                <h3 className="text-sm font-bold">Filters</h3>
+              </div>
+              <div className="mt-3 space-y-2">
+                <div className="flex gap-1.5">
+                  <Input
+                    value={newFilterPattern}
+                    onChange={(e) => setNewFilterPattern(e.target.value)}
+                    placeholder="word or regex…"
+                    className="h-8 text-xs"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") { e.preventDefault(); addFilter(); }
+                    }}
+                  />
+                  <Button type="button" size="icon" className="h-8 w-8 shrink-0" onClick={addFilter} disabled={addFilterMut.isPending || !newFilterPattern.trim()}>
+                    <Plus className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+                <div className="max-h-32 overflow-y-auto space-y-1">
+                  {filtersLoading ? (
+                    <p className="text-xs text-muted-foreground animate-pulse">Loading…</p>
+                  ) : !filtersData || filtersData.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No filters yet.</p>
+                  ) : (
+                    filtersData.map((filter) => (
+                      <div
+                        key={filter.id}
+                        className="flex items-center justify-between rounded-lg bg-black/[0.025] px-2.5 py-1.5 dark:bg-white/[0.03]"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <code className="truncate text-[11px] font-semibold">{filter.pattern}</code>
+                          <span className={cn("text-[10px]", filter.enabled ? "text-emerald-500" : "text-muted-foreground")}>
+                            {filter.enabled ? "On" : "Off"}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => { if (filter.id) deleteFilterMut.mutate(filter.id); }}
+                          className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="dashboard-glass-card p-4 sm:p-5">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 text-kat" />
+                <h3 className="text-sm font-bold">Auto-Punishment</h3>
+              </div>
+              <div className="mt-3 max-h-40 overflow-y-auto space-y-1.5">
+                {autoPunishLoading ? (
+                  <p className="text-xs text-muted-foreground animate-pulse">Loading…</p>
+                ) : !autoPunishments || autoPunishments.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No rules configured.</p>
+                ) : (
+                  autoPunishments.map((ap, idx) => (
+                    <div
+                      key={ap.id ?? idx}
+                      className="flex items-center gap-2 rounded-lg bg-black/[0.025] px-2.5 py-1.5 dark:bg-white/[0.03]"
+                    >
+                      <span className="text-[11px] font-bold text-kat shrink-0">{ap.ruleType}</span>
+                      <span className="text-[11px] text-muted-foreground truncate">
+                        {ap.threshold}x → {ap.action}
+                        {ap.timeoutMinutes ? ` ${ap.timeoutMinutes}m` : ""}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : guildId ? (
+        <SecurityScanner guildId={guildId} />
+      ) : null}
+
+      {tab !== "security" ? (
+        <section className="grid gap-4 md:grid-cols-2">
+          <div className={cn("dashboard-glass-card p-5 sm:p-6", !isPremium && "relative")}>
+            {!isPremium ? (
+              <span className="pointer-events-none absolute right-4 top-4 z-10 inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">
+                <Crown className="h-3 w-3" />
+                Premium
+              </span>
+            ) : null}
+            <div className="flex items-start gap-3">
+              <Users className="mt-0.5 h-5 w-5 shrink-0 text-kat" />
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg font-bold tracking-tight">Command Permissions</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Allow specific roles to use moderation commands without Discord permissions.
+                </p>
+              </div>
+            </div>
+            {permissionsLoading ? (
+              <div className="mt-4 space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-12 animate-pulse rounded-xl bg-white/[0.05]" />
+                ))}
+              </div>
+            ) : (
+              <div className={cn("mt-4 space-y-4", !isPremium && "pointer-events-none opacity-50")}>
+                <div className="grid grid-cols-3 gap-2">
+                  {(Object.keys(emptyPermissions) as (keyof ModPermissions)[]).map((cmd) => (
+                    <div
+                      key={cmd}
+                      className="rounded-xl bg-black/[0.025] p-2 dark:bg-white/[0.03]"
+                    >
+                      <p className="mb-1.5 text-xs font-semibold text-kat">{cmd}</p>
+                      <CommandRoleSelect
+                        roles={guildRoles}
+                        selectedIds={(permissions ?? emptyPermissions)[cmd]}
+                        isLoading={rolesLoading}
+                        onChange={(ids) =>
+                          setPermissions((prev) =>
+                            prev
+                              ? { ...prev, [cmd]: ids }
+                              : { ...emptyPermissions, [cmd]: ids },
+                          )
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-xl bg-black/[0.025] p-2 dark:bg-white/[0.03]">
+                  <p className="mb-1.5 text-xs font-semibold text-kat">xnuke (allowed users)</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <SingleRoleSelect
                       roles={guildRoles}
-                      selectedIds={(permissions ?? emptyPermissions)[cmd]}
+                      selectedId={(nukeConfig ?? defaultNukeConfig).allowedRoleId}
                       isLoading={rolesLoading}
-                      onChange={(ids) =>
-                        setPermissions((prev) =>
+                      onChange={(id) =>
+                        setNukeConfig((prev) =>
                           prev
-                            ? { ...prev, [cmd]: ids }
-                            : { ...emptyPermissions, [cmd]: ids },
+                            ? { ...prev, allowedRoleId: id }
+                            : { ...defaultNukeConfig, allowedRoleId: id },
+                        )
+                      }
+                    />
+                    <UserTagInput
+                      guildId={guildId ?? ""}
+                      userIds={(nukeConfig ?? defaultNukeConfig).allowedUserIds}
+                      onChange={(ids) =>
+                        setNukeConfig((prev) =>
+                          prev
+                            ? { ...prev, allowedUserIds: ids }
+                            : { ...defaultNukeConfig, allowedUserIds: ids },
                         )
                       }
                     />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={savePermissions.isPending || saveNuke.isPending || !permissions || !isPremium}
+                    onClick={() => {
+                      if (!permissions) return;
+                      savePermissions.mutate(permissions, {
+                        onSuccess: () => {
+                          if (nukeConfig) saveNuke.mutate(nukeConfig);
+                        },
+                      });
+                    }}
+                  >
+                    <Save className="mr-2 h-4 w-4" />
+                    {savePermissions.isPending || saveNuke.isPending ? "Saving..." : "Save"}
+                  </Button>
+                  {savePermissions.isError || saveNuke.isError ? (
+                    <p className="text-sm text-destructive">Could not save. Please try again.</p>
+                  ) : null}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="dashboard-glass-card p-5 sm:p-6">
+            <div className="flex items-start gap-3">
+              <ToggleLeft className="mt-0.5 h-5 w-5 shrink-0 text-kat" />
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg font-bold tracking-tight">Purge Command</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Let a specific role delete their own recent messages by typing a command.
+                </p>
+              </div>
+            </div>
+            {purgeLoading ? (
+              <div className="mt-4 space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-12 animate-pulse rounded-xl bg-white/[0.05]" />
                 ))}
               </div>
-              <div className="rounded-xl bg-black/[0.025] p-2 dark:bg-white/[0.03]">
-                <p className="mb-1.5 text-xs font-semibold text-kat">xnuke (allowed users)</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <SingleRoleSelect
-                    roles={guildRoles}
-                    selectedId={(nukeConfig ?? defaultNukeConfig).allowedRoleId}
-                    isLoading={rolesLoading}
-                    onChange={(id) =>
-                      setNukeConfig((prev) =>
-                        prev
-                          ? { ...prev, allowedRoleId: id }
-                          : { ...defaultNukeConfig, allowedRoleId: id },
-                      )
-                    }
-                  />
-                  <UserTagInput
-                    guildId={guildId ?? ""}
-                    userIds={(nukeConfig ?? defaultNukeConfig).allowedUserIds}
-                    onChange={(ids) =>
-                      setNukeConfig((prev) =>
-                        prev
-                          ? { ...prev, allowedUserIds: ids }
-                          : { ...defaultNukeConfig, allowedUserIds: ids },
+            ) : (
+              <div className="mt-4 space-y-5">
+                <div className="flex items-center justify-between rounded-2xl bg-black/[0.025] p-3 dark:bg-white/[0.03]">
+                  <div>
+                    <p className="text-sm font-semibold">Enable Purge Command</p>
+                    <p className="text-xs text-muted-foreground">
+                      Allow members with the selected role to delete their own messages.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={(purgeConfig ?? defaultPurgeConfig).enabled}
+                    onCheckedChange={(enabled) =>
+                      setPurgeConfig((prev) =>
+                        prev ? { ...prev, enabled } : { ...defaultPurgeConfig, enabled },
                       )
                     }
                   />
                 </div>
-              </div>
-              <div className="space-y-2">
+                <div className="space-y-2">
+                  <Label htmlFor="allowed-role">Allowed Role</Label>
+                  <select
+                    id="allowed-role"
+                    value={(purgeConfig ?? defaultPurgeConfig).allowedRoleId ?? ""}
+                    onChange={(e) =>
+                      setPurgeConfig((prev) =>
+                        prev
+                          ? { ...prev, allowedRoleId: e.target.value || null }
+                          : { ...defaultPurgeConfig, allowedRoleId: e.target.value || null },
+                      )
+                    }
+                    className="flex h-10 w-full rounded-xl border border-black/[0.08] bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kat focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10"
+                  >
+                    <option value="">No role</option>
+                    {guildRoles.map((role) => (
+                      <option key={role.id} value={role.id}>{role.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="max-messages">Max Messages</Label>
+                    <Input
+                      id="max-messages"
+                      type="number"
+                      min={1}
+                      max={40}
+                      value={(purgeConfig ?? defaultPurgeConfig).maxMessages}
+                      onChange={(e) =>
+                        setPurgeConfig((prev) =>
+                          prev
+                            ? { ...prev, maxMessages: Math.min(40, Math.max(1, Number(e.target.value))) }
+                            : { ...defaultPurgeConfig, maxMessages: Math.min(40, Math.max(1, Number(e.target.value))) },
+                        )
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">Between 1 and 40</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="max-age">Max Age (seconds)</Label>
+                    <Input
+                      id="max-age"
+                      type="number"
+                      min={10}
+                      max={86400}
+                      value={(purgeConfig ?? defaultPurgeConfig).maxAgeSeconds}
+                      onChange={(e) =>
+                        setPurgeConfig((prev) =>
+                          prev
+                            ? { ...prev, maxAgeSeconds: Math.min(86400, Math.max(10, Number(e.target.value))) }
+                            : { ...defaultPurgeConfig, maxAgeSeconds: Math.min(86400, Math.max(10, Number(e.target.value))) },
+                        )
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">Between 10 and 86400</p>
+                  </div>
+                </div>
                 <Button
                   type="button"
                   size="sm"
-                  disabled={savePermissions.isPending || saveNuke.isPending || !permissions || !isPremium}
+                  disabled={savePurge.isPending || !purgeConfig}
                   onClick={() => {
-                    if (!permissions) return;
-                    savePermissions.mutate(permissions, {
-                      onSuccess: () => {
-                        if (nukeConfig) saveNuke.mutate(nukeConfig);
-                      },
-                    });
+                    if (!purgeConfig) return;
+                    savePurge.mutate(purgeConfig);
                   }}
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  {savePermissions.isPending || saveNuke.isPending ? "Saving..." : "Save"}
+                  {savePurge.isPending ? "Saving..." : "Save"}
                 </Button>
-                {savePermissions.isError || saveNuke.isError ? (
-                  <p className="text-sm text-destructive">Could not save. Please try again.</p>
+                {savePurge.isError ? (
+                  <p className="mt-2 text-sm text-destructive">Could not save purge config. Please try again.</p>
                 ) : null}
               </div>
-            </div>
-          )}
-        </div>
-
-        <div className="dashboard-glass-card p-5 sm:p-6">
-          <div className="flex items-start gap-3">
-            <ToggleLeft className="mt-0.5 h-5 w-5 shrink-0 text-kat" />
-            <div className="min-w-0 flex-1">
-              <h2 className="text-lg font-bold tracking-tight">Purge Command</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Let a specific role delete their own recent messages by typing a command.
-              </p>
-            </div>
+            )}
           </div>
-          {purgeLoading ? (
-            <div className="mt-4 space-y-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-12 animate-pulse rounded-xl bg-white/[0.05]" />
-              ))}
-            </div>
-          ) : (
-            <div className="mt-4 space-y-5">
-              <div className="flex items-center justify-between rounded-2xl bg-black/[0.025] p-3 dark:bg-white/[0.03]">
-                <div>
-                  <p className="text-sm font-semibold">Enable Purge Command</p>
-                  <p className="text-xs text-muted-foreground">
-                    Allow members with the selected role to delete their own messages.
-                  </p>
-                </div>
-                <Switch
-                  checked={(purgeConfig ?? defaultPurgeConfig).enabled}
-                  onCheckedChange={(enabled) =>
-                    setPurgeConfig((prev) =>
-                      prev ? { ...prev, enabled } : { ...defaultPurgeConfig, enabled },
-                    )
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="allowed-role">Allowed Role</Label>
-                <select
-                  id="allowed-role"
-                  value={(purgeConfig ?? defaultPurgeConfig).allowedRoleId ?? ""}
-                  onChange={(e) =>
-                    setPurgeConfig((prev) =>
-                      prev
-                        ? { ...prev, allowedRoleId: e.target.value || null }
-                        : { ...defaultPurgeConfig, allowedRoleId: e.target.value || null },
-                    )
-                  }
-                  className="flex h-10 w-full rounded-xl border border-black/[0.08] bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kat focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10"
-                >
-                  <option value="">No role</option>
-                  {guildRoles.map((role) => (
-                    <option key={role.id} value={role.id}>{role.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="max-messages">Max Messages</Label>
-                  <Input
-                    id="max-messages"
-                    type="number"
-                    min={1}
-                    max={40}
-                    value={(purgeConfig ?? defaultPurgeConfig).maxMessages}
-                    onChange={(e) =>
-                      setPurgeConfig((prev) =>
-                        prev
-                          ? { ...prev, maxMessages: Math.min(40, Math.max(1, Number(e.target.value))) }
-                          : { ...defaultPurgeConfig, maxMessages: Math.min(40, Math.max(1, Number(e.target.value))) },
-                      )
-                    }
-                  />
-                  <p className="text-xs text-muted-foreground">Between 1 and 40</p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="max-age">Max Age (seconds)</Label>
-                  <Input
-                    id="max-age"
-                    type="number"
-                    min={10}
-                    max={86400}
-                    value={(purgeConfig ?? defaultPurgeConfig).maxAgeSeconds}
-                    onChange={(e) =>
-                      setPurgeConfig((prev) =>
-                        prev
-                          ? { ...prev, maxAgeSeconds: Math.min(86400, Math.max(10, Number(e.target.value))) }
-                          : { ...defaultPurgeConfig, maxAgeSeconds: Math.min(86400, Math.max(10, Number(e.target.value))) },
-                      )
-                    }
-                  />
-                  <p className="text-xs text-muted-foreground">Between 10 and 86400</p>
-                </div>
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                disabled={savePurge.isPending || !purgeConfig}
-                onClick={() => {
-                  if (!purgeConfig) return;
-                  savePurge.mutate(purgeConfig);
-                }}
-              >
-                <Save className="mr-2 h-4 w-4" />
-                {savePurge.isPending ? "Saving..." : "Save"}
-              </Button>
-              {savePurge.isError ? (
-                <p className="mt-2 text-sm text-destructive">Could not save purge config. Please try again.</p>
-              ) : null}
-            </div>
-          )}
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       <RuleDialog
         rule={selectedRule}

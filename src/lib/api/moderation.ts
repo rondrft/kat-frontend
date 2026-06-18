@@ -10,6 +10,7 @@ import type {
   ModerationFilter,
   ModerationAutoPunishment,
   ModerationLogPage,
+  SecurityScanResult,
 } from "@/types/moderation";
 
 const RULE_TYPES = new Set<ModerationRuleType>([
@@ -246,6 +247,13 @@ export async function getLogChannel(guildId: string): Promise<{
     endpoints.guilds.moderationLogChannel(guildId),
   );
   return unwrapApiData(data) as { logChannelId: string | null; premiumLogChannelId: string | null };
+}
+
+export async function getSecurityScan(guildId: string): Promise<SecurityScanResult> {
+  const { data } = await apiClient.get<ApiResponse<SecurityScanResult> | unknown>(
+    endpoints.guilds.moderationSecurityScan(guildId),
+  );
+  return unwrapApiData(data) as SecurityScanResult;
 }
 
 export async function saveLogChannel(
