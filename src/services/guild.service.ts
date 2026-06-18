@@ -65,6 +65,13 @@ export const guildService = {
     return normalizeGuild(raw);
   },
 
+  async getSettings(guildId: string): Promise<GuildSettings> {
+    const { data } = await apiClient.get<ApiResponse<GuildSettings>>(
+      endpoints.guilds.settings(guildId),
+    );
+    return data.data;
+  },
+
   async updateSettings(
     guildId: string,
     settings: Partial<GuildSettings>,

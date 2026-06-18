@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Settings, Globe, Clock, Download, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Settings, Globe, Clock, Download, Trash2, Terminal } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,8 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { guildService } from "@/services/guild.service";
+import { useGuildStore } from "@/store/guild-store";
 
 const LANGUAGES = [
   { code: "en", label: "English" },
@@ -43,13 +45,37 @@ const TIMEZONES = [
 export function GeneralSettingsDialog({
   open,
   onOpenChange,
+  guildId,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  guildId: string | null;
 }) {
   const [cleanOnKick, setCleanOnKick] = useState(false);
+  const [prefix, setPrefix] = useState("x");
   const [language, setLanguage] = useState("en");
   const [timezone, setTimezone] = useState("UTC");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (open && guildId) {
+      guildService.getSettings(guildId).then((s) => {
+        setPrefix(s.prefix ?? "x");
+      }).catch(() => {});
+    }
+  }, [open, guildId]);
+
+  const handleSavePrefix = async () => {
+    if (!guildId) return;
+    setSaving(true);
+    try {
+      await guildService.updateSettings(guildId, { prefix });
+    } catch {
+      // silently fail
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -83,6 +109,36 @@ export function GeneralSettingsDialog({
                 </div>
               </div>
               <Switch checked={cleanOnKick} onCheckedChange={setCleanOnKick} />
+            </div>
+          </div>
+
+          {/* Command Prefix */}
+          <div className="rounded-2xl bg-black/[0.025] p-4 dark:bg-white/[0.03]">
+            <div className="flex items-start gap-3">
+              <Terminal className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold">Command Prefix</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                  Set a custom prefix for text commands (e.g. <code className="rounded bg-black/[0.06] px-1 py-0.5 text-[10px] font-mono dark:bg-white/[0.08]">x</code>, <code className="rounded bg-black/[0.06] px-1 py-0.5 text-[10px] font-mono dark:bg-white/[0.08]">!</code>, <code className="rounded bg-black/[0.06] px-1 py-0.5 text-[10px] font-mono dark:bg-white/[0.08]">.</code>).
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={prefix}
+                    onChange={(e) => setPrefix(e.target.value)}
+                    maxLength={5}
+                    className="flex h-9 w-24 items-center rounded-xl border border-black/[0.08] bg-black/[0.03] px-3 text-sm font-mono outline-none focus:border-kat/50 dark:border-white/10 dark:bg-white/[0.03] dark:focus:border-kat/50"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleSavePrefix}
+                    disabled={saving || !guildId}
+                  >
+                    {saving ? "Saving..." : "Save"}
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -167,6 +223,7 @@ export function GeneralSettingsDialog({
 
 export function SidebarSettingsButton() {
   const [open, setOpen] = useState(false);
+  const selectedGuildId = useGuildStore((s) => s.selectedGuildId);
 
   return (
     <>
@@ -196,7 +253,7 @@ export function SidebarSettingsButton() {
         </TooltipContent>
       </Tooltip>
 
-      <GeneralSettingsDialog open={open} onOpenChange={setOpen} />
+      <GeneralSettingsDialog open={open} onOpenChange={setOpen} guildId={selectedGuildId} />
     </>
   );
 }

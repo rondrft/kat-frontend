@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useState } from "react";
-import { ArrowUp, Coins, Crown, Gift, MessageSquare, Sparkles } from "lucide-react";
+import { ArrowUp, Coins, Crown, Gift, MessageSquare, Sparkles, Ticket } from "lucide-react";
 import { ActionsModal } from "@/features/actions/components/actions-modal";
 import { overviewExtraFeatures } from "@/features/dashboard/config/overview-extra-features";
 import { MonthlyJoinsChart } from "@/features/dashboard/components/widgets/monthly-joins-chart";
@@ -20,6 +20,7 @@ import { LevelingModal } from "@/features/leveling/components/leveling-modal";
 import { WorkModal } from "@/features/works/components/work-modal";
 import { MessageSenderModal } from "@/features/message-sender/components/message-sender-modal";
 import { GiveawayModal } from "@/features/giveaways/components/giveaway-modal";
+import { TicketsModal } from "@/features/tickets/components/tickets-modal";
 import { usePremiumStatus } from "@/features/guilds/hooks/use-premium-status";
 import { useGuildStore } from "@/store/guild-store";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,7 @@ function OverviewSectionComponent() {
   const [messageSenderOpen, setMessageSenderOpen] = useState(false);
   const [giveawayOpen, setGiveawayOpen] = useState(false);
   const [workOpen, setWorkOpen] = useState(false);
+  const [ticketsOpen, setTicketsOpen] = useState(false);
 
   const { data: premiumData } = usePremiumStatus(selectedGuildId);
   const isPremium = premiumData?.isPremium ?? false;
@@ -183,6 +185,15 @@ function OverviewSectionComponent() {
             disableHoverMotion
             onClick={() => setWorkOpen(true)}
           />
+          <OverviewFeatureCard
+            title="Tickets"
+            description="Create support ticket panels with custom roles, categories and messages."
+            icon={Ticket}
+            className={cn("h-full w-full sm:min-w-0 sm:flex-1", BOTTOM_PANEL_HEIGHT)}
+            badge="configure"
+            disableHoverMotion
+            onClick={() => setTicketsOpen(true)}
+          />
         </div>
       </div>
 
@@ -230,6 +241,12 @@ function OverviewSectionComponent() {
       <WorkModal
         open={workOpen}
         onOpenChange={setWorkOpen}
+        guildId={selectedGuildId}
+      />
+
+      <TicketsModal
+        open={ticketsOpen}
+        onOpenChange={setTicketsOpen}
         guildId={selectedGuildId}
       />
     </>
