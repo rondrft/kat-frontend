@@ -30,7 +30,7 @@ import {
   ticketConfigSchema,
   type TicketConfigSchemaType,
 } from "@/features/tickets/schemas/ticket-config-schema";
-import type { TicketConfigFormValues } from "@/features/tickets/types/ticket-config";
+import type { TicketConfig, TicketConfigFormValues } from "@/features/tickets/types/ticket-config";
 import { AppError } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 
@@ -58,9 +58,16 @@ const DEFAULT_VALUES: TicketConfigFormValues = {
 };
 
 function configToFormValues(
-  config: TicketConfigFormValues | null | undefined,
+  config: TicketConfig | TicketConfigFormValues | null | undefined,
 ): TicketConfigFormValues {
-  return config ?? DEFAULT_VALUES;
+  if (!config) return DEFAULT_VALUES;
+  return {
+    ...DEFAULT_VALUES,
+    ...config,
+    panelChannelId: config.panelChannelId ?? "",
+    categoryId: config.categoryId ?? "",
+    welcomeMessage: config.welcomeMessage ?? DEFAULT_VALUES.welcomeMessage,
+  };
 }
 
 function roleColorToHex(color: number | undefined): string {

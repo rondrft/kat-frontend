@@ -5,6 +5,7 @@ import type {
   TicketConfigFormValues,
   TicketSaveRequest,
 } from "@/features/tickets/types/ticket-config";
+import type { TicketConfigSchemaType } from "@/features/tickets/schemas/ticket-config-schema";
 
 function unwrapApiData<T>(data: ApiResponse<T> | T): T {
   if (typeof data === "object" && data !== null && "data" in data) {
@@ -57,7 +58,7 @@ export async function getTicketConfig(guildId: string): Promise<TicketConfig | n
 
 export async function saveTicketConfig(
   guildId: string,
-  values: TicketConfigFormValues,
+  values: TicketConfigFormValues | TicketConfigSchemaType,
 ): Promise<TicketConfig> {
   const payload: TicketSaveRequest = {
     enabled: values.enabled,

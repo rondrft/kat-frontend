@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TicketConfigFormValues } from "@/features/tickets/types/ticket-config";
+import type { TicketConfigSchemaType } from "@/features/tickets/schemas/ticket-config-schema";
 import {
   deleteAllTempVoiceChannels,
   getTicketConfig,
@@ -23,7 +24,7 @@ export function useSaveTicketConfig(guildId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (values: TicketConfigFormValues) =>
+    mutationFn: (values: TicketConfigFormValues | TicketConfigSchemaType) =>
       saveTicketConfig(guildId!, values),
     onSuccess: (data) => {
       if (guildId) {

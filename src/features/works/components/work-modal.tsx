@@ -4,16 +4,19 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  AlertTriangle,
   CheckCircle2,
   Coins,
   Flame,
   Gift,
   Loader2,
+  Mic,
   ShoppingBag,
   Shield,
   Sword,
   TrendingUp,
   Wrench,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,19 +55,21 @@ function configToFormValues(
 }
 
 const CONTRACT_PREVIEW = [
-  { label: "Tech", desc: "debug, webdev, pentest, cloud", icon: Wrench },
-  { label: "Labor", desc: "carpentry, electrical, welding", icon: Shield },
-  { label: "Creative", desc: "illustrate, compose, animatic", icon: Sword },
-  { label: "Service", desc: "chef, concierge, logistics", icon: Coins },
-  { label: "Exploration", desc: "scout, dive, ruins", icon: Shield },
+  { label: "Tech", desc: "debug, webdev, pentest, aioptimize", icon: Wrench },
+  { label: "Labor", desc: "carpentry, electrical, welding, machinery", icon: Shield },
+  { label: "Creative", desc: "illustrate, compose, storywrite, worldbuild", icon: Sword },
+  { label: "Service", desc: "chef, concierge, logistics, events", icon: Coins },
+  { label: "Exploration", desc: "scout, dive, ruins, expedition", icon: Zap },
+  { label: "Entertainment", desc: "streamer, podcaster, comedian, esports_pro", icon: Mic },
+  { label: "Criminal", desc: "pickpocket, grifter, carjacker, heist, kingpin", icon: AlertTriangle },
 ];
 
 const DIFFICULTY_STEPS = [
-  { label: "Easy", cooldown: "15 min", reward: "50–150" },
-  { label: "Medium", cooldown: "30 min", reward: "100–350" },
-  { label: "Hard", cooldown: "60 min", reward: "200–600" },
-  { label: "Expert", cooldown: "2 hr", reward: "400–1,000" },
-  { label: "Legendary", cooldown: "4 hr", reward: "800–1,500" },
+  { label: "Entry", cooldown: "15 min", reward: "35–210" },
+  { label: "Medium", cooldown: "30 min", reward: "60–510" },
+  { label: "Hard", cooldown: "60 min", reward: "150–1,125" },
+  { label: "Expert", cooldown: "2 hr", reward: "260–1,800" },
+  { label: "Legendary", cooldown: "4 hr", reward: "450–9,000" },
 ];
 
 export function WorkModal({ open, onOpenChange, guildId }: WorkModalProps) {
@@ -181,11 +186,12 @@ export function WorkModal({ open, onOpenChange, guildId }: WorkModalProps) {
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">How it works</p>
               <p className="text-xs leading-relaxed text-muted-foreground">
-                Use <code className="rounded bg-muted px-1">xworks</code> to list
-                contracts, <code className="rounded bg-muted px-1">xwork &lt;name&gt;</code>{" "}
-                to complete one, and <code className="rounded bg-muted px-1">xworkprofile</code>{" "}
-                to see your stats. Each contract has a cooldown — time passes in
-                real minutes. Level up to access harder contracts with bigger rewards.
+                Use <code className="rounded bg-muted px-1">xworks</code> to browse
+                contracts, apply with <code className="rounded bg-muted px-1">xwork apply &lt;job&gt;</code>,
+                then <code className="rounded bg-muted px-1">xwork</code> to complete it.
+                Most work sessions trigger a trivia challenge — answer correctly to earn, wrong
+                answers accumulate towards dismissal. Criminal jobs always have 90% chance of a
+                challenge and increasing arrest bans on repeat offences. Max 12 works/hour.
               </p>
             </div>
 
@@ -203,7 +209,14 @@ export function WorkModal({ open, onOpenChange, guildId }: WorkModalProps) {
                   <ShoppingBag className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
                   <div className="min-w-0">
                     <p className="text-xs font-semibold">Shop</p>
-                    <p className="text-xs text-muted-foreground"><code className="rounded bg-muted px-0.5">xworkshop</code> — buy upgrades like Coffee (-cooldown) or category boosters</p>
+                    <p className="text-xs text-muted-foreground"><code className="rounded bg-muted px-0.5">xworkshop</code> — category boosters (+15% rewards), Coffee (+10% XP), Charm (streak)</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 rounded-lg border border-black/[0.06] bg-black/[0.02] p-3 dark:border-white/[0.06] dark:bg-white/[0.02]">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold">Criminal</p>
+                    <p className="text-xs text-muted-foreground">90% challenge rate, high rewards, escalating arrest bans (24h → 3d → 7d). CRIMINAL skill reduces catch chance.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2 rounded-lg border border-black/[0.06] bg-black/[0.02] p-3 dark:border-white/[0.06] dark:bg-white/[0.02]">
