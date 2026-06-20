@@ -16,6 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useGuildStats } from "@/features/dashboard/hooks/use-guild-stats";
 import { useMemberJoinStats } from "@/features/dashboard/hooks/use-member-join-stats";
 import { useGuildStore } from "@/store/guild-store";
@@ -32,11 +33,11 @@ function formatNumber(value: number) {
   return numberFormatter.format(Math.max(0, value));
 }
 
-function formatCreatedAt(value: string | null) {
-  if (!value) return "Unknown";
+function formatCreatedAt(value: string | null, fallback = "Unknown") {
+  if (!value) return fallback;
 
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Unknown";
+  if (Number.isNaN(date.getTime())) return fallback;
 
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
@@ -45,9 +46,9 @@ function formatCreatedAt(value: string | null) {
   }).format(date);
 }
 
-function getBoostTierLabel(level: number) {
-  if (level <= 0) return "No boost level";
-  return `Level ${level}`;
+function getBoostTierLabel(level: number, noLevel = "No boost level", levelLabel = "Level {level}") {
+  if (level <= 0) return noLevel;
+  return levelLabel.replace("{level}", String(level));
 }
 
 function formatShortDate(value: string) {
@@ -177,9 +178,23 @@ function StatCard({
 function BoostStatCard({
   stats,
   className,
+  boostLabel,
+  boostersLabel,
+  progressLabel,
+  goalReached,
+  target,
+  noLevel,
+  levelLabel,
 }: {
   stats: GuildStats;
   className?: string;
+  boostLabel: string;
+  boostersLabel: string;
+  progressLabel: string;
+  goalReached: string;
+  target: string;
+  noLevel: string;
+  levelLabel: string;
 }) {
   const progress = Math.min(stats.boosterCount, BOOST_GOAL);
   const percent = Math.min(100, (progress / BOOST_GOAL) * 100);
@@ -195,13 +210,13 @@ function BoostStatCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wider text-violet-500">
-            Server boost
+            {boostLabel}
           </p>
           <p className="mt-2 truncate text-2xl font-black tracking-tight">
-            {getBoostTierLabel(stats.boostLevel)}
+            {getBoostTierLabel(stats.boostLevel, noLevel, levelLabel)}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {formatNumber(stats.boosterCount)} boosters
+            {boostersLabel.replace("{count}", formatNumber(stats.boosterCount))}
           </p>
         </div>
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-500">
@@ -217,25 +232,25 @@ function BoostStatCard({
           />
         </div>
         <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-          <span>{remaining > 0 ? `${remaining} until 33` : "Goal reached"}</span>
-          <span>33+</span>
+          <span>{remaining > 0 ? progressLabel.replace("{remaining}", String(remaining)) : goalReached}</span>
+          <span>{target}</span>
         </div>
       </div>
     </div>
   );
 }
 
-function ModulesPanel({ modules }: { modules: string[] }) {
+function ModulesPanel({ modules, sectionLabel, heading, description, empty }: { modules: string[]; sectionLabel: string; heading: string; description: string; empty: string }) {
   return (
     <section className="dashboard-glass-card p-5 sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-kat">
-            Active modules
+            {sectionLabel}
           </p>
-          <h2 className="mt-1 text-xl font-bold tracking-tight">Enabled features</h2>
+          <h2 className="mt-1 text-xl font-bold tracking-tight">{heading}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Modules currently active for this server.
+            {description}
           </p>
         </div>
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kat/10 text-kat">
@@ -256,7 +271,7 @@ function ModulesPanel({ modules }: { modules: string[] }) {
         </div>
       ) : (
         <div className="mt-4 rounded-xl bg-black/[0.025] p-4 text-sm text-muted-foreground dark:bg-white/[0.03]">
-          No active modules reported yet.
+          {empty}
         </div>
       )}
     </section>
@@ -302,10 +317,17 @@ function getMonthLabel(dateStr: string) {
   return new Date(dateStr + "T00:00:00").toLocaleString("en-US", { month: "short" });
 }
 
-const DAY_LABELS: (string | null)[] = [null, "Mon", null, "Wed", null, "Fri", null];
 const CELL = "h-3 w-3 rounded-[3px] ring-1 ring-black/[0.04] transition-transform hover:scale-110 dark:ring-white/10 sm:h-3.5 sm:w-3.5";
 
-function ActivityYearPanel({ days }: { days: ActivityDay[] }) {
+function ActivityYearPanel({ days, sectionLabel, heading, description, dayLabels, legend, tooltip }: {
+  days: ActivityDay[];
+  sectionLabel: string;
+  heading: string;
+  description: string;
+  dayLabels: { mon: string; wed: string; fri: string };
+  legend: { joins: string; voiceJoins: string; less: string; more: string };
+  tooltip: string;
+}) {
   const total = days.reduce((sum, d) => sum + d.total, 0);
   const joinsTotal = days.reduce((sum, d) => sum + d.joins, 0);
   const voiceTotal = days.reduce((sum, d) => sum + d.voiceJoins, 0);
@@ -366,18 +388,20 @@ function ActivityYearPanel({ days }: { days: ActivityDay[] }) {
   const colW = cellPx + gapPx;
   const dayLabelW = 36;
 
+  const dayLabelsArray: (string | null)[] = [null, dayLabels.mon, null, dayLabels.wed, null, dayLabels.fri, null];
+
   return (
     <section className="dashboard-glass-card min-w-0 p-5 sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-kat">
-            Year activity
+            {sectionLabel}
           </p>
           <h2 className="mt-1 text-xl font-bold tracking-tight">
-            {formatNumber(total)} tracked actions
+            {heading.replace("{total}", formatNumber(total))}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Joins now, plus voice and bot events when the backend reports them.
+            {description}
           </p>
         </div>
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kat/10 text-kat">
@@ -400,7 +424,7 @@ function ActivityYearPanel({ days }: { days: ActivityDay[] }) {
 
         <div className="flex gap-1">
           <div className="flex shrink-0 flex-col gap-1" style={{ width: dayLabelW - 4 }}>
-            {DAY_LABELS.map((label, i) => (
+            {dayLabelsArray.map((label, i) => (
               <div
                 key={i}
                 className="flex h-3 items-start justify-end pr-1 text-[10px] leading-none text-muted-foreground sm:h-3.5"
@@ -416,7 +440,7 @@ function ActivityYearPanel({ days }: { days: ActivityDay[] }) {
                 day ? (
                   <span
                     key={day.date}
-                    title={`${formatShortDate(day.date)}: ${day.total} total, ${day.joins} joins, ${day.voiceJoins} voice joins`}
+                    title={tooltip.replace("{date}", formatShortDate(day.date)).replace("{total}", String(day.total)).replace("{joins}", String(day.joins)).replace("{voiceJoins}", String(day.voiceJoins))}
                     className={cn(CELL, getTone(day.total))}
                   />
                 ) : (
@@ -430,11 +454,11 @@ function ActivityYearPanel({ days }: { days: ActivityDay[] }) {
 
       <div className="mt-4 flex flex-col gap-3 text-[11px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-3">
-          <span>{formatNumber(joinsTotal)} joins</span>
-          <span>{formatNumber(voiceTotal)} voice joins</span>
+          <span>{formatNumber(joinsTotal)} {legend.joins}</span>
+          <span>{formatNumber(voiceTotal)} {legend.voiceJoins}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span>Less</span>
+          <span>{legend.less}</span>
           <div className="flex items-center gap-1">
             {[0, 1, 2, 3, 4].map((level) => (
               <span
@@ -450,7 +474,7 @@ function ActivityYearPanel({ days }: { days: ActivityDay[] }) {
               />
             ))}
           </div>
-          <span>More</span>
+          <span>{legend.more}</span>
         </div>
       </div>
     </section>
@@ -460,9 +484,44 @@ function ActivityYearPanel({ days }: { days: ActivityDay[] }) {
 function StatisticsContent({
   stats,
   joinDays,
+  statCards: sc,
+  boostStat: bs,
+  modulesPanel: mp,
+  activityYear: ay,
+  createdFallback,
 }: {
   stats: GuildStats;
   joinDays: DailyJoin[];
+  statCards: {
+    members: { title: string; detail: string };
+    roles: { title: string; detail: string };
+    customRoles: { title: string; detail: string };
+    voiceJoins: { title: string; detail: string };
+    created: { title: string; detail: string };
+    textChannels: { title: string; detail: string };
+    voiceChannels: { title: string; detail: string };
+    tempChannels: { title: string; detail: string };
+    commands: { title: string; detail: string };
+  };
+  boostStat: {
+    label: string;
+    boosters: string;
+    progress: string;
+    goalReached: string;
+    target: string;
+    noLevel: string;
+    level: string;
+  };
+  modulesPanel: { sectionLabel: string; heading: string; description: string; empty: string };
+  activityYear: {
+    sectionLabel: string;
+    heading: string;
+    description: string;
+    dayLabels: { mon: string; wed: string; fri: string };
+    legend: { joins: string; voiceJoins: string; less: string; more: string };
+    tooltip: string;
+  };
+  createdFallback: string;
 }) {
   const activityDays = buildActivityDays(stats, joinDays);
 
@@ -470,72 +529,82 @@ function StatisticsContent({
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
-          title="Members"
+          title={sc.members.title}
           value={formatNumber(stats.totalMembers)}
-          detail="Total community size"
+          detail={sc.members.detail}
           icon={Users}
           tone="blue"
         />
         <StatCard
-          title="Roles"
+          title={sc.roles.title}
           value={formatNumber(stats.totalRoles)}
-          detail="Discord roles in server"
+          detail={sc.roles.detail}
           icon={Tags}
           tone="cyan"
         />
         <StatCard
-          title="Custom roles"
+          title={sc.customRoles.title}
           value={formatNumber(stats.activeCustomRoles)}
-          detail="Active booster roles"
+          detail={sc.customRoles.detail}
           icon={ShieldCheck}
           tone="violet"
         />
         <StatCard
-          title="Voice joins"
+          title={sc.voiceJoins.title}
           value={formatNumber(stats.voiceJoinsThisMonth)}
-          detail="Tracked this month"
+          detail={sc.voiceJoins.detail}
           icon={Mic2}
           tone="cyan"
         />
         <StatCard
-          title="Created"
-          value={formatCreatedAt(stats.createdAt)}
-          detail="Server creation date"
+          title={sc.created.title}
+          value={formatCreatedAt(stats.createdAt, createdFallback)}
+          detail={sc.created.detail}
           icon={CalendarDays}
           tone="slate"
         />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[3.15fr_repeat(4,minmax(0,1fr))]">
-        <BoostStatCard stats={stats} className="h-[13rem]" />
+        <BoostStatCard
+          stats={stats}
+          className="h-[13rem]"
+          boostLabel={bs.label}
+          boostersLabel={bs.boosters}
+          progressLabel={bs.progress}
+          goalReached={bs.goalReached}
+          target={bs.target}
+          noLevel={bs.noLevel}
+          levelLabel={bs.level}
+        />
         <StatCard
-          title="Text channels"
+          title={sc.textChannels.title}
           value={formatNumber(stats.totalTextChannels)}
-          detail="Channels for chat and panels"
+          detail={sc.textChannels.detail}
           icon={Hash}
           tone="blue"
           className="h-[13rem]"
         />
         <StatCard
-          title="Voice channels"
+          title={sc.voiceChannels.title}
           value={formatNumber(stats.totalVoiceChannels)}
-          detail="Voice and temporary spaces"
+          detail={sc.voiceChannels.detail}
           icon={Mic2}
           tone="cyan"
           className="h-[13rem]"
         />
         <StatCard
-          title="Temp channels"
+          title={sc.tempChannels.title}
           value={formatNumber(stats.tempChannelsCreatedThisMonth)}
-          detail="Created this month"
+          detail={sc.tempChannels.detail}
           icon={Activity}
           tone="blue"
           className="h-[13rem]"
         />
         <StatCard
-          title="Commands"
+          title={sc.commands.title}
           value={formatNumber(stats.commandsUsedThisMonth)}
-          detail="Used this month"
+          detail={sc.commands.detail}
           icon={TrendingUp}
           tone="slate"
           className="h-[13rem]"
@@ -543,14 +612,29 @@ function StatisticsContent({
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <ActivityYearPanel days={activityDays} />
-        <ModulesPanel modules={stats.activeModules} />
+        <ActivityYearPanel
+          days={activityDays}
+          sectionLabel={ay.sectionLabel}
+          heading={ay.heading}
+          description={ay.description}
+          dayLabels={ay.dayLabels}
+          legend={ay.legend}
+          tooltip={ay.tooltip}
+        />
+        <ModulesPanel
+          modules={stats.activeModules}
+          sectionLabel={mp.sectionLabel}
+          heading={mp.heading}
+          description={mp.description}
+          empty={mp.empty}
+        />
       </div>
     </div>
   );
 }
 
 function StatisticsSectionComponent() {
+  const t = useTranslation();
   const selectedGuildId = useGuildStore((s) => s.selectedGuildId);
   const { data: stats, isLoading, isError, refetch } = useGuildStats(selectedGuildId);
   const { data: joinStats } = useMemberJoinStats(selectedGuildId, ACTIVITY_DAYS);
@@ -560,9 +644,9 @@ function StatisticsSectionComponent() {
       <div className="dashboard-glass-card flex min-h-[280px] items-center justify-center p-6 text-center">
         <div>
           <Activity className="mx-auto h-8 w-8 text-muted-foreground" />
-          <p className="mt-3 text-sm font-medium">Select a server first</p>
+          <p className="mt-3 text-sm font-medium">{t.statistics.noGuild.heading}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Statistics need a guild context.
+            {t.statistics.noGuild.description}
           </p>
         </div>
       </div>
@@ -573,7 +657,7 @@ function StatisticsSectionComponent() {
     return (
       <div className="dashboard-glass-card flex min-h-[280px] items-center justify-center gap-2 p-6 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Loading server statistics...
+        {t.statistics.loading}
       </div>
     );
   }
@@ -583,9 +667,9 @@ function StatisticsSectionComponent() {
       <div className="dashboard-glass-card flex min-h-[280px] items-center justify-center p-6 text-center">
         <div>
           <AlertCircle className="mx-auto h-8 w-8 text-destructive" />
-          <p className="mt-3 text-sm font-medium">Could not load statistics</p>
+          <p className="mt-3 text-sm font-medium">{t.statistics.error.heading}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Check the backend endpoint and try again.
+            {t.statistics.error.description}
           </p>
           <Button
             type="button"
@@ -594,7 +678,7 @@ function StatisticsSectionComponent() {
             className="mt-4"
             onClick={() => void refetch()}
           >
-            Retry
+            {t.statistics.error.retry}
           </Button>
         </div>
       </div>
@@ -603,7 +687,17 @@ function StatisticsSectionComponent() {
 
   if (!stats) return null;
 
-  return <StatisticsContent stats={stats} joinDays={joinStats?.days ?? []} />;
+  return (
+    <StatisticsContent
+      stats={stats}
+      joinDays={joinStats?.days ?? []}
+      statCards={t.statistics.statCards}
+      boostStat={t.statistics.boostStat}
+      modulesPanel={t.statistics.modulesPanel}
+      activityYear={t.statistics.activityYear}
+      createdFallback={t.statistics.createdFallback}
+    />
+  );
 }
 
 export const StatisticsSection = memo(StatisticsSectionComponent);

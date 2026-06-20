@@ -25,126 +25,15 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 type BillingPeriod = "monthly" | "yearly" | "lifetime";
 
-type BenefitRow = {
-  feature: string;
-  icon: typeof Check;
-  free: string | boolean;
-  premium: string | boolean;
-};
-
-type FaqItem = {
-  question: string;
-  answer: string;
-};
-
-const PLANS = [
-  {
-    id: "monthly" as const,
-    name: "Monthly",
-    price: "$4.99",
-    originalPrice: "$9.99",
-    period: "/month",
-    description: "Full access. Cancel anytime.",
-    badge: "Save 50%",
-    features: [
-      "All Premium features",
-      "One Discord server",
-      "Cancel anytime",
-      "Priority support",
-    ],
-  },
-  {
-    id: "lifetime" as const,
-    name: "Lifetime",
-    price: "$44.99",
-    originalPrice: "$89.99",
-    period: " one-time",
-    description: "Pay once, never worry again.",
-    badge: "Best Value",
-    features: [
-      "All Premium features forever",
-      "One Discord server",
-      "No recurring payments",
-      "Priority support",
-      "Future Premium features",
-    ],
-  },
-  {
-    id: "yearly" as const,
-    name: "Yearly",
-    price: "$24.99",
-    originalPrice: "$59.88",
-    period: "/year",
-    description: "Just $2.08/month. Best value for active communities.",
-    badge: "Most Popular",
-    features: [
-      "All Premium features",
-      "One Discord server",
-      "Cancel anytime",
-      "Priority support",
-      "Pay $2.08/month billed yearly",
-    ],
-  },
-];
-
-const BENEFITS: BenefitRow[] = [
-  { feature: "Booster Roles", icon: Crown, free: false, premium: true },
-  { feature: "Temporary Voice Channels", icon: Users, free: "Max 5 Channels", premium: "Unlimited" },
-  { feature: "Autoroles (Join / Boost)", icon: Users, free: true, premium: true },
-  { feature: "Reaction Roles", icon: MessageSquare, free: "Max 8 Reactions", premium: "Unlimited" },
-  { feature: "Basic Welcome System", icon: Image, free: true, premium: true },
-  { feature: "Booster Welcome Messages", icon: Sparkles, free: false, premium: true },
-  { feature: "Raid Protection", icon: Shield, free: false, premium: true },
-  { feature: "Command Permissions", icon: Lock, free: false, premium: true },
-  { feature: "Activity Logs", icon: Bell, free: "7 Days", premium: "Unlimited History" },
-  { feature: "Ranking", icon: BarChart3, free: "Top 10", premium: "Unlimited" },
-  { feature: "Priority Support", icon: Headphones, free: false, premium: true },
-  { feature: "Premium Badge", icon: Star, free: false, premium: true },
-  { feature: "Advanced Analytics", icon: Gauge, free: false, premium: true },
-  { feature: "Custom Branding", icon: Palette, free: false, premium: true },
-];
-
-const FAQS: FaqItem[] = [
-  {
-    question: "Why does Kat have Premium?",
-    answer:
-      "Kat Premium helps cover infrastructure costs, server hosting, development time and future features while keeping the core experience free for everyone.",
-  },
-  {
-    question: "Is there a refund policy?",
-    answer:
-      "Yes. If you're not satisfied with Kat Premium, you can request a refund within 3 days of your purchase.",
-  },
-  {
-    question: "How many servers can I use my subscription on?",
-    answer:
-      "A Premium subscription is valid for one Discord server.",
-  },
-  {
-    question: "Can I cancel my subscription anytime?",
-    answer:
-      "Yes. Monthly and yearly plans can be cancelled at any time.",
-  },
-  {
-    question: "What is the Premium revenue used for?",
-    answer:
-      "Premium revenue is used to pay for servers, APIs, development, maintenance and future improvements.",
-  },
-  {
-    question: "Will Free features remain available?",
-    answer:
-      "Absolutely. Kat will always offer a powerful free experience. Premium simply unlocks additional advanced tools.",
-  },
-];
-
-function BillingToggleStatic() {
+function BillingToggleStatic({ toggle }: { toggle: { monthly: string; yearly: string; yearlySuffix: string; lifetime: string } }) {
   const options: { id: BillingPeriod; label: string; suffix?: string }[] = [
-    { id: "monthly", label: "Monthly" },
-    { id: "yearly", label: "Yearly", suffix: "Save 58%" },
-    { id: "lifetime", label: "Lifetime" },
+    { id: "monthly", label: toggle.monthly },
+    { id: "yearly", label: toggle.yearly, suffix: toggle.yearlySuffix },
+    { id: "lifetime", label: toggle.lifetime },
   ];
 
   return (
@@ -184,16 +73,20 @@ function BillingToggleStatic() {
   );
 }
 
-function PricingCards() {
+function PricingCards({ plans, cta, lifetimeSubtext }: { plans: { monthly: { name: string; price: string; original: string; period: string; description: string; badge: string; features: string[] }; yearly: { name: string; price: string; original: string; period: string; description: string; badge: string; features: string[] }; lifetime: { name: string; price: string; original: string; period: string; description: string; badge: string; features: string[] } }; cta: string; lifetimeSubtext: string }) {
+  const planIds: ("monthly" | "lifetime" | "yearly")[] = ["monthly", "lifetime", "yearly"];
   return (
     <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-3 md:items-center">
-      {PLANS.map((plan, index) => {
+      {planIds.map((id, index) => {
+        const plan = plans[id];
         const isHighlighted = index === 1;
-        const isLifetime = plan.id === "lifetime";
+        const isLifetime = id === "lifetime";
+        const isYearly = id === "yearly";
+        const isMonthly = id === "monthly";
 
         return (
           <motion.div
-            key={plan.id}
+            key={id}
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 * index, ease: [0.22, 1, 0.36, 1] }}
@@ -227,7 +120,7 @@ function PricingCards() {
                   "inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg",
                   isHighlighted
                     ? "bg-gradient-to-r from-kat to-cyan-500 text-white shadow-kat/30"
-                    : plan.id === "monthly"
+                    : isMonthly
                       ? "bg-emerald-500 text-white shadow-emerald-500/30"
                       : "bg-amber-500 text-white shadow-amber-500/30",
                 )}
@@ -240,9 +133,9 @@ function PricingCards() {
             <div className="relative z-10 mb-6">
               <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
               <div className="mt-3 flex items-baseline gap-2">
-                {plan.originalPrice && (
+                {plan.original && (
                   <span className="text-sm font-medium text-muted-foreground line-through decoration-muted-foreground/50">
-                    {plan.originalPrice}
+                    {plan.original}
                   </span>
                 )}
                 <span className="text-4xl font-black tracking-tight">{plan.price}</span>
@@ -250,9 +143,9 @@ function PricingCards() {
                   {plan.period}
                 </span>
               </div>
-              {plan.id === "yearly" && (
+              {isYearly && (
                 <p className="mt-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                  Just $2.08/month billed yearly
+                  {plan.description}
                 </p>
               )}
               <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
@@ -267,7 +160,7 @@ function PricingCards() {
               )}
             >
               <Crown className="mr-2 h-4 w-4" />
-              Get Premium
+              {cta}
             </Button>
 
             <ul className="relative z-10 space-y-3">
@@ -285,7 +178,7 @@ function PricingCards() {
               <div className="relative z-10 mt-6 rounded-xl bg-gradient-to-r from-amber-500/10 via-kat/5 to-cyan-500/10 p-3 text-center">
                 <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">
                   <Infinity className="mr-1 inline-block h-3 w-3" />
-                  No recurring charges — ever.
+                  {lifetimeSubtext}
                 </p>
               </div>
             )}
@@ -296,30 +189,32 @@ function PricingCards() {
   );
 }
 
-function BenefitsTable() {
+function BenefitsTable({ rows, featureLabel, freeLabel, premiumLabel, premiumBadge }: { rows: Record<string, { name: string; free: string | boolean; premium: string | boolean }>; featureLabel: string; freeLabel: string; premiumLabel: string; premiumBadge: string }) {
+  const rowEntries = Object.values(rows);
+  const icons = [Crown, Users, Users, MessageSquare, Image, Sparkles, Shield, Lock, Bell, BarChart3, Headphones, Star, Gauge, Palette];
   return (
     <div className="overflow-hidden rounded-2xl border border-black/[0.06] dark:border-white/10">
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="border-b border-black/[0.06] bg-black/[0.02] dark:border-white/10 dark:bg-white/[0.02]">
             <th className="px-5 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Feature
+              {featureLabel}
             </th>
             <th className="px-5 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Free
+              {freeLabel}
             </th>
             <th className="px-5 py-4 text-xs font-bold uppercase tracking-wider text-kat">
               <Crown className="mr-1 inline-block h-3 w-3" />
-              Premium
+              {premiumLabel}
             </th>
           </tr>
         </thead>
         <tbody>
-          {BENEFITS.map((row, index) => {
-            const Icon = row.icon;
+          {rowEntries.map((row, index) => {
+            const Icon = icons[index] ?? Check;
             return (
               <motion.tr
-                key={row.feature}
+                key={row.name}
                 initial={{ opacity: 0, y: 8 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -331,7 +226,7 @@ function BenefitsTable() {
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-2.5">
                     <Icon className="h-4 w-4 text-muted-foreground/60" strokeWidth={1.5} />
-                    <span className="font-medium text-foreground">{row.feature}</span>
+                    <span className="font-medium text-foreground">{row.name}</span>
                   </div>
                 </td>
                 <td className="px-5 py-3.5">
@@ -350,7 +245,7 @@ function BenefitsTable() {
                     row.premium ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-kat/10 px-2.5 py-0.5 text-xs font-semibold text-kat">
                         <Check className="h-3 w-3" />
-                        Premium
+                        {premiumBadge}
                       </span>
                     ) : (
                       <X className="h-4 w-4 text-red-400/70" />
@@ -368,12 +263,12 @@ function BenefitsTable() {
   );
 }
 
-function FaqAccordion() {
+function FaqAccordion({ questions }: { questions: { q: string; a: string }[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
     <div className="space-y-3">
-      {FAQS.map((faq, index) => {
+      {questions.map((faq, index) => {
         const isOpen = openIndex === index;
         return (
           <div
@@ -392,7 +287,7 @@ function FaqAccordion() {
             >
               <span className="flex items-center gap-3 text-sm font-semibold text-foreground">
                 <HelpCircle className="h-4 w-4 shrink-0 text-kat/60" strokeWidth={1.5} />
-                {faq.question}
+                {faq.q}
               </span>
               <motion.span
                 animate={{ rotate: isOpen ? 180 : 0 }}
@@ -414,7 +309,7 @@ function FaqAccordion() {
                 >
                   <div className="border-t border-black/[0.04] px-5 py-4 dark:border-white/[0.04]">
                     <p className="text-sm leading-relaxed text-muted-foreground">
-                      {faq.answer}
+                      {faq.a}
                     </p>
                   </div>
                 </motion.div>
@@ -483,6 +378,8 @@ function AnimatedBlobs() {
 }
 
 function PremiumSectionComponent() {
+  const t = useTranslation();
+
   return (
     <div className="relative min-h-0 space-y-20 pb-20">
       <AnimatedBlobs />
@@ -497,20 +394,17 @@ function PremiumSectionComponent() {
         >
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
             <Sparkles className="h-3.5 w-3.5" />
-            Premium Plan
+            {t.premium.hero.badge}
           </div>
 
           <h2 className="font-hero text-4xl font-extrabold tracking-tight md:text-5xl lg:text-6xl text-nowrap">
             <span className="bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">
-              Unlock the Full Power{' '}
-            </span>
-            <span className="bg-gradient-to-r from-kat via-cyan-400 to-violet-500 bg-clip-text text-transparent">
-              of Kat
+              {t.premium.hero.heading}{' '}
             </span>
           </h2>
 
           <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
-            Advanced automation, moderation and growth tools for serious communities.
+            {t.premium.hero.subtext}
           </p>
         </motion.div>
 
@@ -520,13 +414,21 @@ function PremiumSectionComponent() {
           transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           className="mt-8"
         >
-          <BillingToggleStatic />
+          <BillingToggleStatic toggle={t.premium.billingToggle} />
         </motion.div>
       </section>
 
       {/* Pricing Cards */}
       <section>
-        <PricingCards />
+        <PricingCards
+          plans={{
+            monthly: { ...t.premium.plans.monthly, features: [...t.premium.plans.monthly.features] },
+            yearly: { ...t.premium.plans.yearly, features: [...t.premium.plans.yearly.features] },
+            lifetime: { ...t.premium.plans.lifetime, features: [...t.premium.plans.lifetime.features] },
+          }}
+          cta={t.premium.cta}
+          lifetimeSubtext={t.premium.billingToggle.lifetimeSubtext}
+        />
       </section>
 
       {/* Benefits + FAQ */}
@@ -539,10 +441,10 @@ function PremiumSectionComponent() {
           className="mb-8 text-center"
         >
           <h3 className="font-hero text-3xl font-extrabold tracking-tight md:text-4xl">
-            Everything You Get
+            {t.premium.benefits.heading}
           </h3>
           <p className="mt-2 text-muted-foreground">
-            See exactly what changes when you upgrade to Premium.
+            {t.premium.benefits.subtext}
           </p>
         </motion.div>
 
@@ -553,7 +455,13 @@ function PremiumSectionComponent() {
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
           >
-            <BenefitsTable />
+            <BenefitsTable
+              rows={t.premium.benefitsTable.rows}
+              featureLabel={t.premium.benefitsTable.feature}
+              freeLabel={t.premium.benefitsTable.free}
+              premiumLabel={t.premium.benefitsTable.premium}
+              premiumBadge={t.premium.benefitsTable.premiumBadge}
+            />
           </motion.div>
 
           <motion.div
@@ -562,7 +470,7 @@ function PremiumSectionComponent() {
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           >
-            <FaqAccordion />
+            <FaqAccordion questions={t.premium.faq.questions as unknown as { q: string; a: string }[]} />
           </motion.div>
         </div>
       </section>

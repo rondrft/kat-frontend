@@ -99,6 +99,11 @@ export type PurgeConfig = {
   allowedRoleId: string | null;
   maxMessages: number;
   maxAgeSeconds: number;
+  purgeUserEnabled: boolean;
+  purgeUserAllowedRoleId: string | null;
+  purgeUserAllowedUserId: string | null;
+  purgeUserMaxMessages: number;
+  purgeUserMaxAgeSeconds: number;
   prefix?: string;
 };
 

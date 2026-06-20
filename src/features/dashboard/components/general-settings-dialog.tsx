@@ -15,6 +15,9 @@ import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { guildService } from "@/services/guild.service";
 import { useGuildStore } from "@/store/guild-store";
+import { useUiStore } from "@/store/ui-store";
+import { useTranslation } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n/config";
 
 const LANGUAGES = [
   { code: "en", label: "English" },
@@ -53,14 +56,21 @@ export function GeneralSettingsDialog({
 }) {
   const [cleanOnKick, setCleanOnKick] = useState(false);
   const [prefix, setPrefix] = useState("x");
-  const [language, setLanguage] = useState("en");
+  const [language, setLanguage] = useState<Locale>("en");
   const [timezone, setTimezone] = useState("UTC");
   const [saving, setSaving] = useState(false);
+  const [prefixError, setPrefixError] = useState<string | null>(null);
+  const [langError, setLangError] = useState<string | null>(null);
+  const setLocale = useUiStore((s) => s.setLocale);
+  const t = useTranslation();
 
   useEffect(() => {
     if (open && guildId) {
+      const currentLocale = useUiStore.getState().locale;
+      setLanguage(currentLocale);
       guildService.getSettings(guildId).then((s) => {
         setPrefix(s.prefix ?? "x");
+        if (s.locale) setLanguage(s.locale as Locale);
       }).catch(() => {});
     }
   }, [open, guildId]);
@@ -68,12 +78,28 @@ export function GeneralSettingsDialog({
   const handleSavePrefix = async () => {
     if (!guildId) return;
     setSaving(true);
+    setPrefixError(null);
     try {
       await guildService.updateSettings(guildId, { prefix });
     } catch {
-      // silently fail
+      setPrefixError(t.common.error);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLanguageChange = async (newLocale: Locale) => {
+    const previous = language;
+    setLanguage(newLocale);
+    setLocale(newLocale);
+    setLangError(null);
+    if (!guildId) return;
+    try {
+      await guildService.updateSettings(guildId, { locale: newLocale });
+    } catch {
+      setLanguage(previous);
+      setLocale(previous);
+      setLangError(t.common.error);
     }
   };
 
@@ -86,9 +112,9 @@ export function GeneralSettingsDialog({
               <Settings className="h-5 w-5 text-muted-foreground" />
             </div>
             <div>
-              <DialogTitle>General Settings</DialogTitle>
+              <DialogTitle>{t.settings.title}</DialogTitle>
               <DialogDescription>
-                Configure global bot behaviour and preferences.
+                {t.settings.description}
               </DialogDescription>
             </div>
           </div>
@@ -101,10 +127,9 @@ export function GeneralSettingsDialog({
               <div className="flex items-start gap-3 min-w-0">
                 <Trash2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold">Clean up on kick</p>
+                  <p className="text-sm font-semibold">{t.settings.cleanOnKick}</p>
                   <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                    Automatically delete all server data (config, warnings, logs)
-                    when the bot is removed from the server.
+                    {t.settings.cleanOnKickDesc}
                   </p>
                 </div>
               </div>
@@ -117,15 +142,15 @@ export function GeneralSettingsDialog({
             <div className="flex items-start gap-3">
               <Terminal className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold">Command Prefix</p>
+                <p className="text-sm font-semibold">{t.settings.prefix}</p>
                 <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                  Set a custom prefix for text commands (e.g. <code className="rounded bg-black/[0.06] px-1 py-0.5 text-[10px] font-mono dark:bg-white/[0.08]">x</code>, <code className="rounded bg-black/[0.06] px-1 py-0.5 text-[10px] font-mono dark:bg-white/[0.08]">!</code>, <code className="rounded bg-black/[0.06] px-1 py-0.5 text-[10px] font-mono dark:bg-white/[0.08]">.</code>).
+                  {t.settings.prefixDesc}
                 </p>
                 <div className="mt-2 flex items-center gap-2">
                   <input
                     type="text"
                     value={prefix}
-                    onChange={(e) => setPrefix(e.target.value)}
+                    onChange={(e) => { setPrefix(e.target.value); setPrefixError(null); }}
                     maxLength={5}
                     className="flex h-9 w-24 items-center rounded-xl border border-black/[0.08] bg-black/[0.03] px-3 text-sm font-mono outline-none focus:border-kat/50 dark:border-white/10 dark:bg-white/[0.03] dark:focus:border-kat/50"
                   />
@@ -135,9 +160,12 @@ export function GeneralSettingsDialog({
                     onClick={handleSavePrefix}
                     disabled={saving || !guildId}
                   >
-                    {saving ? "Saving..." : "Save"}
+                    {saving ? t.common.saving : t.common.save}
                   </Button>
                 </div>
+                {prefixError && (
+                  <p className="mt-1.5 text-xs text-red-500">{prefixError}</p>
+                )}
               </div>
             </div>
           </div>
@@ -147,20 +175,14 @@ export function GeneralSettingsDialog({
             <div className="flex items-start gap-3">
               <Globe className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold">Language</p>
-                  <span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-500">
-                    Soon
-                  </span>
-                </div>
+                <p className="text-sm font-semibold">{t.settings.language}</p>
                 <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                  Set the language for both the dashboard and Discord responses.
+                  {t.settings.languageDesc}
                 </p>
                 <select
                   value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  disabled
-                  className="mt-2 flex h-9 w-full cursor-not-allowed items-center rounded-xl border border-black/[0.08] bg-black/[0.03] px-3 text-sm opacity-60 dark:border-white/10 dark:bg-white/[0.03]"
+                  onChange={(e) => handleLanguageChange(e.target.value as Locale)}
+                  className="mt-2 flex h-9 w-full items-center rounded-xl border border-black/[0.08] bg-black/[0.03] px-3 text-sm dark:border-white/10 dark:bg-white/[0.03]"
                 >
                   {LANGUAGES.map((lang) => (
                     <option key={lang.code} value={lang.code}>
@@ -168,6 +190,9 @@ export function GeneralSettingsDialog({
                     </option>
                   ))}
                 </select>
+                {langError && (
+                  <p className="mt-1.5 text-xs text-red-500">{langError}</p>
+                )}
               </div>
             </div>
           </div>
@@ -177,9 +202,9 @@ export function GeneralSettingsDialog({
             <div className="flex items-start gap-3">
               <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold">Timezone</p>
+                <p className="text-sm font-semibold">{t.settings.timezone}</p>
                 <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                  Used for log timestamps and scheduled actions.
+                  {t.settings.timezoneDesc}
                 </p>
                 <select
                   value={timezone}
@@ -203,15 +228,15 @@ export function GeneralSettingsDialog({
               <div className="flex items-center gap-3 min-w-0">
                 <Download className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold">Export configuration</p>
+                  <p className="text-sm font-semibold">{t.settings.export}</p>
                   <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                    Download all server settings as a JSON file.
+                    {t.settings.exportDesc}
                   </p>
                 </div>
               </div>
               <Button type="button" size="sm" variant="outline" className="shrink-0">
                 <Download className="mr-1.5 h-3.5 w-3.5" />
-                Export
+                {t.settings.exportBtn}
               </Button>
             </div>
           </div>
@@ -224,6 +249,7 @@ export function GeneralSettingsDialog({
 export function SidebarSettingsButton() {
   const [open, setOpen] = useState(false);
   const selectedGuildId = useGuildStore((s) => s.selectedGuildId);
+  const t = useTranslation();
 
   return (
     <>
@@ -232,7 +258,7 @@ export function SidebarSettingsButton() {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            aria-label="General settings"
+            aria-label={t.sidebar.settings}
             className={cn(
               "relative flex h-10 w-10 items-center justify-center rounded-full border transition-colors duration-300",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kat/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
@@ -249,7 +275,7 @@ export function SidebarSettingsButton() {
           side="right"
           className="border-black/[0.08] bg-background/95 shadow-md backdrop-blur-md dark:border-white/10 dark:shadow-none"
         >
-          Settings
+          {t.sidebar.settings}
         </TooltipContent>
       </Tooltip>
 

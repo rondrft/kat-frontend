@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useMemo, useState } from "react";
 import { AlertCircle, Braces, Crown, Loader2, PartyPopper, Sparkles } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { Button } from "@/components/ui/button";
 import { apiConfig } from "@/config/api";
 import {
@@ -20,48 +21,7 @@ import { cn } from "@/lib/utils";
 import { useGuildStore } from "@/store/guild-store";
 import type { WelcomeConfig } from "@/types/welcome";
 
-const TEMPLATE_VARIABLES = [
-  { token: "{user}", description: "username" },
-  { token: "{userMention}", description: "Discord mention" },
-  { token: "{server}", description: "server name" },
-  { token: "{count}", description: "member count" },
-  { token: "{boostCount}", description: "boost count" },
-];
-
-const sampleUser = {
-  username: "luna.exe",
-  avatar: "https://cdn.discordapp.com/embed/avatars/2.png",
-  memberCount: 1284,
-  boostCount: 2,
-};
-
 type ActivePanel = "welcome" | "boost" | "variables";
-
-const PANEL_OPTIONS: {
-  id: ActivePanel;
-  label: string;
-  description: string;
-  icon: typeof PartyPopper;
-}[] = [
-  {
-    id: "welcome",
-    label: "Welcome",
-    description: "New member joins",
-    icon: PartyPopper,
-  },
-  {
-    id: "boost",
-    label: "Booster",
-    description: "Server boost event",
-    icon: Sparkles,
-  },
-  {
-    id: "variables",
-    label: "Template variables",
-    description: "Dynamic text",
-    icon: Braces,
-  },
-];
 
 function resolveBackendAssetUrl(url: string) {
   if (!url || url.startsWith("http://") || url.startsWith("https://")) return url;
@@ -77,11 +37,53 @@ type WelcomeSectionProps = {
 };
 
 function WelcomeSectionComponent({ guildId: guildIdProp }: WelcomeSectionProps) {
+  const t = useTranslation();
   const selectedGuildId = useGuildStore((s) => s.selectedGuildId);
   const guildId = guildIdProp ?? selectedGuildId;
+
+  const TEMPLATE_VARIABLES = [
+    { token: "{user}", description: t.welcome.variables.user },
+    { token: "{userMention}", description: t.welcome.variables.userMention },
+    { token: "{server}", description: t.welcome.variables.server },
+    { token: "{count}", description: t.welcome.variables.count },
+    { token: "{boostCount}", description: t.welcome.variables.boostCount },
+  ];
+
+  const sampleUser = {
+    username: t.welcome.sampleUsername,
+    avatar: "https://cdn.discordapp.com/embed/avatars/2.png",
+    memberCount: 1284,
+    boostCount: 2,
+  };
+
+  const PANEL_OPTIONS: {
+    id: ActivePanel;
+    label: string;
+    description: string;
+    icon: typeof PartyPopper;
+  }[] = [
+    {
+      id: "welcome",
+      label: t.welcome.tabs.welcome.label,
+      description: t.welcome.tabs.welcome.description,
+      icon: PartyPopper,
+    },
+    {
+      id: "boost",
+      label: t.welcome.tabs.booster.label,
+      description: t.welcome.tabs.booster.description,
+      icon: Sparkles,
+    },
+    {
+      id: "variables",
+      label: t.welcome.variablesPanel.sectionLabel,
+      description: t.welcome.variablesPanel.heading,
+      icon: Braces,
+    },
+  ];
   const { data: guilds = [] } = useGuilds();
   const selectedGuild = guilds.find((guild) => guild.id === guildId);
-  const serverName = selectedGuild?.name ?? "Kat Community";
+  const serverName = selectedGuild?.name ?? t.welcome.fallbackServerName;
 
   const { data: premiumData } = usePremiumStatus(guildId);
   const isPremium = premiumData?.isPremium ?? false;
@@ -159,9 +161,9 @@ function WelcomeSectionComponent({ guildId: guildIdProp }: WelcomeSectionProps) 
       <div className="dashboard-glass-card flex min-h-[320px] items-center justify-center p-6 text-center">
         <div>
           <AlertCircle className="mx-auto h-8 w-8 text-muted-foreground" />
-          <p className="mt-3 text-sm font-medium">Select a server first</p>
+          <p className="mt-3 text-sm font-medium">{t.welcome.noGuild.heading}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Welcome messages need a guild context.
+            {t.welcome.noGuild.description}
           </p>
         </div>
       </div>
@@ -172,7 +174,7 @@ function WelcomeSectionComponent({ guildId: guildIdProp }: WelcomeSectionProps) 
     return (
       <div className="dashboard-glass-card flex min-h-[320px] items-center justify-center gap-2 p-6 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Loading welcome config...
+        {t.welcome.loading}
       </div>
     );
   }
@@ -182,9 +184,9 @@ function WelcomeSectionComponent({ guildId: guildIdProp }: WelcomeSectionProps) 
       <div className="dashboard-glass-card flex min-h-[320px] items-center justify-center p-6 text-center">
         <div>
           <AlertCircle className="mx-auto h-8 w-8 text-destructive" />
-          <p className="mt-3 text-sm font-medium">Could not load welcome config</p>
+          <p className="mt-3 text-sm font-medium">{t.welcome.error.heading}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Check that the backend is running and this guild has access.
+            {t.welcome.error.description}
           </p>
           <Button
             type="button"
@@ -193,7 +195,7 @@ function WelcomeSectionComponent({ guildId: guildIdProp }: WelcomeSectionProps) 
             className="mt-4"
             onClick={() => void welcomeQuery.refetch()}
           >
-            Retry
+            {t.welcome.error.retry}
           </Button>
         </div>
       </div>
@@ -251,7 +253,7 @@ function WelcomeSectionComponent({ guildId: guildIdProp }: WelcomeSectionProps) 
           {!isPremium ? (
             <span className="pointer-events-none absolute right-0 top-0 z-10 inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">
               <Crown className="h-3 w-3" />
-              Premium
+              {t.welcome.premium}
             </span>
           ) : null}
           <div className={!isPremium ? "pointer-events-none opacity-50" : undefined}>
@@ -276,11 +278,11 @@ function WelcomeSectionComponent({ guildId: guildIdProp }: WelcomeSectionProps) 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-kat">
-                Template variables
+                {t.welcome.variablesPanel.sectionLabel}
               </p>
-              <h2 className="mt-1 text-lg font-bold tracking-tight">Dynamic text</h2>
+              <h2 className="mt-1 text-lg font-bold tracking-tight">{t.welcome.variablesPanel.heading}</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Use these tokens in messages, embeds, and generated images.
+                {t.welcome.variablesPanel.description}
               </p>
             </div>
           </div>
@@ -301,7 +303,7 @@ function WelcomeSectionComponent({ guildId: guildIdProp }: WelcomeSectionProps) 
 
           {saveMutation.isError || uploadMutation.isError ? (
             <p className="mt-4 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              Something failed while saving or uploading. Please try again.
+              {t.welcome.saveError}
             </p>
           ) : null}
         </section>

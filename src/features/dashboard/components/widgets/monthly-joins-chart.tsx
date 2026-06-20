@@ -4,6 +4,7 @@ import { memo, useMemo } from "react";
 import { TrendingUp } from "lucide-react";
 import { buildEmptyMonthDays } from "@/features/dashboard/lib/chart-days";
 import type { MonthlyJoinStats } from "@/features/dashboard/types/monthly-joins";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { cn } from "@/lib/utils";
 
 const CHART_GRADIENT_ID = "kat-monthly-joins-gradient";
@@ -24,6 +25,7 @@ function MonthlyJoinsChartComponent({
   hasGuild = true,
   className,
 }: MonthlyJoinsChartProps) {
+  const t = useTranslation();
   const showSkeleton = hasGuild && isPending && !stats;
 
   const { points, maxCount, total, hasActivity } = useMemo(() => {
@@ -52,17 +54,17 @@ function MonthlyJoinsChartComponent({
         "dashboard-glass-card flex h-[23rem] shrink-0 flex-col p-5 sm:h-[24rem] sm:p-6",
         className,
       )}
-      aria-label="Members who joined in the last month"
+      aria-label={t.overview.monthlyJoinsChart.ariaLabel}
     >
       <div className="mb-4 flex shrink-0 items-start justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Last 30 days
+            {t.overview.monthlyJoinsChart.header}
           </p>
           <p className="mt-1 font-hero text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
             {showSkeleton ? "—" : total}
           </p>
-          <p className="mt-0.5 text-sm text-muted-foreground">new members</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t.overview.monthlyJoinsChart.metric}</p>
         </div>
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black/[0.08] bg-kat/10 dark:border-white/10">
           <TrendingUp className="h-5 w-5 text-kat" strokeWidth={1.75} />
@@ -72,7 +74,7 @@ function MonthlyJoinsChartComponent({
       <div className={cn("relative w-full shrink-0", CHART_AREA_HEIGHT)}>
         {!hasGuild ? (
           <div className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
-            Select a server to view the chart
+            {t.overview.monthlyJoinsChart.noGuild}
           </div>
         ) : showSkeleton ? (
           <div className="flex h-full items-end gap-1">
@@ -92,7 +94,7 @@ function MonthlyJoinsChartComponent({
               height="100%"
               preserveAspectRatio="none"
               role="img"
-              aria-label={`Chart of ${total} joins over 30 days`}
+              aria-label={t.overview.monthlyJoinsChart.chartAria.replace("{total}", String(total))}
             >
               <defs>
                 <linearGradient id={CHART_GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
@@ -128,7 +130,7 @@ function MonthlyJoinsChartComponent({
             </svg>
             {!hasActivity && stats ? (
               <p className="pointer-events-none absolute inset-x-0 bottom-2 text-center text-xs text-muted-foreground">
-                No joins recorded this month yet
+                {t.overview.monthlyJoinsChart.noActivity}
               </p>
             ) : null}
           </>

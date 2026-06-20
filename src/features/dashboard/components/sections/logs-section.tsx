@@ -51,6 +51,7 @@ import { guildService } from "@/services/guild.service";
 import type { LoggingEntry } from "@/types/logging";
 import type { GuildTextChannel } from "@/features/auto-roles/types/auto-roles-config";
 import { AppError } from "@/lib/errors";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 type LogsSectionProps = {
   guildId?: string;
@@ -74,102 +75,6 @@ type CategoryConfig = {
   logs: LogEntryMeta[];
 };
 
-const CATEGORIES: CategoryConfig[] = [
-  {
-    id: "channels",
-    label: "Channel",
-    icon: Hash,
-    color: "border-l-sky-500",
-    borderColor: "border-sky-500/30",
-    bgColor: "bg-sky-500/8",
-    textColor: "text-sky-600 dark:text-sky-400",
-    logs: [
-      { id: "channel_create", label: "Channel Created", description: "A new text or voice channel was created", icon: Plus },
-      { id: "channel_delete", label: "Channel Deleted", description: "A channel was removed", icon: Minus },
-      { id: "channel_update", label: "Channel Renamed", description: "Channel name or topic changed", icon: Settings2 },
-    ],
-  },
-  {
-    id: "messages",
-    label: "Message",
-    icon: MessageSquare,
-    color: "border-l-amber-500",
-    borderColor: "border-amber-500/30",
-    bgColor: "bg-amber-500/8",
-    textColor: "text-amber-600 dark:text-amber-400",
-    logs: [
-      { id: "message_delete", label: "Message Deleted", description: "A message was removed from a channel", icon: Trash2 },
-      { id: "message_bulk_delete", label: "Bulk Delete", description: "Multiple messages were purged at once", icon: MessageCircleOff },
-      { id: "message_edit", label: "Message Edited", description: "A message content was modified", icon: Edit3 },
-    ],
-  },
-  {
-    id: "members",
-    label: "Member",
-    icon: Users,
-    color: "border-l-violet-500",
-    borderColor: "border-violet-500/30",
-    bgColor: "bg-violet-500/8",
-    textColor: "text-violet-600 dark:text-violet-400",
-    logs: [
-      { id: "member_join", label: "Member Joined", description: "A member joined the server", icon: LogIn },
-      { id: "member_leave", label: "Member Left", description: "A member left the server", icon: LogOut },
-      { id: "member_update", label: "Member Updated", description: "Nickname or avatar changed", icon: UserCheck },
-      { id: "member_ban", label: "Member Banned", description: "A user was banned from the server", icon: Ban },
-      { id: "member_unban", label: "Member Unbanned", description: "A user ban was lifted", icon: Unlock },
-    ],
-  },
-  {
-    id: "roles",
-    label: "Role",
-    icon: Shield,
-    color: "border-l-indigo-500",
-    borderColor: "border-indigo-500/30",
-    bgColor: "bg-indigo-500/8",
-    textColor: "text-indigo-600 dark:text-indigo-400",
-    logs: [
-      { id: "role_create", label: "Role Created", description: "A new role was created", icon: BadgePlus },
-      { id: "role_delete", label: "Role Deleted", description: "A role was removed", icon: BadgeMinus },
-      { id: "role_update", label: "Role Updated", description: "Role name or color changed", icon: Settings2 },
-      { id: "role_add", label: "Role Added", description: "When a member is given a role", icon: BadgeCheck },
-      { id: "role_remove", label: "Role Removed", description: "When a member is removed from a role", icon: UserMinus },
-    ],
-  },
-  {
-    id: "invites",
-    label: "Invite",
-    icon: Link2,
-    color: "border-l-emerald-500",
-    borderColor: "border-emerald-500/30",
-    bgColor: "bg-emerald-500/8",
-    textColor: "text-emerald-600 dark:text-emerald-400",
-    logs: [
-      { id: "invite_create", label: "Invite Created", description: "A new server invite was generated", icon: Plus },
-      { id: "invite_delete", label: "Invite Deleted", description: "An invite link was revoked", icon: Minus },
-      { id: "invite_used", label: "Invite Used", description: "A member joined using an invite link", icon: LogIn },
-    ],
-  },
-  {
-    id: "voice",
-    label: "Voice",
-    icon: Volume2,
-    color: "border-l-cyan-500",
-    borderColor: "border-cyan-500/30",
-    bgColor: "bg-cyan-500/8",
-    textColor: "text-cyan-600 dark:text-cyan-400",
-    logs: [
-      { id: "voice_join", label: "Voice Joined", description: "A member joined a voice channel", icon: Speaker },
-      { id: "voice_leave", label: "Voice Left", description: "A member left a voice channel", icon: VolumeX },
-      { id: "voice_move", label: "Voice Moved", description: "A member switched between voice channels", icon: Move },
-      { id: "voice_kick", label: "Voice Kicked", description: "A member was disconnected from a voice channel", icon: UserMinus },
-      { id: "voice_mute", label: "Voice Muted", description: "A member was server muted in a voice channel", icon: MicOff },
-      { id: "voice_deafen", label: "Voice Deafened", description: "A member was server deafened in a voice channel", icon: EarOff },
-    ],
-  },
-];
-
-const ALL_EVENT_IDS = CATEGORIES.flatMap((cat) => cat.logs.map((log) => log.id));
-
 // ─── Channel Selector ────────────────────────────────────────────────────────
 
 function ChannelSelect({
@@ -185,6 +90,7 @@ function ChannelSelect({
   placeholder?: string;
   invalid?: boolean;
 }) {
+  const t = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -216,7 +122,7 @@ function ChannelSelect({
       >
         <Hash className="h-2.5 w-2.5 shrink-0 opacity-60" />
         <span className="min-w-0 flex-1 truncate">
-          {selected ? selected.name : placeholder ?? "Channel"}
+          {selected ? selected.name : placeholder ?? t.logs.channelSelect.placeholder}
         </span>
         <ChevronDown className="h-2.5 w-2.5 shrink-0 opacity-40" />
       </button>
@@ -231,7 +137,7 @@ function ChannelSelect({
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.04]"
           >
             <Hash className="h-3 w-3 opacity-50" />
-            <span className="italic">No channel</span>
+            <span className="italic">{t.logs.channelSelect.noChannel}</span>
           </button>
           {channels.map((channel) => (
             <button
@@ -277,6 +183,7 @@ function LogTile({
   categoryColor: string;
   channelInvalid?: boolean;
 }) {
+  const t = useTranslation();
   const Icon = entry.icon;
 
   return (
@@ -325,14 +232,14 @@ function LogTile({
                 channels={channels}
                 value={channelId}
                 onChange={(id) => onChannelChange(entry.id, id)}
-                placeholder="Select channel"
+                placeholder={t.logs.channelSelect.selectChannel}
                 invalid={channelInvalid && enabled}
               />
             </div>
           </TooltipTrigger>
           {channelInvalid && enabled && (
             <TooltipContent>
-              <p>Channel no longer exists</p>
+              <p>{t.logs.channelSelect.notFound}</p>
             </TooltipContent>
           )}
         </Tooltip>
@@ -414,9 +321,106 @@ function CategorySection({
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 function LogsSectionComponent({ guildId: guildIdProp }: LogsSectionProps) {
+  const t = useTranslation();
   const queryClient = useQueryClient();
   const selectedGuildId = useGuildStore((s) => s.selectedGuildId);
   const guildId = guildIdProp ?? selectedGuildId ?? null;
+
+  const CATEGORIES = useMemo(() => [
+    {
+      id: "channels",
+      label: t.logs.categories.channel.label,
+      icon: Hash,
+      color: "border-l-sky-500",
+      borderColor: "border-sky-500/30",
+      bgColor: "bg-sky-500/8",
+      textColor: "text-sky-600 dark:text-sky-400",
+      logs: [
+        { id: "channel_create", label: t.logs.categories.channel.events.channel_create.label, description: t.logs.categories.channel.events.channel_create.description, icon: Plus },
+        { id: "channel_delete", label: t.logs.categories.channel.events.channel_delete.label, description: t.logs.categories.channel.events.channel_delete.description, icon: Minus },
+        { id: "channel_update", label: t.logs.categories.channel.events.channel_update.label, description: t.logs.categories.channel.events.channel_update.description, icon: Settings2 },
+      ],
+    },
+    {
+      id: "messages",
+      label: t.logs.categories.message.label,
+      icon: MessageSquare,
+      color: "border-l-amber-500",
+      borderColor: "border-amber-500/30",
+      bgColor: "bg-amber-500/8",
+      textColor: "text-amber-600 dark:text-amber-400",
+      logs: [
+        { id: "message_delete", label: t.logs.categories.message.events.message_delete.label, description: t.logs.categories.message.events.message_delete.description, icon: Trash2 },
+        { id: "message_bulk_delete", label: t.logs.categories.message.events.message_bulk_delete.label, description: t.logs.categories.message.events.message_bulk_delete.description, icon: MessageCircleOff },
+        { id: "message_edit", label: t.logs.categories.message.events.message_edit.label, description: t.logs.categories.message.events.message_edit.description, icon: Edit3 },
+      ],
+    },
+    {
+      id: "members",
+      label: t.logs.categories.member.label,
+      icon: Users,
+      color: "border-l-violet-500",
+      borderColor: "border-violet-500/30",
+      bgColor: "bg-violet-500/8",
+      textColor: "text-violet-600 dark:text-violet-400",
+      logs: [
+        { id: "member_join", label: t.logs.categories.member.events.member_join.label, description: t.logs.categories.member.events.member_join.description, icon: LogIn },
+        { id: "member_leave", label: t.logs.categories.member.events.member_leave.label, description: t.logs.categories.member.events.member_leave.description, icon: LogOut },
+        { id: "member_update", label: t.logs.categories.member.events.member_update.label, description: t.logs.categories.member.events.member_update.description, icon: UserCheck },
+        { id: "member_ban", label: t.logs.categories.member.events.member_ban.label, description: t.logs.categories.member.events.member_ban.description, icon: Ban },
+        { id: "member_unban", label: t.logs.categories.member.events.member_unban.label, description: t.logs.categories.member.events.member_unban.description, icon: Unlock },
+      ],
+    },
+    {
+      id: "roles",
+      label: t.logs.categories.role.label,
+      icon: Shield,
+      color: "border-l-indigo-500",
+      borderColor: "border-indigo-500/30",
+      bgColor: "bg-indigo-500/8",
+      textColor: "text-indigo-600 dark:text-indigo-400",
+      logs: [
+        { id: "role_create", label: t.logs.categories.role.events.role_create.label, description: t.logs.categories.role.events.role_create.description, icon: BadgePlus },
+        { id: "role_delete", label: t.logs.categories.role.events.role_delete.label, description: t.logs.categories.role.events.role_delete.description, icon: BadgeMinus },
+        { id: "role_update", label: t.logs.categories.role.events.role_update.label, description: t.logs.categories.role.events.role_update.description, icon: Settings2 },
+        { id: "role_add", label: t.logs.categories.role.events.role_add.label, description: t.logs.categories.role.events.role_add.description, icon: BadgeCheck },
+        { id: "role_remove", label: t.logs.categories.role.events.role_remove.label, description: t.logs.categories.role.events.role_remove.description, icon: UserMinus },
+      ],
+    },
+    {
+      id: "invites",
+      label: t.logs.categories.invite.label,
+      icon: Link2,
+      color: "border-l-emerald-500",
+      borderColor: "border-emerald-500/30",
+      bgColor: "bg-emerald-500/8",
+      textColor: "text-emerald-600 dark:text-emerald-400",
+      logs: [
+        { id: "invite_create", label: t.logs.categories.invite.events.invite_create.label, description: t.logs.categories.invite.events.invite_create.description, icon: Plus },
+        { id: "invite_delete", label: t.logs.categories.invite.events.invite_delete.label, description: t.logs.categories.invite.events.invite_delete.description, icon: Minus },
+        { id: "invite_used", label: t.logs.categories.invite.events.invite_used.label, description: t.logs.categories.invite.events.invite_used.description, icon: LogIn },
+      ],
+    },
+    {
+      id: "voice",
+      label: t.logs.categories.voice.label,
+      icon: Volume2,
+      color: "border-l-cyan-500",
+      borderColor: "border-cyan-500/30",
+      bgColor: "bg-cyan-500/8",
+      textColor: "text-cyan-600 dark:text-cyan-400",
+      logs: [
+        { id: "voice_join", label: t.logs.categories.voice.events.voice_join.label, description: t.logs.categories.voice.events.voice_join.description, icon: Speaker },
+        { id: "voice_leave", label: t.logs.categories.voice.events.voice_leave.label, description: t.logs.categories.voice.events.voice_leave.description, icon: VolumeX },
+        { id: "voice_move", label: t.logs.categories.voice.events.voice_move.label, description: t.logs.categories.voice.events.voice_move.description, icon: Move },
+        { id: "voice_kick", label: t.logs.categories.voice.events.voice_kick.label, description: t.logs.categories.voice.events.voice_kick.description, icon: UserMinus },
+        { id: "voice_mute", label: t.logs.categories.voice.events.voice_mute.label, description: t.logs.categories.voice.events.voice_mute.description, icon: MicOff },
+        { id: "voice_deafen", label: t.logs.categories.voice.events.voice_deafen.label, description: t.logs.categories.voice.events.voice_deafen.description, icon: EarOff },
+      ],
+    },
+  ] as CategoryConfig[], [t]);
+
+  const ALL_EVENT_IDS = useMemo(() => CATEGORIES.flatMap((cat) => cat.logs.map((log) => log.id)), [CATEGORIES]);
 
   const [enabledLogs, setEnabledLogs] = useState<Set<string>>(new Set());
   const [channelMap, setChannelMap] = useState<Map<string, string>>(new Map());
@@ -480,12 +484,12 @@ function LogsSectionComponent({ guildId: guildIdProp }: LogsSectionProps) {
       pendingRef.current = false;
       if (err instanceof AppError) {
         if (err.status === 403) {
-          setErrorMessage("Only server admins can configure logging.");
+          setErrorMessage(t.logs.status.forbidden);
         } else {
-          setErrorMessage(err.message || "Failed to save logging configuration.");
+          setErrorMessage(err.message || t.logs.status.saveError);
         }
       } else {
-        setErrorMessage("Failed to save logging configuration.");
+        setErrorMessage(t.logs.status.saveError);
       }
     },
   });
@@ -633,8 +637,8 @@ function LogsSectionComponent({ guildId: guildIdProp }: LogsSectionProps) {
     return (
       <div className="min-h-0 space-y-5">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-kat">Logs</p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight">Log configuration</h1>
+          <p className="text-xs font-semibold uppercase tracking-wider text-kat">{t.logs.header.label}</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight">{t.logs.header.heading}</h1>
         </div>
         <div className="space-y-4">
           <Skeleton className="h-20 w-full rounded-[1.75rem]" />
@@ -653,12 +657,11 @@ function LogsSectionComponent({ guildId: guildIdProp }: LogsSectionProps) {
       {/* Header */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-wider text-kat">
-          Logs
+          {t.logs.header.label}
         </p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight">Log configuration</h1>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight">{t.logs.header.heading}</h1>
         <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          Choose which events to log and where to send them. Each log type can go to a different
-          channel, or use the default channel for all.
+          {t.logs.header.description}
         </p>
       </div>
 
@@ -668,7 +671,7 @@ function LogsSectionComponent({ guildId: guildIdProp }: LogsSectionProps) {
           <XCircle className="h-4 w-4 shrink-0" />
           {configFetchError instanceof AppError
             ? configFetchError.message
-            : "Failed to load logging configuration."}
+            : t.logs.status.loadError}
         </div>
       )}
 
@@ -676,7 +679,7 @@ function LogsSectionComponent({ guildId: guildIdProp }: LogsSectionProps) {
       {saveStatus === "success" && (
         <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-400">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
-          Configuration saved successfully.
+          {t.logs.status.saveSuccess}
         </div>
       )}
       {saveStatus === "error" && (
@@ -691,19 +694,19 @@ function LogsSectionComponent({ guildId: guildIdProp }: LogsSectionProps) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0 flex-1 space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Default channel for all logs
+              {t.logs.defaultChannel.label}
             </label>
             <div className="max-w-xs">
               {channelsLoading ? (
                 <div className="flex h-10 items-center rounded-xl border border-black/[0.08] bg-background px-3 text-xs text-muted-foreground dark:border-white/10">
-                  Loading channels…
+                  {t.logs.defaultChannel.loading}
                 </div>
               ) : (
                 <ChannelSelect
                   channels={channels}
                   value={defaultChannel}
                   onChange={handleDefaultChannelChange}
-                  placeholder="Select default channel"
+                  placeholder={t.logs.defaultChannel.select}
                   invalid={defaultChannelMissing}
                 />
               )}
@@ -712,20 +715,20 @@ function LogsSectionComponent({ guildId: guildIdProp }: LogsSectionProps) {
             {!defaultChannel && (
               <p className="flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400">
                 <AlertTriangle className="h-3 w-3" />
-                No default channel set. Events without a custom channel will not be logged.
+                {t.logs.defaultChannel.noDefaultWarning}
               </p>
             )}
             {defaultChannelMissing && (
               <p className="flex items-center gap-1.5 text-[11px] text-red-600 dark:text-red-400">
                 <AlertTriangle className="h-3 w-3" />
-                Default channel no longer exists. Please select a new one.
+                {t.logs.defaultChannel.notFoundWarning}
               </p>
             )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <Badge className="bg-kat/10 text-kat shadow-none">
-              {totalEnabled} active
+              {t.logs.toolbar.activeCount.replace("{totalEnabled}", String(totalEnabled))}
             </Badge>
             <Button
               type="button"
@@ -734,7 +737,7 @@ function LogsSectionComponent({ guildId: guildIdProp }: LogsSectionProps) {
               onClick={handleToggleAll}
               className="text-xs"
             >
-              {allEnabled ? "Disable all" : "Enable all"}
+              {allEnabled ? t.logs.toolbar.disableAll : t.logs.toolbar.enableAll}
             </Button>
 
             <TooltipProvider>
@@ -748,13 +751,13 @@ function LogsSectionComponent({ guildId: guildIdProp }: LogsSectionProps) {
                       onClick={handleSaveNow}
                     >
                       <Save className="mr-1.5 h-3.5 w-3.5" />
-                      {saveMutation.isPending ? "Saving…" : "Save changes"}
+                      {saveMutation.isPending ? t.logs.toolbar.saving : t.logs.toolbar.saveChanges}
                     </Button>
                   </div>
                 </TooltipTrigger>
                 {!isAdmin && (
                   <TooltipContent>
-                    <p>Only server admins can configure logging.</p>
+                    <p>{t.logs.toolbar.adminOnly}</p>
                   </TooltipContent>
                 )}
               </Tooltip>

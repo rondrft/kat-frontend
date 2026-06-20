@@ -13,6 +13,7 @@ type OverviewFeatureCardProps = {
   onClick?: () => void;
   disableHoverMotion?: boolean;
   badge?: "soon" | "configure" | "premium" | "none";
+  badgeLabel?: string;
   bgImage?: string;
 };
 
@@ -24,6 +25,7 @@ function OverviewFeatureCardComponent({
   onClick,
   disableHoverMotion = false,
   badge = "soon",
+  badgeLabel,
   bgImage,
 }: OverviewFeatureCardProps) {
   const isInteractive = Boolean(onClick);
@@ -68,19 +70,14 @@ function OverviewFeatureCardComponent({
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-black/[0.08] bg-black/[0.03] dark:border-white/10 dark:bg-white/[0.06]">
           <Icon className="h-4 w-4 text-kat" strokeWidth={1.75} />
         </div>
-        {badge === "soon" ? (
-          <span className="rounded-full border border-black/[0.08] bg-black/[0.04] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground dark:border-white/10 dark:bg-white/5">
-            Soon
-          </span>
-        ) : null}
-        {badge === "configure" ? (
-          <span className="rounded-full border border-kat/30 bg-kat/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-kat">
-            Configure
-          </span>
-        ) : null}
-        {badge === "premium" ? (
-          <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-300">
-            Premium
+        {badge !== "none" && badgeLabel ? (
+          <span className={cn(
+            "rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider",
+            badge === "soon" && "border-black/[0.08] bg-black/[0.04] text-muted-foreground dark:border-white/10 dark:bg-white/5",
+            badge === "configure" && "border-kat/30 bg-kat/10 text-kat",
+            badge === "premium" && "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-300",
+          )}>
+            {badgeLabel}
           </span>
         ) : null}
       </div>

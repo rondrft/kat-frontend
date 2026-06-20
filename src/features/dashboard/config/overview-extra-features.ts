@@ -2,28 +2,19 @@ import type { LucideIcon } from "lucide-react";
 import { Mic2, Users } from "lucide-react";
 
 export type OverviewExtraFeature = {
-  id: string;
-  title: string;
-  description: string;
+  id: "tempVoice" | "autoRoles";
   icon: LucideIcon;
-  actionable?: boolean;
   bgImage?: string;
 };
 
 export const overviewExtraFeatures: OverviewExtraFeature[] = [
   {
-    id: "temp-voice",
-    title: "Temporary Voice Channel",
-    description: "Join-to-create personal voice rooms under a category.",
+    id: "tempVoice",
     icon: Mic2,
-    actionable: true,
     bgImage: "/bunnybg.jpeg",
   },
   {
-    id: "auto-roles",
-    title: "Auto Roles",
-    description: "Assign roles on join, boost, or reaction.",
+    id: "autoRoles",
     icon: Users,
-    actionable: true,
   },
 ];

@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
   AlertCircle,
   Crown,
@@ -86,9 +87,9 @@ function getInitials(username: string) {
     .join("");
 }
 
-function formatRelativeTimestamp(timestamp: string) {
+function formatRelativeTimestamp(timestamp: string, justNowLabel = "just now") {
   const date = new Date(timestamp);
-  if (Number.isNaN(date.getTime())) return "just now";
+  if (Number.isNaN(date.getTime())) return justNowLabel;
 
   const diffSeconds = Math.round((date.getTime() - Date.now()) / 1000);
   const units: [Intl.RelativeTimeFormatUnit, number][] = [
@@ -118,28 +119,8 @@ function formatFullTimestamp(timestamp: string) {
   return dateTimeFormatter.format(date);
 }
 
-const ACTION_LABELS: Record<string, string> = {
-  BAN: "Ban",
-  UNBAN: "Unban",
-  KICK: "Kick",
-  TIMEOUT: "Timeout",
-  UNTIMEOUT: "Untimeout",
-  MUTE: "Mute",
-  UNMUTE: "Unmute",
-  WARN: "Warn",
-  MESSAGE_DELETE: "Message Deleted",
-  MESSAGE_BULK_DELETE: "Bulk Delete",
-  ROLE_ADD: "Role Added",
-  ROLE_REMOVE: "Role Removed",
-  AUTO_MOD: "Auto Mod",
-  VOICE_MOVE: "Voice Moved",
-  VOICE_KICK: "Voice Kicked",
-  VOICE_MUTE: "Voice Muted",
-  VOICE_DEAFEN: "Voice Deafened",
-};
-
-function getActionLabel(action: string): string {
-  return ACTION_LABELS[action] ?? action;
+function getActionLabel(action: string, labels: Record<string, string>): string {
+  return labels[action.toLowerCase()] ?? action;
 }
 
 function getActionBadgeClassName(action: string) {
@@ -176,17 +157,19 @@ function UserAvatar({
   avatarUrl,
   className,
   style,
+  fallbackInitial = "?",
 }: {
   username: string;
   avatarUrl: string | null;
   className?: string;
   style?: React.CSSProperties;
+  fallbackInitial?: string;
 }) {
   return (
     <Avatar className={cn("h-8 w-8", className)} style={style}>
       {avatarUrl ? <AvatarImage src={avatarUrl} alt="" /> : null}
       <AvatarFallback delayMs={0} className="text-xs font-semibold">
-        {getInitials(username) || "?"}
+        {getInitials(username) || fallbackInitial}
       </AvatarFallback>
     </Avatar>
   );
@@ -197,12 +180,15 @@ function ActivityHeader({
   icon: Icon,
   isFetching,
   onRefresh,
+  refreshAria,
 }: {
   title: string;
   icon: typeof ScrollText;
   isFetching: boolean;
   onRefresh: () => void;
+  refreshAria?: string;
 }) {
+  const aria = refreshAria ? refreshAria.replace("{title}", title) : `Refresh ${title}`;
   return (
     <div className="mb-4 flex items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2">
@@ -217,8 +203,8 @@ function ActivityHeader({
         size="icon"
         onClick={onRefresh}
         disabled={isFetching}
-        title={`Refresh ${title}`}
-        aria-label={`Refresh ${title}`}
+        title={aria}
+        aria-label={aria}
         className="h-9 w-9 shrink-0"
       >
         <RefreshCw className={cn("h-4 w-4", isFetching ? "animate-spin" : null)} />
@@ -246,11 +232,29 @@ function AuditLogSkeleton() {
   );
 }
 
-function AuditLogEntryRow({ entry }: { entry: AuditLogEntry }) {
+function AuditLogEntryRow({
+  entry,
+  actionLabels,
+  byPrefix,
+  unknown,
+  justNowLabel,
+  fallbackInitial,
+}: {
+  entry: AuditLogEntry;
+  actionLabels: Record<string, string>;
+  byPrefix: string;
+  unknown: string;
+  justNowLabel: string;
+  fallbackInitial: string;
+}) {
   return (
     <li className="rounded-xl bg-black/[0.025] p-3 dark:bg-white/[0.03]">
       <div className="flex gap-3">
-        <UserAvatar username={entry.targetUsername} avatarUrl={entry.targetAvatar} />
+        <UserAvatar
+          username={entry.targetUsername}
+          avatarUrl={entry.targetAvatar}
+          fallbackInitial={fallbackInitial}
+        />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="max-w-[11rem] truncate text-sm font-bold">
@@ -263,11 +267,11 @@ function AuditLogEntryRow({ entry }: { entry: AuditLogEntry }) {
                 getActionBadgeClassName(entry.action),
               )}
             >
-              {getActionLabel(entry.action)}
+              {getActionLabel(entry.action, actionLabels)}
             </Badge>
           </div>
           <p className="mt-1 truncate text-xs text-muted-foreground">
-            by {entry.executorUsername ?? "Unknown"}
+            {byPrefix}{entry.executorUsername ?? unknown}
           </p>
           {entry.reason ? (
             <p className="mt-1 truncate text-xs text-foreground/75">{entry.reason}</p>
@@ -278,7 +282,7 @@ function AuditLogEntryRow({ entry }: { entry: AuditLogEntry }) {
           title={formatFullTimestamp(entry.createdAt)}
           className="shrink-0 pt-0.5 text-right text-[11px] text-muted-foreground"
         >
-          {formatRelativeTimestamp(entry.createdAt)}
+          {formatRelativeTimestamp(entry.createdAt, justNowLabel)}
         </time>
       </div>
     </li>
@@ -290,19 +294,38 @@ function AuditLogCard({
   isLoading,
   isFetching,
   onRefresh,
+  actionLabels,
+  byPrefix,
+  unknown,
+  justNowLabel,
+  auditLogTitle,
+  emptyHeading,
+  emptyDescription,
+  refreshAria,
+  fallbackInitial,
 }: {
   logs: AuditLogEntry[];
   isLoading: boolean;
   isFetching: boolean;
   onRefresh: () => void;
+  actionLabels: Record<string, string>;
+  byPrefix: string;
+  unknown: string;
+  justNowLabel: string;
+  auditLogTitle: string;
+  emptyHeading: string;
+  emptyDescription: string;
+  refreshAria: string;
+  fallbackInitial: string;
 }) {
   return (
     <section className="dashboard-glass-card min-w-0 p-5 sm:p-6">
       <ActivityHeader
-        title="Audit Log"
+        title={auditLogTitle}
         icon={ScrollText}
         isFetching={isFetching}
         onRefresh={onRefresh}
+        refreshAria={refreshAria}
       />
 
       {isLoading ? (
@@ -311,16 +334,24 @@ function AuditLogCard({
         <div className="flex min-h-[220px] items-center justify-center rounded-xl bg-black/[0.025] p-6 text-center dark:bg-white/[0.03]">
           <div>
             <AlertCircle className="mx-auto h-7 w-7 text-muted-foreground" />
-            <p className="mt-3 text-sm font-medium">No audit logs yet</p>
+            <p className="mt-3 text-sm font-medium">{emptyHeading}</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Moderation events will appear here.
+              {emptyDescription}
             </p>
           </div>
         </div>
       ) : (
         <ul className="max-h-[500px] space-y-3 overflow-y-auto pr-1">
           {logs.map((entry) => (
-            <AuditLogEntryRow key={entry.id} entry={entry} />
+            <AuditLogEntryRow
+              key={entry.id}
+              entry={entry}
+              actionLabels={actionLabels}
+              byPrefix={byPrefix}
+              unknown={unknown}
+              justNowLabel={justNowLabel}
+              fallbackInitial={fallbackInitial}
+            />
           ))}
         </ul>
       )}
@@ -350,11 +381,13 @@ function PodiumCard({
   rank,
   tone,
   primary = false,
+  fallbackInitial = "?",
 }: {
   entry: RankingEntry;
   rank: number;
   tone: PodiumTone;
   primary?: boolean;
+  fallbackInitial?: string;
 }) {
   const gradient = PODIUM_GRADIENTS[tone];
 
@@ -392,6 +425,7 @@ function PodiumCard({
         username={entry.username}
         avatarUrl={entry.avatarUrl}
         className="mx-auto h-11 w-11"
+        fallbackInitial={fallbackInitial}
         style={{
           boxShadow: `0 0 0 3px ${gradient.ring}, 0 0 15px ${gradient.ring}55`,
         }}
@@ -409,7 +443,7 @@ function PodiumCard({
   );
 }
 
-function RankingRow({ entry, rank }: { entry: RankingEntry; rank: number }) {
+function RankingRow({ entry, rank, fallbackInitial = "?" }: { entry: RankingEntry; rank: number; fallbackInitial?: string }) {
   return (
     <li className="group relative flex items-center gap-3 rounded-xl bg-white/70 px-3 py-2.5 transition-colors hover:bg-white/90 dark:bg-black/[0.18] dark:hover:bg-black/[0.3]">
       {/* Left accent bar */}
@@ -420,7 +454,7 @@ function RankingRow({ entry, rank }: { entry: RankingEntry; rank: number }) {
         #{rank}
       </span>
 
-      <UserAvatar username={entry.username} avatarUrl={entry.avatarUrl} className="h-8 w-8" />
+      <UserAvatar username={entry.username} avatarUrl={entry.avatarUrl} className="h-8 w-8" fallbackInitial={fallbackInitial} />
 
       <span className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-800 dark:text-white/90">
         {entry.username}
@@ -438,18 +472,29 @@ function RankingTableCard({
   rest,
   isFetching,
   onRefresh,
+  rankingTitle,
+  empty,
+  emptySub,
+  refreshAria,
+  fallbackInitial,
 }: {
   rest: RankingEntry[];
   isFetching: boolean;
   onRefresh: () => void;
+  rankingTitle: string;
+  empty: string;
+  emptySub: string;
+  refreshAria: string;
+  fallbackInitial: string;
 }) {
   return (
     <section className="dashboard-glass-card flex min-w-0 flex-1 flex-col p-4 sm:p-5">
       <ActivityHeader
-        title="Message Ranking"
+        title={rankingTitle}
         icon={Trophy}
         isFetching={isFetching}
         onRefresh={onRefresh}
+        refreshAria={refreshAria}
       />
 
       {rest.length > 0 ? (
@@ -459,6 +504,7 @@ function RankingTableCard({
               key={entry.userId || `${entry.username}-${index}`}
               entry={entry}
               rank={index + 4}
+              fallbackInitial={fallbackInitial}
             />
           ))}
         </ul>
@@ -466,10 +512,10 @@ function RankingTableCard({
         <div className="flex min-h-[120px] items-center justify-center rounded-xl bg-black/[0.015] p-4 text-center dark:bg-white/[0.02]">
           <div>
             <p className="text-sm font-medium text-muted-foreground">
-              Only top members shown
+              {empty}
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground/70">
-              More participants will appear here as they rank up.
+              {emptySub}
             </p>
           </div>
         </div>
@@ -479,6 +525,7 @@ function RankingTableCard({
 }
 
 function ActivitySectionComponent({ guildId: guildIdProp }: ActivitySectionProps) {
+  const t = useTranslation();
   const selectedGuildId = useGuildStore((s) => s.selectedGuildId);
   const guildId = guildIdProp ?? selectedGuildId ?? null;
   const auditLogsQuery = useAuditLogs(guildId);
@@ -495,9 +542,9 @@ function ActivitySectionComponent({ guildId: guildIdProp }: ActivitySectionProps
       <style>{styles}</style>
       <div>
         <p className="text-xs font-semibold uppercase tracking-wider text-kat">
-          Activity
+          {t.activity.sectionLabel}
         </p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight">Server activity</h1>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight">{t.activity.pageHeading}</h1>
       </div>
 
       <div className="grid min-h-0 gap-4 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1fr)]">
@@ -506,6 +553,15 @@ function ActivitySectionComponent({ guildId: guildIdProp }: ActivitySectionProps
           isLoading={auditLogsQuery.isLoading}
           isFetching={auditLogsQuery.isFetching}
           onRefresh={() => void auditLogsQuery.refetch()}
+          actionLabels={t.activity.actionLabels}
+          byPrefix={t.activity.auditLogCard.byPrefix}
+          unknown={t.activity.auditLogCard.unknown}
+          justNowLabel={t.activity.timeAgo.justNow}
+          auditLogTitle={t.activity.auditLogCard.title}
+          emptyHeading={t.activity.auditLogCard.emptyHeading}
+          emptyDescription={t.activity.auditLogCard.emptyDescription}
+          refreshAria={t.activity.refreshAria}
+          fallbackInitial={t.activity.fallbackInitial}
         />
         <div className="flex h-full min-h-0 flex-col gap-4">
           {rankingQuery.isLoading ? (
@@ -514,9 +570,9 @@ function ActivitySectionComponent({ guildId: guildIdProp }: ActivitySectionProps
             <section className="dashboard-glass-card flex min-h-[260px] items-center justify-center p-6 text-center">
               <div>
                 <MessageCircle className="mx-auto h-7 w-7 text-muted-foreground" />
-                <p className="mt-3 text-sm font-medium">No ranking data yet</p>
+                <p className="mt-3 text-sm font-medium">{t.activity.rankingCard.emptyHeading}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Member message counts will appear here.
+                  {t.activity.rankingCard.emptyDescription}
                 </p>
               </div>
             </section>
@@ -525,13 +581,13 @@ function ActivitySectionComponent({ guildId: guildIdProp }: ActivitySectionProps
               {/* Podium — mobile: stacked 1→2→3, desktop: side by side with center taller */}
               <div className="flex flex-col gap-3 sm:grid sm:grid-cols-3 sm:items-end">
                 <div className="order-2 sm:order-1">
-                  {second ? <PodiumCard entry={second} rank={2} tone="silver" /> : null}
+                  {second ? <PodiumCard entry={second} rank={2} tone="silver" fallbackInitial={t.activity.fallbackInitial} /> : null}
                 </div>
                 <div className="order-1 sm:order-2">
-                  {first ? <PodiumCard entry={first} rank={1} tone="gold" primary /> : null}
+                  {first ? <PodiumCard entry={first} rank={1} tone="gold" primary fallbackInitial={t.activity.fallbackInitial} /> : null}
                 </div>
                 <div className="order-3">
-                  {third ? <PodiumCard entry={third} rank={3} tone="bronze" /> : null}
+                  {third ? <PodiumCard entry={third} rank={3} tone="bronze" fallbackInitial={t.activity.fallbackInitial} /> : null}
                 </div>
               </div>
               {/* Ranking table — ranks 4+ inside a glass card, fills remaining space */}
@@ -539,6 +595,11 @@ function ActivitySectionComponent({ guildId: guildIdProp }: ActivitySectionProps
                 rest={rest}
                 isFetching={rankingQuery.isFetching}
                 onRefresh={() => void rankingQuery.refetch()}
+                rankingTitle={t.activity.rankingCard.title}
+                empty={t.activity.rankingCard.empty}
+                emptySub={t.activity.rankingCard.emptySub}
+                refreshAria={t.activity.refreshAria}
+                fallbackInitial={t.activity.fallbackInitial}
               />
             </div>
           )}

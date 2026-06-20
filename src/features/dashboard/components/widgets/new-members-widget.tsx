@@ -9,6 +9,7 @@ import {
   getMemberAccentColor,
 } from "@/features/dashboard/lib/member-display";
 import { getDiscordAvatarUrl } from "@/utils/discord";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { cn } from "@/lib/utils";
 
 export type NewMembersWidgetProps = {
@@ -56,12 +57,13 @@ function NewMembersWidgetComponent({
   isLoading = false,
   className,
 }: NewMembersWidgetProps) {
+  const t = useTranslation();
   const isEmpty = !isLoading && members.length === 0;
 
   return (
     <section
       className={cn("w-full shrink-0", className)}
-      aria-label="Recent server members"
+      aria-label={t.overview.newMembersWidget.ariaLabel}
     >
       {isLoading ? (
         <ul className="flex gap-4 overflow-x-auto px-1 pb-1 pt-1">
@@ -75,7 +77,7 @@ function NewMembersWidgetComponent({
       ) : isEmpty ? (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <UserPlus className="h-4 w-4 shrink-0 opacity-60" />
-          New member avatars will appear here
+          {t.overview.newMembersWidget.empty}
         </p>
       ) : (
         <ul className="flex gap-4 overflow-x-auto px-1 pb-1 pt-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

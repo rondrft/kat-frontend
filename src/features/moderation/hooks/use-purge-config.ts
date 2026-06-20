@@ -34,6 +34,17 @@ function normalizePurgeConfig(raw: unknown): PurgeConfig {
       typeof row.maxAgeSeconds === "number"
         ? Math.min(86400, Math.max(10, row.maxAgeSeconds))
         : 300,
+    purgeUserEnabled: Boolean(row.purgeUserEnabled),
+    purgeUserAllowedRoleId: typeof row.purgeUserAllowedRoleId === "string" ? row.purgeUserAllowedRoleId : null,
+    purgeUserAllowedUserId: typeof row.purgeUserAllowedUserId === "string" ? row.purgeUserAllowedUserId : null,
+    purgeUserMaxMessages:
+      typeof row.purgeUserMaxMessages === "number"
+        ? Math.min(40, Math.max(1, Math.round(row.purgeUserMaxMessages)))
+        : 20,
+    purgeUserMaxAgeSeconds:
+      typeof row.purgeUserMaxAgeSeconds === "number"
+        ? Math.min(86400, Math.max(10, row.purgeUserMaxAgeSeconds))
+        : 300,
   };
 }
 

@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { NewMember } from "@/features/dashboard/types/new-member";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getDiscordAvatarUrl } from "@/utils/discord";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { cn } from "@/lib/utils";
 
 export type MemberAlertsWidgetProps = {
@@ -14,7 +15,17 @@ export type MemberAlertsWidgetProps = {
   className?: string;
 };
 
-function formatRelative(iso: string): string {
+type TimeAgoDict = {
+  justNow: string;
+  minuteAgo: string;
+  minutesAgo: string;
+  hourAgo: string;
+  hoursAgo: string;
+  dayAgo: string;
+  daysAgo: string;
+};
+
+function formatRelative(iso: string, ta: TimeAgoDict): string {
   const date = new Date(iso);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -24,10 +35,10 @@ function formatRelative(iso: string): string {
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
 
-  if (seconds < 60) return "just now";
-  if (minutes < 60) return minutes === 1 ? "1 min ago" : `${minutes} min ago`;
-  if (hours < 24) return hours === 1 ? "1 hour ago" : `${hours} hours ago`;
-  return days === 1 ? "1 day ago" : `${days} days ago`;
+  if (seconds < 60) return ta.justNow;
+  if (minutes < 60) return minutes === 1 ? ta.minuteAgo : ta.minutesAgo.replace("{minutes}", String(minutes));
+  if (hours < 24) return hours === 1 ? ta.hourAgo : ta.hoursAgo.replace("{hours}", String(hours));
+  return days === 1 ? ta.dayAgo : ta.daysAgo.replace("{days}", String(days));
 }
 
 const itemVariants = {
@@ -46,6 +57,7 @@ export function MemberAlertsWidgetComponent({
   isLoading = false,
   className,
 }: MemberAlertsWidgetProps) {
+  const t = useTranslation();
   const isEmpty = !isLoading && members.length === 0;
 
   return (
@@ -54,14 +66,14 @@ export function MemberAlertsWidgetComponent({
         "dashboard-glass-card flex h-full flex-col overflow-hidden p-3 sm:p-4",
         className,
       )}
-      aria-label="Member alerts"
+      aria-label={t.overview.memberAlertsWidget.ariaLabel}
     >
       <div className="mb-2">
         <p className="text-sm font-semibold tracking-tight text-foreground">
-          Member Alerts
+          {t.overview.memberAlertsWidget.heading}
         </p>
         <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
-          Recent joins with quick heuristics. Refreshes every 30s.
+          {t.overview.memberAlertsWidget.subheading}
         </p>
       </div>
 
@@ -82,7 +94,7 @@ export function MemberAlertsWidgetComponent({
             ))
           ) : isEmpty ? (
             <p className="py-4 text-xs text-muted-foreground">
-              No recent join events yet.
+              {t.overview.memberAlertsWidget.empty}
             </p>
           ) : (
             <AnimatePresence initial={false}>
@@ -129,19 +141,19 @@ export function MemberAlertsWidgetComponent({
                                 : "border-red-500/30 bg-red-500/10 text-red-500",
                             )}
                           >
-                            BOT
+                            {t.overview.memberAlertsWidget.botBadge}
                           </span>
                         ) : null}
                       </div>
                       <p className="mt-0.5 text-[10px] text-muted-foreground">
-                        {formatRelative(member.joinedAt)}
+                        {formatRelative(member.joinedAt, t.overview.timeAgo)}
                       </p>
                       {alertReasons.length > 0 ? (
                         <p
                           className="mt-0.5 line-clamp-1 text-[10px] text-muted-foreground"
-                          title={alertReasons.join(" | ")}
+                          title={alertReasons.join(t.overview.memberAlertsWidget.alertSeparator)}
                         >
-                          {alertReasons.join(" | ")}
+                          {alertReasons.join(t.overview.memberAlertsWidget.alertSeparator)}
                         </p>
                       ) : null}
                     </div>

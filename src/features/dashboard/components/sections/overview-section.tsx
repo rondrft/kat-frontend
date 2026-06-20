@@ -23,12 +23,14 @@ import { GiveawayModal } from "@/features/giveaways/components/giveaway-modal";
 import { TicketsModal } from "@/features/tickets/components/tickets-modal";
 import { usePremiumStatus } from "@/features/guilds/hooks/use-premium-status";
 import { useGuildStore } from "@/store/guild-store";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { cn } from "@/lib/utils";
 
 const PANEL_HEIGHT = "h-[23rem] sm:h-[24rem]";
 const BOTTOM_PANEL_HEIGHT = "h-[19rem]";
 
 function OverviewSectionComponent() {
+  const t = useTranslation();
   const selectedGuildId = useGuildStore((s) => s.selectedGuildId);
   const hasGuild = Boolean(selectedGuildId);
   const [tempVoiceOpen, setTempVoiceOpen] = useState(false);
@@ -85,21 +87,23 @@ function OverviewSectionComponent() {
 
             <div className="flex min-h-0 flex-1 gap-3">
               <OverviewFeatureCard
-                title="Actions"
-                description="Interactive action commands with GIFs (kiss, hug, pat, slap, cuddle, punch, bite, feed)"
+                title={t.overview.featureCards.actions.title}
+                description={t.overview.featureCards.actions.description}
                 icon={Sparkles}
                 className="h-full w-[46%] shrink-0"
                 badge="configure"
+                badgeLabel={t.overview.badges.configure}
                 disableHoverMotion
                 bgImage="/catbg.jpeg"
                 onClick={() => setActionsOpen(true)}
               />
               <OverviewFeatureCard
-                title="Booster Roles"
-                description="Custom premium roles for 2x server boosters."
+                title={t.overview.featureCards.boosterRoles.title}
+                description={t.overview.featureCards.boosterRoles.description}
                 icon={Crown}
                 className={cn("h-full min-w-0 flex-1", !isPremium && "pointer-events-none opacity-50")}
                 badge="premium"
+                badgeLabel={t.overview.badges.premium}
                 disableHoverMotion
                 onClick={isPremium ? () => setBoosterRolesOpen(true) : undefined}
               />
@@ -109,33 +113,35 @@ function OverviewSectionComponent() {
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
           <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-[calc(46%_-_0.375rem)]">
-            {overviewExtraFeatures.map((feature) => (
-              <OverviewFeatureCard
-                key={feature.id}
-                title={feature.title}
-                description={feature.description}
-                icon={feature.icon}
-                className={cn(
-                  "h-full",
-                  BOTTOM_PANEL_HEIGHT,
-                  feature.id === "temp-voice"
-                    ? "sm:w-[46%] sm:shrink-0"
-                    : "sm:min-w-0 sm:flex-1",
-                )}
-                badge="configure"
-                disableHoverMotion
-                bgImage={feature.bgImage}
-                onClick={
-                  feature.id === "temp-voice"
-                    ? () => setTempVoiceOpen(true)
-                    : feature.id === "auto-roles"
-                      ? () => setAutoRolesOpen(true)
-                      : feature.id === "leveling"
-                        ? () => setLevelingOpen(true)
+            {overviewExtraFeatures.map((feature) => {
+              const card = t.overview.featureCards[feature.id];
+              return (
+                <OverviewFeatureCard
+                  key={feature.id}
+                  title={card.title}
+                  description={card.description}
+                  icon={feature.icon}
+                  className={cn(
+                    "h-full",
+                    BOTTOM_PANEL_HEIGHT,
+                    feature.id === "tempVoice"
+                      ? "sm:w-[46%] sm:shrink-0"
+                      : "sm:min-w-0 sm:flex-1",
+                  )}
+                  badge="configure"
+                  badgeLabel={t.overview.badges.configure}
+                  disableHoverMotion
+                  bgImage={feature.bgImage}
+                  onClick={
+                    feature.id === "tempVoice"
+                      ? () => setTempVoiceOpen(true)
+                      : feature.id === "autoRoles"
+                        ? () => setAutoRolesOpen(true)
                         : undefined
-                }
-              />
-            ))}
+                  }
+                />
+              );
+            })}
           </div>
 
           <div className="w-full lg:w-[calc(54%_-_0.375rem)]">
@@ -149,48 +155,53 @@ function OverviewSectionComponent() {
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <OverviewFeatureCard
-            title="Message Sender"
-            description="Send plain messages or rich embeds to any text channel."
+            title={t.overview.featureCards.messageSender.title}
+            description={t.overview.featureCards.messageSender.description}
             icon={MessageSquare}
             className={cn("h-full w-full sm:min-w-0 sm:flex-1", BOTTOM_PANEL_HEIGHT)}
             badge="configure"
+            badgeLabel={t.overview.badges.configure}
             disableHoverMotion
             onClick={() => setMessageSenderOpen(true)}
           />
           <OverviewFeatureCard
-            title="Giveaways"
-            description="Run reaction giveaways and spin the wheel to pick winners."
+            title={t.overview.featureCards.giveaways.title}
+            description={t.overview.featureCards.giveaways.description}
             icon={Gift}
             className={cn("h-full w-full sm:min-w-0 sm:flex-1", BOTTOM_PANEL_HEIGHT)}
             badge="configure"
+            badgeLabel={t.overview.badges.configure}
             disableHoverMotion
             onClick={() => setGiveawayOpen(true)}
           />
           <OverviewFeatureCard
-            title="Leveling"
-            description="Members earn XP, level up, and compete on the leaderboard."
+            title={t.overview.featureCards.leveling.title}
+            description={t.overview.featureCards.leveling.description}
             icon={ArrowUp}
             className={cn("h-full w-full sm:min-w-0 sm:flex-1", BOTTOM_PANEL_HEIGHT)}
             badge="configure"
+            badgeLabel={t.overview.badges.configure}
             disableHoverMotion
             bgImage="/handbg.jpeg"
             onClick={() => setLevelingOpen(true)}
           />
           <OverviewFeatureCard
-            title="KatWorks"
-            description="Earn coins by completing contracts. Level up for bigger payouts."
+            title={t.overview.featureCards.katWorks.title}
+            description={t.overview.featureCards.katWorks.description}
             icon={Coins}
             className={cn("h-full w-full sm:min-w-0 sm:flex-1", BOTTOM_PANEL_HEIGHT)}
             badge="configure"
+            badgeLabel={t.overview.badges.configure}
             disableHoverMotion
             onClick={() => setWorkOpen(true)}
           />
           <OverviewFeatureCard
-            title="Tickets"
-            description="Create support ticket panels with custom roles, categories and messages."
+            title={t.overview.featureCards.tickets.title}
+            description={t.overview.featureCards.tickets.description}
             icon={Ticket}
             className={cn("h-full w-full sm:min-w-0 sm:flex-1", BOTTOM_PANEL_HEIGHT)}
             badge="configure"
+            badgeLabel={t.overview.badges.configure}
             disableHoverMotion
             onClick={() => setTicketsOpen(true)}
           />

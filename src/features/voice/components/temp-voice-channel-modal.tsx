@@ -31,6 +31,7 @@ import {
 } from "@/features/voice/types/temp-voice-config";
 import { AppError } from "@/lib/errors";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 type TempVoiceChannelModalProps = {
   open: boolean;
@@ -96,6 +97,7 @@ export function TempVoiceChannelModal({
   onOpenChange,
   guildId,
 }: TempVoiceChannelModalProps) {
+  const t = useTranslation();
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -199,22 +201,16 @@ export function TempVoiceChannelModal({
           <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-xl border border-black/[0.08] bg-kat/10 dark:border-white/10">
             <Mic2 className="h-5 w-5 text-kat" />
           </div>
-          <DialogTitle>Temporary voice channels</DialogTitle>
-          <DialogDescription>
-            Pick where Kat should set up voice channels. On save, the bot creates the
-            join lobby (and a default category if you don&apos;t choose one). When
-            someone joins that lobby, Kat opens their personal voice channel.
-          </DialogDescription>
+          <DialogTitle>{t.modals.tempVoice.title}</DialogTitle>
+          <DialogDescription>{t.modals.tempVoice.description}</DialogDescription>
         </DialogHeader>
 
         {noGuild ? (
-          <p className="text-sm text-muted-foreground">
-            Select a server in the header first.
-          </p>
+          <p className="text-sm text-muted-foreground">{t.modals.tempVoice.noGuild}</p>
         ) : configLoading ? (
           <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" />
-            Loading settings…
+            {t.modals.tempVoice.loading}
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">

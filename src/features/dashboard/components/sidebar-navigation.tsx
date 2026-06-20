@@ -6,11 +6,13 @@ import { NavigationButton } from "@/features/dashboard/components/navigation-but
 import { SidebarThemeToggle } from "@/features/dashboard/components/sidebar-theme-toggle";
 import { SidebarSettingsButton } from "@/features/dashboard/components/general-settings-dialog";
 import { useDashboardNavStore } from "@/features/dashboard/store/dashboard-nav-store";
+import { useTranslation } from "@/lib/i18n";
 import type { DashboardSectionId } from "@/features/dashboard/types";
 
 function SidebarNavigationComponent() {
   const activeSection = useDashboardNavStore((s) => s.activeSection);
   const setActiveSection = useDashboardNavStore((s) => s.setActiveSection);
+  const t = useTranslation();
 
   const handleSelect = useCallback(
     (id: DashboardSectionId) => {
@@ -29,7 +31,7 @@ function SidebarNavigationComponent() {
           <NavigationButton
             key={section.id}
             icon={section.icon}
-            label={section.label}
+            label={t.sections[section.id].label}
             isActive={activeSection === section.id}
             onClick={() => handleSelect(section.id)}
           />
