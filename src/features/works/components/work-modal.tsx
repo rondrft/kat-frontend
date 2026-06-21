@@ -9,6 +9,7 @@ import {
   Coins,
   Flame,
   Gift,
+  Hash,
   Loader2,
   Mic,
   ShoppingBag,
@@ -34,10 +35,13 @@ import {
   useSaveWorkConfig,
 } from "@/features/works/hooks/use-work-config";
 import { DEFAULT_WORK_CONFIG } from "@/features/works/types/work-config";
+import { useGuildTextChannels } from "@/features/auto-roles/hooks/use-guild-text-channels";
 import { AppError } from "@/lib/errors";
+import { cn } from "@/lib/utils";
 
 const workConfigSchema = z.object({
   enabled: z.boolean(),
+  allowedChannelIds: z.array(z.string()),
 });
 
 type WorkConfigFormValues = z.infer<typeof workConfigSchema>;
@@ -51,7 +55,10 @@ type WorkModalProps = {
 function configToFormValues(
   config: typeof DEFAULT_WORK_CONFIG | null | undefined,
 ): WorkConfigFormValues {
-  return { enabled: config?.enabled ?? DEFAULT_WORK_CONFIG.enabled };
+  return {
+    enabled: config?.enabled ?? DEFAULT_WORK_CONFIG.enabled,
+    allowedChannelIds: config?.allowedChannelIds ?? [],
+  };
 }
 
 const CONTRACT_PREVIEW = [
@@ -83,6 +90,9 @@ export function WorkModal({ open, onOpenChange, guildId }: WorkModalProps) {
     error: configLoadError,
   } = useWorkConfig(guildId, open);
 
+  const { data: channels = [], isLoading: channelsLoading } =
+    useGuildTextChannels(guildId, open);
+
   const saveMutation = useSaveWorkConfig(guildId);
 
   const form = useForm<WorkConfigFormValues>({
@@ -92,6 +102,7 @@ export function WorkModal({ open, onOpenChange, guildId }: WorkModalProps) {
 
   const { handleSubmit, reset, watch, setValue } = form;
   const enabled = watch("enabled");
+  const allowedChannelIds = watch("allowedChannelIds");
 
   const noGuild = !guildId;
 
@@ -181,6 +192,57 @@ export function WorkModal({ open, onOpenChange, guildId }: WorkModalProps) {
                 disabled={formDisabled}
                 onCheckedChange={(v) => setValue("enabled", v)}
               />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Hash className="h-4 w-4 text-muted-foreground" />
+                <p className="text-sm font-medium text-foreground">Allowed channels</p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Select which channels work commands are allowed in. If none are selected, commands won&apos;t respond anywhere — users will see a setup message.
+              </p>
+              {channelsLoading ? (
+                <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading channels...
+                </div>
+              ) : channels.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No text channels found.</p>
+              ) : (
+                <div className="max-h-44 space-y-1 overflow-y-auto rounded-xl border border-black/[0.08] p-2 dark:border-white/10">
+                  {channels.map((ch) => {
+                    const checked = allowedChannelIds.includes(ch.id);
+                    return (
+                      <label
+                        key={ch.id}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors",
+                          checked && "bg-kat/10",
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          className="accent-[hsl(var(--kat-brand))]"
+                          checked={checked}
+                          disabled={formDisabled}
+                          onChange={() => {
+                            const next = checked
+                              ? allowedChannelIds.filter((id) => id !== ch.id)
+                              : [...allowedChannelIds, ch.id];
+                            setValue("allowedChannelIds", next);
+                          }}
+                        />
+                        <Hash className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span className="truncate">{ch.name}</span>
+                      </label>
+                    );
+                  })}
+                  <p className="px-2 pt-1 text-[10px] text-muted-foreground">
+                    {allowedChannelIds.length} selected
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

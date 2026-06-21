@@ -1,13 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { LayoutDashboard } from "lucide-react";
 import { motion } from "framer-motion";
 import { ShineText } from "@/components/landing/shine-text";
 import { Button } from "@/components/ui/button";
 import { DiscordLoginButton } from "@/features/auth";
-import { siteConfig } from "@/config/site";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -39,19 +37,6 @@ export function HeroSection() {
         initial="hidden"
         animate="visible"
       >
-        <motion.div variants={itemVariants} className="mb-6 flex justify-center">
-          <div className="relative h-24 w-24 sm:h-28 sm:w-28 md:h-32 md:w-32">
-            <Image
-              src={siteConfig.ogImage}
-              alt={`${siteConfig.name} logo`}
-              fill
-              className="object-contain"
-              sizes="(max-width: 640px) 96px, (max-width: 768px) 112px, 128px"
-              priority
-            />
-          </div>
-        </motion.div>
-
         <motion.p
           variants={itemVariants}
           className="mb-6 font-hero text-xs font-bold uppercase tracking-[0.35em] text-muted-foreground/80 sm:text-sm"

@@ -289,6 +289,7 @@ export const guildService = {
       >(endpoints.guilds.works(guildId));
       const config = unwrapApiData(data) as WorkConfig;
       if (!config || typeof config.enabled !== "boolean") return null;
+      if (!Array.isArray(config.allowedChannelIds)) config.allowedChannelIds = [];
       return config;
     } catch (error) {
       if (error instanceof AppError && error.status === 404) return null;
