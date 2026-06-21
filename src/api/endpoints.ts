@@ -50,6 +50,9 @@ export const endpoints = {
     premium: (guildId: string) => `/guilds/${guildId}/premium`,
     works: (guildId: string) => `/guilds/${guildId}/works`,
   },
+  payment: {
+    createOrder: "/payment/orders",
+  },
   bot: {
     status: "/bot/status",
     stats: "/bot/stats",

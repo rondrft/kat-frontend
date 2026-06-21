@@ -22,12 +22,21 @@ import {
   Headphones,
   Palette,
   Star,
+  ArrowLeft,
+  Loader2,
+  ExternalLink,
+  AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { useGuildStore } from "@/store/guild-store";
+import { useGuilds } from "@/features/guilds/hooks/use-guilds";
+import { useCreatePaymentOrder } from "@/features/premium/hooks/use-create-payment-order";
 
 type BillingPeriod = "monthly" | "yearly" | "lifetime";
+
+// ---- Billing toggle (display only) ----
 
 function BillingToggleStatic({ toggle }: { toggle: { monthly: string; yearly: string; yearlySuffix: string; lifetime: string } }) {
   const options: { id: BillingPeriod; label: string; suffix?: string }[] = [
@@ -45,9 +54,7 @@ function BillingToggleStatic({ toggle }: { toggle: { monthly: string; yearly: st
             key={option.id}
             className={cn(
               "relative flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold",
-              isSelected
-                ? "text-white"
-                : "text-muted-foreground",
+              isSelected ? "text-white" : "text-muted-foreground",
             )}
           >
             {isSelected && (
@@ -73,8 +80,28 @@ function BillingToggleStatic({ toggle }: { toggle: { monthly: string; yearly: st
   );
 }
 
-function PricingCards({ plans, cta, lifetimeSubtext }: { plans: { monthly: { name: string; price: string; original: string; period: string; description: string; badge: string; features: string[] }; yearly: { name: string; price: string; original: string; period: string; description: string; badge: string; features: string[] }; lifetime: { name: string; price: string; original: string; period: string; description: string; badge: string; features: string[] } }; cta: string; lifetimeSubtext: string }) {
-  const planIds: ("monthly" | "lifetime" | "yearly")[] = ["monthly", "lifetime", "yearly"];
+// ---- Pricing cards ----
+
+type PlanData = {
+  name: string;
+  price: string;
+  original: string;
+  period: string;
+  description: string;
+  badge: string;
+  features: readonly string[];
+};
+
+type PricingCardsProps = {
+  plans: { monthly: PlanData; yearly: PlanData; lifetime: PlanData };
+  cta: string;
+  lifetimeSubtext: string;
+  onSelectPlan: (plan: BillingPeriod) => void;
+};
+
+function PricingCards({ plans, cta, lifetimeSubtext, onSelectPlan }: PricingCardsProps) {
+  const planIds: BillingPeriod[] = ["monthly", "lifetime", "yearly"];
+
   return (
     <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-3 md:items-center">
       {planIds.map((id, index) => {
@@ -139,9 +166,7 @@ function PricingCards({ plans, cta, lifetimeSubtext }: { plans: { monthly: { nam
                   </span>
                 )}
                 <span className="text-4xl font-black tracking-tight">{plan.price}</span>
-                <span className="text-sm font-medium text-muted-foreground">
-                  {plan.period}
-                </span>
+                <span className="text-sm font-medium text-muted-foreground">{plan.period}</span>
               </div>
               {isYearly && (
                 <p className="mt-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
@@ -152,6 +177,7 @@ function PricingCards({ plans, cta, lifetimeSubtext }: { plans: { monthly: { nam
             </div>
 
             <Button
+              onClick={() => onSelectPlan(id)}
               className={cn(
                 "relative z-10 mb-6 w-full rounded-xl py-6 text-base font-bold transition-all duration-300",
                 isHighlighted
@@ -189,9 +215,178 @@ function PricingCards({ plans, cta, lifetimeSubtext }: { plans: { monthly: { nam
   );
 }
 
-function BenefitsTable({ rows, featureLabel, freeLabel, premiumLabel, premiumBadge }: { rows: Record<string, { name: string; free: string | boolean; premium: string | boolean }>; featureLabel: string; freeLabel: string; premiumLabel: string; premiumBadge: string }) {
+// ---- Checkout view ----
+
+const PLAN_LABELS: Record<BillingPeriod, string> = {
+  monthly: "Monthly",
+  yearly: "Yearly",
+  lifetime: "Lifetime",
+};
+
+type CheckoutViewProps = {
+  plan: BillingPeriod;
+  plans: { monthly: PlanData; yearly: PlanData; lifetime: PlanData };
+  onBack: () => void;
+};
+
+function CheckoutView({ plan, plans, onBack }: CheckoutViewProps) {
+  const selectedGuildId = useGuildStore((s) => s.selectedGuildId);
+  const { data: guilds = [] } = useGuilds();
+  const guild = guilds.find((g) => g.id === selectedGuildId) ?? null;
+
+  const { mutate: createOrder, isPending, error } = useCreatePaymentOrder();
+  const planData = plans[plan];
+
+  function handleProceed() {
+    if (!selectedGuildId) return;
+    createOrder(
+      { guildId: selectedGuildId, plan },
+      {
+        onSuccess: (result) => {
+          window.location.href = result.checkoutUrl;
+        },
+      },
+    );
+  }
+
+  return (
+    <motion.div
+      key="checkout"
+      initial={{ opacity: 0, x: 40 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -40 }}
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      className="mx-auto max-w-lg"
+    >
+      <button
+        type="button"
+        onClick={onBack}
+        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to plans
+      </button>
+
+      <div className="overflow-hidden rounded-3xl border border-black/[0.08] bg-white shadow-xl shadow-black/[0.05] dark:border-white/10 dark:bg-white/[0.03]">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-kat/10 to-cyan-500/10 px-8 py-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-kat to-cyan-500 shadow-lg shadow-kat/25">
+              <Crown className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Order Summary
+              </p>
+              <h2 className="text-xl font-extrabold text-foreground">
+                Kat Premium — {PLAN_LABELS[plan]}
+              </h2>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4 px-8 py-6">
+          {/* Plan line */}
+          <div className="flex items-center justify-between rounded-2xl border border-black/[0.06] bg-black/[0.02] px-4 py-3.5 dark:border-white/[0.06] dark:bg-white/[0.02]">
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                {planData.name} Plan
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">{planData.description}</p>
+            </div>
+            <div className="text-right">
+              {planData.original && (
+                <p className="text-xs text-muted-foreground line-through">{planData.original}</p>
+              )}
+              <p className="text-lg font-black text-foreground">
+                {planData.price}
+                <span className="ml-0.5 text-xs font-medium text-muted-foreground">
+                  {planData.period}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          {/* Server */}
+          {guild ? (
+            <div className="flex items-center gap-3 rounded-2xl border border-black/[0.06] bg-black/[0.02] px-4 py-3.5 dark:border-white/[0.06] dark:bg-white/[0.02]">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-kat/10 text-xs font-bold text-kat">
+                {guild.name.charAt(0)}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">Activating on</p>
+                <p className="truncate text-sm font-semibold text-foreground">{guild.name}</p>
+              </div>
+              <Check className="ml-auto h-4 w-4 shrink-0 text-emerald-500" />
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 px-4 py-3.5">
+              <AlertCircle className="h-4 w-4 shrink-0 text-amber-500" />
+              <p className="text-sm text-amber-600 dark:text-amber-400">
+                No server selected. Please select a server first.
+              </p>
+            </div>
+          )}
+
+          {/* Features list */}
+          <ul className="space-y-2 pt-1">
+            {planData.features.map((feature) => (
+              <li key={feature} className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                {feature}
+              </li>
+            ))}
+          </ul>
+
+          {/* Error */}
+          {error && (
+            <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {error instanceof Error ? error.message : "Something went wrong. Please try again."}
+            </div>
+          )}
+
+          {/* CTA */}
+          <Button
+            onClick={handleProceed}
+            disabled={isPending || !selectedGuildId}
+            className="w-full rounded-xl bg-gradient-to-r from-kat to-cyan-500 py-6 text-base font-bold text-white shadow-lg shadow-kat/25 hover:shadow-xl hover:shadow-kat/30 disabled:opacity-60"
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Preparing payment...
+              </>
+            ) : (
+              <>
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Continue to MercadoPago
+              </>
+            )}
+          </Button>
+
+          <p className="text-center text-xs text-muted-foreground">
+            You will be redirected to MercadoPago's secure checkout.
+            Your payment details are never stored on our servers.
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ---- Benefits table ----
+
+function BenefitsTable({ rows, featureLabel, freeLabel, premiumLabel, premiumBadge }: {
+  rows: Record<string, { name: string; free: string | boolean; premium: string | boolean }>;
+  featureLabel: string;
+  freeLabel: string;
+  premiumLabel: string;
+  premiumBadge: string;
+}) {
   const rowEntries = Object.values(rows);
   const icons = [Crown, Users, Users, MessageSquare, Image, Sparkles, Shield, Lock, Bell, BarChart3, Headphones, Star, Gauge, Palette];
+
   return (
     <div className="overflow-hidden rounded-2xl border border-black/[0.06] dark:border-white/10">
       <table className="w-full text-left text-sm">
@@ -219,9 +414,7 @@ function BenefitsTable({ rows, featureLabel, freeLabel, premiumLabel, premiumBad
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.3, delay: 0.02 * index }}
-                className={cn(
-                  "border-b border-black/[0.04] transition-colors last:border-0 hover:bg-black/[0.02] dark:border-white/[0.04] dark:hover:bg-white/[0.02]",
-                )}
+                className="border-b border-black/[0.04] transition-colors last:border-0 hover:bg-black/[0.02] dark:border-white/[0.04] dark:hover:bg-white/[0.02]"
               >
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-2.5">
@@ -262,6 +455,8 @@ function BenefitsTable({ rows, featureLabel, freeLabel, premiumLabel, premiumBad
     </div>
   );
 }
+
+// ---- FAQ accordion ----
 
 function FaqAccordion({ questions }: { questions: { q: string; a: string }[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -308,9 +503,7 @@ function FaqAccordion({ questions }: { questions: { q: string; a: string }[] }) 
                   className="overflow-hidden"
                 >
                   <div className="border-t border-black/[0.04] px-5 py-4 dark:border-white/[0.04]">
-                    <p className="text-sm leading-relaxed text-muted-foreground">
-                      {faq.a}
-                    </p>
+                    <p className="text-sm leading-relaxed text-muted-foreground">{faq.a}</p>
                   </div>
                 </motion.div>
               )}
@@ -322,158 +515,158 @@ function FaqAccordion({ questions }: { questions: { q: string; a: string }[] }) 
   );
 }
 
+// ---- Animated background blobs ----
+
 function AnimatedBlobs() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-visible" aria-hidden>
       <motion.div
         className="absolute -left-16 top-8 h-72 w-72 rounded-full bg-gradient-to-br from-kat/8 to-cyan-500/5 blur-3xl"
-        animate={{
-          x: [0, 30, -15, 0],
-          y: [0, -25, 15, 0],
-          scale: [1, 1.08, 0.96, 1],
-        }}
+        animate={{ x: [0, 30, -15, 0], y: [0, -25, 15, 0], scale: [1, 1.08, 0.96, 1] }}
         transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
       />
       <motion.div
         className="absolute -right-16 top-1/4 h-72 w-72 rounded-full bg-gradient-to-bl from-violet-500/8 to-kat/5 blur-3xl"
-        animate={{
-          x: [0, -25, 15, 0],
-          y: [0, 25, -15, 0],
-          scale: [1, 0.92, 1.04, 1],
-        }}
+        animate={{ x: [0, -25, 15, 0], y: [0, 25, -15, 0], scale: [1, 0.92, 1.04, 1] }}
         transition={{ duration: 25, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
       />
       <motion.div
         className="absolute bottom-12 left-1/3 h-56 w-56 rounded-full bg-gradient-to-tr from-cyan-500/6 to-kat/5 blur-3xl"
-        animate={{
-          x: [0, 15, -20, 0],
-          y: [0, -15, 10, 0],
-          scale: [1, 1.04, 0.96, 1],
-        }}
+        animate={{ x: [0, 15, -20, 0], y: [0, -15, 10, 0], scale: [1, 1.04, 0.96, 1] }}
         transition={{ duration: 18, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
       />
-
       {Array.from({ length: 6 }).map((_, i) => (
         <motion.div
           key={i}
           className="absolute h-1.5 w-1.5 rounded-full bg-kat/30"
-          style={{
-            left: `${18 + i * 12}%`,
-            top: `${20 + (i % 3) * 25}%`,
-          }}
-          animate={{
-            y: [0, -12, 0],
-            opacity: [0.3, 0.8, 0.3],
-          }}
-          transition={{
-            duration: 3 + i * 0.5,
-            repeat: Number.POSITIVE_INFINITY,
-            delay: i * 0.7,
-            ease: "easeInOut",
-          }}
+          style={{ left: `${18 + i * 12}%`, top: `${20 + (i % 3) * 25}%` }}
+          animate={{ y: [0, -12, 0], opacity: [0.3, 0.8, 0.3] }}
+          transition={{ duration: 3 + i * 0.5, repeat: Number.POSITIVE_INFINITY, delay: i * 0.7, ease: "easeInOut" }}
         />
       ))}
     </div>
   );
 }
 
+// ---- Root component ----
+
 function PremiumSectionComponent() {
   const t = useTranslation();
+  const [selectedPlan, setSelectedPlan] = useState<BillingPeriod | null>(null);
+
+  const plans = {
+    monthly: { ...t.premium.plans.monthly, features: [...t.premium.plans.monthly.features] },
+    yearly: { ...t.premium.plans.yearly, features: [...t.premium.plans.yearly.features] },
+    lifetime: { ...t.premium.plans.lifetime, features: [...t.premium.plans.lifetime.features] },
+  };
 
   return (
     <div className="relative min-h-0 space-y-20 pb-20">
       <AnimatedBlobs />
 
-      {/* Hero */}
-      <section className="relative text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="mx-auto max-w-3xl"
-        >
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-            <Sparkles className="h-3.5 w-3.5" />
-            {t.premium.hero.badge}
-          </div>
-
-          <h2 className="font-hero text-4xl font-extrabold tracking-tight md:text-5xl lg:text-6xl text-nowrap">
-            <span className="bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">
-              {t.premium.hero.heading}{' '}
-            </span>
-          </h2>
-
-          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
-            {t.premium.hero.subtext}
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-8"
-        >
-          <BillingToggleStatic toggle={t.premium.billingToggle} />
-        </motion.div>
-      </section>
-
-      {/* Pricing Cards */}
-      <section>
-        <PricingCards
-          plans={{
-            monthly: { ...t.premium.plans.monthly, features: [...t.premium.plans.monthly.features] },
-            yearly: { ...t.premium.plans.yearly, features: [...t.premium.plans.yearly.features] },
-            lifetime: { ...t.premium.plans.lifetime, features: [...t.premium.plans.lifetime.features] },
-          }}
-          cta={t.premium.cta}
-          lifetimeSubtext={t.premium.billingToggle.lifetimeSubtext}
-        />
-      </section>
-
-      {/* Benefits + FAQ */}
-      <section className="relative">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="mb-8 text-center"
-        >
-          <h3 className="font-hero text-3xl font-extrabold tracking-tight md:text-4xl">
-            {t.premium.benefits.heading}
-          </h3>
-          <p className="mt-2 text-muted-foreground">
-            {t.premium.benefits.subtext}
-          </p>
-        </motion.div>
-
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-2 lg:items-start">
+      <AnimatePresence mode="wait">
+        {selectedPlan ? (
+          <CheckoutView
+            key="checkout"
+            plan={selectedPlan}
+            plans={plans}
+            onBack={() => setSelectedPlan(null)}
+          />
+        ) : (
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            key="plans"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="space-y-20"
           >
-            <BenefitsTable
-              rows={t.premium.benefitsTable.rows}
-              featureLabel={t.premium.benefitsTable.feature}
-              freeLabel={t.premium.benefitsTable.free}
-              premiumLabel={t.premium.benefitsTable.premium}
-              premiumBadge={t.premium.benefitsTable.premiumBadge}
-            />
-          </motion.div>
+            {/* Hero */}
+            <section className="relative text-center">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                className="mx-auto max-w-3xl"
+              >
+                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {t.premium.hero.badge}
+                </div>
+                <h2 className="font-hero text-4xl font-extrabold tracking-tight md:text-5xl lg:text-6xl text-nowrap">
+                  <span className="bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">
+                    {t.premium.hero.heading}
+                  </span>
+                </h2>
+                <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
+                  {t.premium.hero.subtext}
+                </p>
+              </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <FaqAccordion questions={t.premium.faq.questions as unknown as { q: string; a: string }[]} />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                className="mt-8"
+              >
+                <BillingToggleStatic toggle={t.premium.billingToggle} />
+              </motion.div>
+            </section>
+
+            {/* Pricing cards */}
+            <section>
+              <PricingCards
+                plans={plans}
+                cta={t.premium.cta}
+                lifetimeSubtext={t.premium.billingToggle.lifetimeSubtext}
+                onSelectPlan={setSelectedPlan}
+              />
+            </section>
+
+            {/* Benefits + FAQ */}
+            <section className="relative">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="mb-8 text-center"
+              >
+                <h3 className="font-hero text-3xl font-extrabold tracking-tight md:text-4xl">
+                  {t.premium.benefits.heading}
+                </h3>
+                <p className="mt-2 text-muted-foreground">{t.premium.benefits.subtext}</p>
+              </motion.div>
+
+              <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-2 lg:items-start">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "-80px" }}
+                  transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <BenefitsTable
+                    rows={t.premium.benefitsTable.rows}
+                    featureLabel={t.premium.benefitsTable.feature}
+                    freeLabel={t.premium.benefitsTable.free}
+                    premiumLabel={t.premium.benefitsTable.premium}
+                    premiumBadge={t.premium.benefitsTable.premiumBadge}
+                  />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "-80px" }}
+                  transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <FaqAccordion questions={t.premium.faq.questions as unknown as { q: string; a: string }[]} />
+                </motion.div>
+              </div>
+            </section>
           </motion.div>
-        </div>
-      </section>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
