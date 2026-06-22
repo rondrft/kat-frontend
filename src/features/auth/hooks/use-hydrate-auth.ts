@@ -3,10 +3,7 @@
 import { useEffect, useLayoutEffect } from "react";
 import { authService } from "@/services/auth.service";
 import { AppError } from "@/lib/errors";
-import {
-  getStoredAccessToken,
-  syncAuthFromStorage,
-} from "@/features/auth/lib/auth-session";
+import { syncAuthFromStorage } from "@/features/auth/lib/auth-session";
 import { useAuthStore } from "@/store/auth-store";
 
 function completeAuthHydration() {
@@ -45,21 +42,14 @@ export function useHydrateAuth() {
 
     syncAuthFromStorage();
 
-    const token = getStoredAccessToken() ?? session?.accessToken ?? null;
-
-    if (!token) {
-      if (!session?.user) {
-        setStatus("unauthenticated");
-      }
-      return;
-    }
-
     if (session?.user?.id) {
       if (status !== "authenticated") {
         setStatus("authenticated");
       }
       return;
     }
+
+    if (status === "authenticated") return;
 
     let cancelled = false;
     setStatus("loading");
@@ -68,11 +58,7 @@ export function useHydrateAuth() {
       .getMe()
       .then((user) => {
         if (cancelled) return;
-        setSession({
-          user,
-          accessToken: token,
-          expiresAt: session?.expiresAt ?? 0,
-        });
+        setSession({ user, accessToken: "", expiresAt: 0 });
       })
       .catch((error: unknown) => {
         if (cancelled) return;
@@ -96,8 +82,6 @@ export function useHydrateAuth() {
     };
   }, [
     hasHydrated,
-    session?.accessToken,
-    session?.expiresAt,
     session?.user,
     status,
     setSession,

@@ -1,12 +1,10 @@
 import type { AuthSession } from "@/types/auth";
 import { useAuthStore } from "@/store/auth-store";
 
-const ACCESS_TOKEN_KEY = "kat-access-token";
 const PERSIST_KEY = "kat-auth";
 
 export function getStoredAccessToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
+  return null;
 }
 
 export function readPersistedAuthSession(): AuthSession | null {
@@ -25,14 +23,10 @@ export function readPersistedAuthSession(): AuthSession | null {
 
     if (session.expiresAt && Date.now() > session.expiresAt) {
       localStorage.removeItem(PERSIST_KEY);
-      localStorage.removeItem(ACCESS_TOKEN_KEY);
       return null;
     }
 
-    const token = getStoredAccessToken() ?? session.accessToken ?? null;
-    if (!token) return null;
-
-    return { ...session, accessToken: token };
+    return session;
   } catch {
     return null;
   }
@@ -42,14 +36,11 @@ export function syncAuthFromStorage(): boolean {
   if (typeof window === "undefined") return false;
 
   const { session, status, setSession, setStatus } = useAuthStore.getState();
-  const token = getStoredAccessToken() ?? session?.accessToken ?? null;
   const persisted = readPersistedAuthSession();
 
   if (persisted?.user?.id) {
     const needsSessionUpdate =
-      !session?.user?.id ||
-      session.user.id !== persisted.user.id ||
-      session.accessToken !== persisted.accessToken;
+      !session?.user?.id || session.user.id !== persisted.user.id;
 
     if (needsSessionUpdate) {
       setSession(persisted);
@@ -57,14 +48,10 @@ export function syncAuthFromStorage(): boolean {
       setStatus("authenticated");
     }
 
-    if (token && !getStoredAccessToken()) {
-      localStorage.setItem(ACCESS_TOKEN_KEY, token);
-    }
-
     return true;
   }
 
-  if (session?.user?.id && token) {
+  if (session?.user?.id) {
     if (status !== "authenticated") {
       setStatus("authenticated");
     }

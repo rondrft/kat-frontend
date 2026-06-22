@@ -21,26 +21,19 @@ function recoverAuthAndGuilds(queryClient: ReturnType<typeof useQueryClient>) {
     useGuildStore.getState().setSelectedGuildId(pendingGuildId);
   }
 
-  const { session, status, setSession, setStatus } = useAuthStore.getState();
+  const { session, status, setSession } = useAuthStore.getState();
   if (session?.user?.id || status === "authenticated") return;
-
-  const token = localStorage.getItem("kat-access-token");
-  if (!token) return;
 
   void authService
     .getMe()
     .then((user) => {
-      setSession({
-        user,
-        accessToken: token,
-        expiresAt: session?.expiresAt ?? 0,
-      });
+      setSession({ user, accessToken: "", expiresAt: session?.expiresAt ?? 0 });
     })
     .catch((error: unknown) => {
       const isUnauthorized =
         error instanceof AppError && (error.status === 401 || error.status === 403);
       if (!isUnauthorized && session?.user) {
-        setStatus("authenticated");
+        useAuthStore.getState().setStatus("authenticated");
       }
     });
 }

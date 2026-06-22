@@ -37,7 +37,6 @@ function AuthCallbackContent() {
           parsed.data.code,
           parsed.data.state,
         );
-        window.localStorage.setItem("kat-access-token", session.accessToken);
         setSession(session);
         sessionStorage.removeItem("kat-oauth-state");
         router.replace("/dashboard");

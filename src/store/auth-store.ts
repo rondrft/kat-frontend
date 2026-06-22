@@ -13,15 +13,6 @@ type AuthStore = {
   logout: () => void;
 };
 
-function syncAccessToken(accessToken: string | null) {
-  if (typeof window === "undefined") return;
-  if (accessToken) {
-    localStorage.setItem("kat-access-token", accessToken);
-  } else {
-    localStorage.removeItem("kat-access-token");
-  }
-}
-
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set) => ({
@@ -29,7 +20,6 @@ export const useAuthStore = create<AuthStore>()(
       status: "idle",
       hasHydrated: false,
       setSession: (session) => {
-        syncAccessToken(session?.accessToken ?? null);
         set({
           session,
           status: session?.user ? "authenticated" : "unauthenticated",
@@ -43,7 +33,6 @@ export const useAuthStore = create<AuthStore>()(
       setStatus: (status) => set({ status }),
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),
       logout: () => {
-        syncAccessToken(null);
         set({ session: null, status: "unauthenticated", hasHydrated: true });
       },
     }),
