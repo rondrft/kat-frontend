@@ -39,7 +39,7 @@ const imageVariants = {
 export function HeroSection() {
   return (
     <section className="flex min-h-[calc(100vh-3.5rem)] items-center pl-6 sm:pl-12 lg:pl-20 xl:pl-28">
-      <div className="flex w-full items-center gap-8 lg:gap-12">
+      <div className="flex w-full items-center gap-4 lg:gap-6">
 
         {/* Left: text + buttons */}
         <motion.div
@@ -109,7 +109,7 @@ export function HeroSection() {
             alt="Kat"
             width={800}
             height={800}
-            className="h-[70vh] w-auto"
+            className="h-[80vh] w-auto"
             priority
           />
         </motion.div>
