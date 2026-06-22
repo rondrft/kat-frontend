@@ -51,6 +51,7 @@ export const endpoints = {
     works: (guildId: string) => `/guilds/${guildId}/works`,
     recurringMessages: (guildId: string) => `/guilds/${guildId}/recurring-messages`,
     recurringMessageById: (guildId: string, id: number) => `/guilds/${guildId}/recurring-messages/${id}`,
+    branding: (guildId: string) => `/guilds/${guildId}/branding`,
   },
   payment: {
     createOrder: "/payment/orders",

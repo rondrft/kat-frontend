@@ -32,6 +32,10 @@ export const overviewEn = {
       title: "Recurring Messages",
       description: "Schedule automatic announcements to any channel at a fixed interval.",
     },
+    branding: {
+      title: "Server Branding",
+      description: "Custom bot name, avatar, banner, and description for your server.",
+    },
     tempVoice: {
       title: "Temporary Voice Channel",
       description: "Join-to-create personal voice rooms under a category.",
@@ -110,6 +114,10 @@ export const overviewEs = {
     recurringMessages: {
       title: "Mensajes Recurrentes",
       description: "Programa anuncios automáticos en cualquier canal a intervalos fijos.",
+    },
+    branding: {
+      title: "Branding del Servidor",
+      description: "Nombre, avatar, banner y descripción personalizados del bot en tu servidor.",
     },
     tempVoice: {
       title: "Canal de Voz Temporal",
@@ -190,6 +198,10 @@ export const overviewPtBr = {
       title: "Mensagens Recorrentes",
       description: "Agende anúncios automáticos em qualquer canal em intervalos fixos.",
     },
+    branding: {
+      title: "Branding do Servidor",
+      description: "Nome, avatar, banner e descrição personalizados do bot no seu servidor.",
+    },
     tempVoice: {
       title: "Canal de Voz Temporário",
       description: "Entre para criar salas de voz pessoais sob uma categoria.",
@@ -268,6 +280,10 @@ export const overviewFr = {
     recurringMessages: {
       title: "Messages Récurrents",
       description: "Planifiez des annonces automatiques dans n'importe quel salon à intervalle fixe.",
+    },
+    branding: {
+      title: "Identité du Serveur",
+      description: "Nom, avatar, bannière et description personnalisés du bot sur votre serveur.",
     },
     tempVoice: {
       title: "Salon Vocal Temporaire",
@@ -348,6 +364,10 @@ export const overviewDe = {
       title: "Wiederkehrende Nachrichten",
       description: "Plane automatische Ankündigungen in beliebigen Kanälen in festen Intervallen.",
     },
+    branding: {
+      title: "Server-Branding",
+      description: "Benutzerdefinierter Bot-Name, Avatar, Banner und Beschreibung für deinen Server.",
+    },
     tempVoice: {
       title: "Temporärer Sprachkanal",
       description: "Tritt bei, um persönliche Sprachräume unter einer Kategorie zu erstellen.",
@@ -426,6 +446,10 @@ export const overviewJa = {
     recurringMessages: {
       title: "定期メッセージ",
       description: "任意のチャンネルに固定間隔で自動アナウンスをスケジュール。",
+    },
+    branding: {
+      title: "サーバーブランディング",
+      description: "サーバー専用のボット名、アバター、バナー、説明をカスタマイズ。",
     },
     tempVoice: {
       title: "一時ボイスチャンネル",

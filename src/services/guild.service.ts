@@ -3,6 +3,10 @@ import type {
   RecurringMessage,
   RecurringMessageRequest,
 } from "@/features/recurring-messages/types/recurring-message";
+import type {
+  GuildBranding,
+  GuildBrandingRequest,
+} from "@/features/branding/types/branding";
 import type { ApiResponse, PageResponse } from "@/types/api";
 import type { Guild, GuildSettings } from "@/types/guild";
 import type { LoggingConfig } from "@/types/logging";
@@ -336,6 +340,22 @@ export const guildService = {
 
   async deleteRecurringMessage(guildId: string, id: number): Promise<void> {
     await apiClient.delete(endpoints.guilds.recurringMessageById(guildId, id));
+  },
+
+  async getGuildBranding(guildId: string): Promise<GuildBranding> {
+    const { data } = await apiClient.get<GuildBranding>(endpoints.guilds.branding(guildId));
+    return {
+      guildId: data.guildId ?? guildId,
+      avatarUrl: data.avatarUrl ?? null,
+      bannerUrl: data.bannerUrl ?? null,
+      description: data.description ?? null,
+      botName: data.botName ?? null,
+    };
+  },
+
+  async saveGuildBranding(guildId: string, req: GuildBrandingRequest): Promise<GuildBranding> {
+    const { data } = await apiClient.put<GuildBranding>(endpoints.guilds.branding(guildId), req);
+    return data;
   },
 
   async getRecentMembers(guildId: string, limit = 8): Promise<NewMember[]> {

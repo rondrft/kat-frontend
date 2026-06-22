@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useState } from "react";
-import { ArrowUp, Coins, Crown, Gift, MessageSquare, RefreshCw, Sparkles, Ticket } from "lucide-react";
+import { ArrowUp, Coins, Crown, Gift, MessageSquare, Paintbrush, RefreshCw, Sparkles, Ticket } from "lucide-react";
 import { ActionsModal } from "@/features/actions/components/actions-modal";
 import { overviewExtraFeatures } from "@/features/dashboard/config/overview-extra-features";
 import { MonthlyJoinsChart } from "@/features/dashboard/components/widgets/monthly-joins-chart";
@@ -22,6 +22,7 @@ import { MessageSenderModal } from "@/features/message-sender/components/message
 import { GiveawayModal } from "@/features/giveaways/components/giveaway-modal";
 import { TicketsModal } from "@/features/tickets/components/tickets-modal";
 import { RecurringMessagesModal } from "@/features/recurring-messages/components/recurring-messages-modal";
+import { BrandingModal } from "@/features/branding/components/branding-modal";
 import { usePremiumStatus } from "@/features/guilds/hooks/use-premium-status";
 import { useGuildStore } from "@/store/guild-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -44,6 +45,7 @@ function OverviewSectionComponent() {
   const [workOpen, setWorkOpen] = useState(false);
   const [ticketsOpen, setTicketsOpen] = useState(false);
   const [recurringOpen, setRecurringOpen] = useState(false);
+  const [brandingOpen, setBrandingOpen] = useState(false);
 
   const { data: premiumData } = usePremiumStatus(selectedGuildId);
   const isPremium = premiumData?.isPremium ?? false;
@@ -217,6 +219,16 @@ function OverviewSectionComponent() {
             disableHoverMotion
             onClick={() => setRecurringOpen(true)}
           />
+          <OverviewFeatureCard
+            title={t.overview.featureCards.branding.title}
+            description={t.overview.featureCards.branding.description}
+            icon={Paintbrush}
+            className={cn("h-full w-full sm:min-w-0 sm:flex-1", BOTTOM_PANEL_HEIGHT, !isPremium && "pointer-events-none opacity-50")}
+            badge="premium"
+            badgeLabel={t.overview.badges.premium}
+            disableHoverMotion
+            onClick={isPremium ? () => setBrandingOpen(true) : undefined}
+          />
         </div>
       </div>
 
@@ -277,6 +289,13 @@ function OverviewSectionComponent() {
         open={recurringOpen}
         onOpenChange={setRecurringOpen}
         guildId={selectedGuildId}
+      />
+
+      <BrandingModal
+        open={brandingOpen}
+        onOpenChange={setBrandingOpen}
+        guildId={selectedGuildId}
+        isPremium={isPremium}
       />
     </>
   );
