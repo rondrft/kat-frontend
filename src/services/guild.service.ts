@@ -241,9 +241,9 @@ export const guildService = {
       const { data } = await apiClient.get<
         ApiResponse<LevelingConfig> | LevelingConfig
       >(endpoints.guilds.leveling(guildId));
-      const config = unwrapApiData(data) as LevelingConfig;
-      if (!config || typeof config.enabled !== "boolean") return null;
-      return config;
+      const raw = unwrapApiData(data) as LevelingConfig;
+      if (!raw || typeof raw.enabled !== "boolean") return null;
+      return { ...raw, levelUpChannelId: raw.levelUpChannelId ?? null };
     } catch (error) {
       if (error instanceof AppError && error.status === 404) return null;
       throw error;

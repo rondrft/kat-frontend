@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowUp,
   CheckCircle2,
+  Hash,
   Loader2,
   MessageSquare,
   Zap,
@@ -30,6 +31,7 @@ import {
   type LevelingConfigFormValues,
 } from "@/features/leveling/schemas/leveling-schema";
 import { DEFAULT_LEVELING_CONFIG } from "@/features/leveling/types/leveling-config";
+import { useGuildTextChannels } from "@/features/auto-roles/hooks/use-guild-text-channels";
 import { AppError } from "@/lib/errors";
 
 type LevelingModalProps = {
@@ -41,7 +43,10 @@ type LevelingModalProps = {
 function configToFormValues(
   config: typeof DEFAULT_LEVELING_CONFIG | null | undefined,
 ): LevelingConfigFormValues {
-  return { enabled: config?.enabled ?? DEFAULT_LEVELING_CONFIG.enabled };
+  return {
+    enabled: config?.enabled ?? DEFAULT_LEVELING_CONFIG.enabled,
+    levelUpChannelId: config?.levelUpChannelId ?? null,
+  };
 }
 
 const XP_DETAILS = [
@@ -83,6 +88,9 @@ export function LevelingModal({ open, onOpenChange, guildId }: LevelingModalProp
     error: configLoadError,
   } = useLevelingConfig(guildId, open);
 
+  const { data: channels = [], isLoading: channelsLoading } =
+    useGuildTextChannels(guildId, open);
+
   const saveMutation = useSaveLevelingConfig(guildId);
 
   const form = useForm<LevelingConfigFormValues>({
@@ -92,6 +100,7 @@ export function LevelingModal({ open, onOpenChange, guildId }: LevelingModalProp
 
   const { handleSubmit, reset, watch, setValue } = form;
   const enabled = watch("enabled");
+  const levelUpChannelId = watch("levelUpChannelId");
 
   const noGuild = !guildId;
 
@@ -181,6 +190,62 @@ export function LevelingModal({ open, onOpenChange, guildId }: LevelingModalProp
                 disabled={formDisabled}
                 onCheckedChange={(v) => setValue("enabled", v)}
               />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Hash className="h-4 w-4 text-muted-foreground" />
+                <p className="text-sm font-medium text-foreground">Level-up notification channel</p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Where the bot posts level-up cards. Defaults to the same channel where the user sent the message.
+              </p>
+              {channelsLoading ? (
+                <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading channels...
+                </div>
+              ) : (
+                <div className="max-h-44 space-y-1 overflow-y-auto rounded-xl border border-black/[0.08] p-2 dark:border-white/10">
+                  <label
+                    className={cn(
+                      "flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors",
+                      levelUpChannelId === null && "bg-kat/10",
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      className="accent-[hsl(var(--kat-brand))]"
+                      checked={levelUpChannelId === null}
+                      disabled={formDisabled}
+                      onChange={() => setValue("levelUpChannelId", null)}
+                    />
+                    <span className="truncate text-muted-foreground italic">Same channel as message</span>
+                  </label>
+                  {channels.map((ch) => {
+                    const checked = levelUpChannelId === ch.id;
+                    return (
+                      <label
+                        key={ch.id}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors",
+                          checked && "bg-kat/10",
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          className="accent-[hsl(var(--kat-brand))]"
+                          checked={checked}
+                          disabled={formDisabled}
+                          onChange={() => setValue("levelUpChannelId", ch.id)}
+                        />
+                        <Hash className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span className="truncate">{ch.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
