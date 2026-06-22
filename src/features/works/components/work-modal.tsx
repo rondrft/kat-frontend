@@ -79,9 +79,63 @@ const DIFFICULTY_STEPS = [
   { label: "Legendary", cooldown: "4 hr", reward: "450–9,000" },
 ];
 
+const FEATURES = [
+  {
+    icon: Flame,
+    color: "text-orange-500",
+    bg: "bg-orange-500/10",
+    title: "Streak",
+    desc: "Work daily to build a streak worth up to 3x rewards",
+  },
+  {
+    icon: ShoppingBag,
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+    title: "Shop",
+    desc: "xworkshop — category boosters (+15% rewards), Coffee (+10% XP), Charm (streak)",
+  },
+  {
+    icon: AlertTriangle,
+    color: "text-red-500",
+    bg: "bg-red-500/10",
+    title: "Criminal",
+    desc: "90% challenge rate, high rewards, escalating arrest bans (24h → 3d → 7d). CRIMINAL skill reduces catch chance.",
+  },
+  {
+    icon: TrendingUp,
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
+    title: "Skills",
+    desc: "xworkskills — spend skill points every 5 levels for +10% per category",
+  },
+  {
+    icon: Gift,
+    color: "text-pink-500",
+    bg: "bg-pink-500/10",
+    title: "Daily Missions",
+    desc: "xworkmissions — complete random daily goals for bonus coins & XP",
+  },
+  {
+    icon: Coins,
+    color: "text-amber-500",
+    bg: "bg-amber-500/10",
+    title: "Gamble",
+    desc: "Add ! to gamble — 50% double or 50% half (60% win on streak 3+)",
+  },
+];
+
+type Tab = "config" | "howto" | "contracts";
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: "config", label: "Configuration" },
+  { id: "howto", label: "How it works" },
+  { id: "contracts", label: "Contracts" },
+];
+
 export function WorkModal({ open, onOpenChange, guildId }: WorkModalProps) {
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>("config");
 
   const {
     data: savedConfig,
@@ -110,6 +164,7 @@ export function WorkModal({ open, onOpenChange, guildId }: WorkModalProps) {
     if (!open) {
       setSaveSuccess(null);
       setSaveError(null);
+      setActiveTab("config");
       return;
     }
     if (configLoading) return;
@@ -149,7 +204,7 @@ export function WorkModal({ open, onOpenChange, guildId }: WorkModalProps) {
         onOpenChange(next);
       }}
     >
-      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto sm:max-w-5xl">
+      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-xl border border-black/[0.08] bg-amber-500/10 dark:border-white/10">
             <Coins className="h-5 w-5 text-amber-500" />
@@ -180,175 +235,170 @@ export function WorkModal({ open, onOpenChange, guildId }: WorkModalProps) {
               </p>
             ) : null}
 
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-black/[0.08] bg-black/[0.02] px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
-              <div>
-                <p className="text-sm font-medium">Work system</p>
-                <p className="text-xs text-muted-foreground">
-                  Turn off to disable contract work and coin rewards
-                </p>
-              </div>
-              <Switch
-                checked={enabled}
-                disabled={formDisabled}
-                onCheckedChange={(v) => setValue("enabled", v)}
-              />
+            <div className="flex gap-1 rounded-xl border border-black/[0.08] bg-black/[0.02] p-1 dark:border-white/10 dark:bg-white/[0.03]">
+              {TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "flex-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+                    activeTab === tab.id
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Hash className="h-4 w-4 text-muted-foreground" />
-                <p className="text-sm font-medium text-foreground">Allowed channels</p>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Select which channels work commands are allowed in. If none are selected, commands won&apos;t respond anywhere — users will see a setup message.
-              </p>
-              {channelsLoading ? (
-                <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading channels...
+            {activeTab === "config" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-black/[0.08] bg-black/[0.02] px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+                  <div>
+                    <p className="text-sm font-medium">Work system</p>
+                    <p className="text-xs text-muted-foreground">
+                      Turn off to disable contract work and coin rewards
+                    </p>
+                  </div>
+                  <Switch
+                    checked={enabled}
+                    disabled={formDisabled}
+                    onCheckedChange={(v) => setValue("enabled", v)}
+                  />
                 </div>
-              ) : channels.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No text channels found.</p>
-              ) : (
-                <div className="max-h-44 space-y-1 overflow-y-auto rounded-xl border border-black/[0.08] p-2 dark:border-white/10">
-                  {channels.map((ch) => {
-                    const checked = allowedChannelIds.includes(ch.id);
-                    return (
-                      <label
-                        key={ch.id}
-                        className={cn(
-                          "flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors",
-                          checked && "bg-kat/10",
-                        )}
-                      >
-                        <input
-                          type="checkbox"
-                          className="accent-[hsl(var(--kat-brand))]"
-                          checked={checked}
-                          disabled={formDisabled}
-                          onChange={() => {
-                            const next = checked
-                              ? allowedChannelIds.filter((id) => id !== ch.id)
-                              : [...allowedChannelIds, ch.id];
-                            setValue("allowedChannelIds", next);
-                          }}
-                        />
-                        <Hash className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                        <span className="truncate">{ch.name}</span>
-                      </label>
-                    );
-                  })}
-                  <p className="px-2 pt-1 text-[10px] text-muted-foreground">
-                    {allowedChannelIds.length} selected
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Hash className="h-4 w-4 text-muted-foreground" />
+                    <p className="text-sm font-medium text-foreground">Allowed channels</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Select which channels work commands are allowed in. If none are selected, commands won&apos;t respond anywhere.
+                  </p>
+                  {channelsLoading ? (
+                    <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading channels...
+                    </div>
+                  ) : channels.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No text channels found.</p>
+                  ) : (
+                    <div className="max-h-52 space-y-1 overflow-y-auto rounded-xl border border-black/[0.08] p-2 dark:border-white/10">
+                      {channels.map((ch) => {
+                        const checked = allowedChannelIds.includes(ch.id);
+                        return (
+                          <label
+                            key={ch.id}
+                            className={cn(
+                              "flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors",
+                              checked && "bg-kat/10",
+                            )}
+                          >
+                            <input
+                              type="checkbox"
+                              className="accent-[hsl(var(--kat-brand))]"
+                              checked={checked}
+                              disabled={formDisabled}
+                              onChange={() => {
+                                const next = checked
+                                  ? allowedChannelIds.filter((id) => id !== ch.id)
+                                  : [...allowedChannelIds, ch.id];
+                                setValue("allowedChannelIds", next);
+                              }}
+                            />
+                            <Hash className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                            <span className="truncate">{ch.name}</span>
+                          </label>
+                        );
+                      })}
+                      <p className="px-2 pt-1 text-[10px] text-muted-foreground">
+                        {allowedChannelIds.length} selected
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "howto" && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">How it works</p>
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    Use <code className="rounded bg-muted px-1">xworks</code> to browse
+                    contracts, apply with <code className="rounded bg-muted px-1">xwork apply &lt;job&gt;</code>,
+                    then <code className="rounded bg-muted px-1">xwork</code> to complete it.
+                    Most work sessions trigger a trivia challenge — answer correctly to earn, wrong
+                    answers accumulate towards dismissal. Criminal jobs always have a 90% challenge
+                    rate and escalating arrest bans on repeat offences. Max 12 works/hour.
                   </p>
                 </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">How it works</p>
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                Use <code className="rounded bg-muted px-1">xworks</code> to browse
-                contracts, apply with <code className="rounded bg-muted px-1">xwork apply &lt;job&gt;</code>,
-                then <code className="rounded bg-muted px-1">xwork</code> to complete it.
-                Most work sessions trigger a trivia challenge — answer correctly to earn, wrong
-                answers accumulate towards dismissal. Criminal jobs always have 90% chance of a
-                challenge and increasing arrest bans on repeat offences. Max 12 works/hour.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Features</p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <div className="flex items-start gap-2 rounded-lg border border-black/[0.06] bg-black/[0.02] p-3 dark:border-white/[0.06] dark:bg-white/[0.02]">
-                  <Flame className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold">Streak</p>
-                    <p className="text-xs text-muted-foreground">Work daily to build a streak worth up to 3x rewards</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2 rounded-lg border border-black/[0.06] bg-black/[0.02] p-3 dark:border-white/[0.06] dark:bg-white/[0.02]">
-                  <ShoppingBag className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold">Shop</p>
-                    <p className="text-xs text-muted-foreground"><code className="rounded bg-muted px-0.5">xworkshop</code> — category boosters (+15% rewards), Coffee (+10% XP), Charm (streak)</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2 rounded-lg border border-black/[0.06] bg-black/[0.02] p-3 dark:border-white/[0.06] dark:bg-white/[0.02]">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold">Criminal</p>
-                    <p className="text-xs text-muted-foreground">90% challenge rate, high rewards, escalating arrest bans (24h → 3d → 7d). CRIMINAL skill reduces catch chance.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2 rounded-lg border border-black/[0.06] bg-black/[0.02] p-3 dark:border-white/[0.06] dark:bg-white/[0.02]">
-                  <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold">Skills</p>
-                    <p className="text-xs text-muted-foreground"><code className="rounded bg-muted px-0.5">xworkskills</code> — spend skill points every 5 levels for +10% per category</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2 rounded-lg border border-black/[0.06] bg-black/[0.02] p-3 dark:border-white/[0.06] dark:bg-white/[0.02]">
-                  <Gift className="mt-0.5 h-4 w-4 shrink-0 text-pink-500" />
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold">Daily Missions</p>
-                    <p className="text-xs text-muted-foreground"><code className="rounded bg-muted px-0.5">xworkmissions</code> — complete random daily goals for bonus coins &amp; XP</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2 rounded-lg border border-black/[0.06] bg-black/[0.02] p-3 dark:border-white/[0.06] dark:bg-white/[0.02]">
-                  <Coins className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold">Gamble</p>
-                    <p className="text-xs text-muted-foreground">Add <code className="rounded bg-muted px-0.5">!</code> to gamble — 50% double or 50% half (60% win on streak 3+)</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-5 lg:flex-row">
-              <div className="min-w-0 flex-1 space-y-2">
-                <p className="text-sm font-medium text-foreground">
-                  Contract categories
-                </p>
-                <div className="rounded-xl border border-black/[0.08] dark:border-white/10">
-                  {CONTRACT_PREVIEW.map((cat, i) => (
-                    <div
-                      key={cat.label}
-                      className="flex items-start gap-3 px-4 py-3 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-black/[0.08] dark:[&:not(:last-child)]:border-white/10"
-                    >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
-                        <cat.icon className="h-4 w-4" />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium">{cat.label}</p>
-                        <p className="text-xs text-muted-foreground">{cat.desc}</p>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">Features</p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {FEATURES.map((f) => (
+                      <div
+                        key={f.title}
+                        className="flex items-start gap-2 rounded-lg border border-black/[0.06] bg-black/[0.02] p-3 dark:border-white/[0.06] dark:bg-white/[0.02]"
+                      >
+                        <span className={cn("mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg", f.bg)}>
+                          <f.icon className={cn("h-4 w-4", f.color)} />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold">{f.title}</p>
+                          <p className="text-xs text-muted-foreground">{f.desc}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
+            )}
 
-              <div className="w-px shrink-0 bg-border max-lg:hidden" />
+            {activeTab === "contracts" && (
+              <div className="flex flex-col gap-4 sm:flex-row">
+                <div className="min-w-0 flex-1 space-y-2">
+                  <p className="text-sm font-medium text-foreground">Contract categories</p>
+                  <div className="rounded-xl border border-black/[0.08] dark:border-white/10">
+                    {CONTRACT_PREVIEW.map((cat) => (
+                      <div
+                        key={cat.label}
+                        className="flex items-start gap-3 px-4 py-3 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-black/[0.08] dark:[&:not(:last-child)]:border-white/10"
+                      >
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
+                          <cat.icon className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium">{cat.label}</p>
+                          <p className="text-xs text-muted-foreground">{cat.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-              <div className="min-w-0 space-y-2 lg:w-72 lg:shrink-0">
-                <p className="text-sm font-medium text-foreground">
-                  Difficulty tiers
-                </p>
-                <div className="rounded-xl border border-black/[0.08] dark:border-white/10">
-                  {DIFFICULTY_STEPS.map((step, i) => (
-                    <div
-                      key={step.label}
-                      className="flex items-center justify-between px-4 py-2 text-sm [&:not(:last-child)]:border-b [&:not(:last-child)]:border-black/[0.08] dark:[&:not(:last-child)]:border-white/10"
-                    >
-                      <span className="font-medium">{step.label}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {step.reward} coins · {step.cooldown}
-                      </span>
-                    </div>
-                  ))}
+                <div className="w-px shrink-0 bg-border max-sm:hidden" />
+
+                <div className="min-w-0 space-y-2 sm:w-56 sm:shrink-0">
+                  <p className="text-sm font-medium text-foreground">Difficulty tiers</p>
+                  <div className="rounded-xl border border-black/[0.08] dark:border-white/10">
+                    {DIFFICULTY_STEPS.map((step) => (
+                      <div
+                        key={step.label}
+                        className="flex items-center justify-between px-4 py-2 text-sm [&:not(:last-child)]:border-b [&:not(:last-child)]:border-black/[0.08] dark:[&:not(:last-child)]:border-white/10"
+                      >
+                        <span className="font-medium">{step.label}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {step.reward} · {step.cooldown}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {saveSuccess ? (
               <p className="flex items-start gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
