@@ -39,7 +39,7 @@ const imageVariants = {
 export function HeroSection() {
   return (
     <section className="flex min-h-[calc(100vh-3.5rem)] items-center pl-6 sm:pl-12 lg:pl-20 xl:pl-28">
-      <div className="flex w-full items-center gap-4 lg:gap-6">
+      <div className="flex w-full items-center gap-0">
 
         {/* Left: text + buttons */}
         <motion.div
