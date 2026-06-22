@@ -1,4 +1,8 @@
 import { apiClient, endpoints } from "@/api";
+import type {
+  RecurringMessage,
+  RecurringMessageRequest,
+} from "@/features/recurring-messages/types/recurring-message";
 import type { ApiResponse, PageResponse } from "@/types/api";
 import type { Guild, GuildSettings } from "@/types/guild";
 import type { LoggingConfig } from "@/types/logging";
@@ -305,6 +309,33 @@ export const guildService = {
       ApiResponse<WorkConfig> | WorkConfig
     >(endpoints.guilds.works(guildId), payload);
     return unwrapApiData(data) as WorkConfig;
+  },
+
+  async getRecurringMessages(guildId: string): Promise<RecurringMessage[]> {
+    const { data } = await apiClient.get<RecurringMessage[]>(
+      endpoints.guilds.recurringMessages(guildId),
+    );
+    return Array.isArray(data) ? data : [];
+  },
+
+  async createRecurringMessage(guildId: string, req: RecurringMessageRequest): Promise<RecurringMessage> {
+    const { data } = await apiClient.post<RecurringMessage>(
+      endpoints.guilds.recurringMessages(guildId),
+      req,
+    );
+    return data;
+  },
+
+  async updateRecurringMessage(guildId: string, id: number, req: RecurringMessageRequest): Promise<RecurringMessage> {
+    const { data } = await apiClient.put<RecurringMessage>(
+      endpoints.guilds.recurringMessageById(guildId, id),
+      req,
+    );
+    return data;
+  },
+
+  async deleteRecurringMessage(guildId: string, id: number): Promise<void> {
+    await apiClient.delete(endpoints.guilds.recurringMessageById(guildId, id));
   },
 
   async getRecentMembers(guildId: string, limit = 8): Promise<NewMember[]> {

@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useState } from "react";
-import { ArrowUp, Coins, Crown, Gift, MessageSquare, Sparkles, Ticket } from "lucide-react";
+import { ArrowUp, Coins, Crown, Gift, MessageSquare, RefreshCw, Sparkles, Ticket } from "lucide-react";
 import { ActionsModal } from "@/features/actions/components/actions-modal";
 import { overviewExtraFeatures } from "@/features/dashboard/config/overview-extra-features";
 import { MonthlyJoinsChart } from "@/features/dashboard/components/widgets/monthly-joins-chart";
@@ -21,6 +21,7 @@ import { WorkModal } from "@/features/works/components/work-modal";
 import { MessageSenderModal } from "@/features/message-sender/components/message-sender-modal";
 import { GiveawayModal } from "@/features/giveaways/components/giveaway-modal";
 import { TicketsModal } from "@/features/tickets/components/tickets-modal";
+import { RecurringMessagesModal } from "@/features/recurring-messages/components/recurring-messages-modal";
 import { usePremiumStatus } from "@/features/guilds/hooks/use-premium-status";
 import { useGuildStore } from "@/store/guild-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -42,6 +43,7 @@ function OverviewSectionComponent() {
   const [giveawayOpen, setGiveawayOpen] = useState(false);
   const [workOpen, setWorkOpen] = useState(false);
   const [ticketsOpen, setTicketsOpen] = useState(false);
+  const [recurringOpen, setRecurringOpen] = useState(false);
 
   const { data: premiumData } = usePremiumStatus(selectedGuildId);
   const isPremium = premiumData?.isPremium ?? false;
@@ -205,6 +207,16 @@ function OverviewSectionComponent() {
             disableHoverMotion
             onClick={() => setTicketsOpen(true)}
           />
+          <OverviewFeatureCard
+            title={t.overview.featureCards.recurringMessages.title}
+            description={t.overview.featureCards.recurringMessages.description}
+            icon={RefreshCw}
+            className={cn("h-full w-full sm:min-w-0 sm:flex-1", BOTTOM_PANEL_HEIGHT)}
+            badge="configure"
+            badgeLabel={t.overview.badges.configure}
+            disableHoverMotion
+            onClick={() => setRecurringOpen(true)}
+          />
         </div>
       </div>
 
@@ -258,6 +270,12 @@ function OverviewSectionComponent() {
       <TicketsModal
         open={ticketsOpen}
         onOpenChange={setTicketsOpen}
+        guildId={selectedGuildId}
+      />
+
+      <RecurringMessagesModal
+        open={recurringOpen}
+        onOpenChange={setRecurringOpen}
         guildId={selectedGuildId}
       />
     </>

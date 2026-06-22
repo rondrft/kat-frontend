@@ -49,6 +49,8 @@ export const endpoints = {
     moderationSecurityScan: (guildId: string) => `/guilds/${guildId}/moderation/security-scan`,
     premium: (guildId: string) => `/guilds/${guildId}/premium`,
     works: (guildId: string) => `/guilds/${guildId}/works`,
+    recurringMessages: (guildId: string) => `/guilds/${guildId}/recurring-messages`,
+    recurringMessageById: (guildId: string, id: number) => `/guilds/${guildId}/recurring-messages/${id}`,
   },
   payment: {
     createOrder: "/payment/orders",

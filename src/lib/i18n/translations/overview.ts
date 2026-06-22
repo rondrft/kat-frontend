@@ -28,6 +28,10 @@ export const overviewEn = {
       title: "Tickets",
       description: "Create support ticket panels with custom roles, categories and messages.",
     },
+    recurringMessages: {
+      title: "Recurring Messages",
+      description: "Schedule automatic announcements to any channel at a fixed interval.",
+    },
     tempVoice: {
       title: "Temporary Voice Channel",
       description: "Join-to-create personal voice rooms under a category.",
@@ -102,6 +106,10 @@ export const overviewEs = {
     tickets: {
       title: "Tickets",
       description: "Crea paneles de tickets de soporte con roles, categorías y mensajes personalizados.",
+    },
+    recurringMessages: {
+      title: "Mensajes Recurrentes",
+      description: "Programa anuncios automáticos en cualquier canal a intervalos fijos.",
     },
     tempVoice: {
       title: "Canal de Voz Temporal",
@@ -178,6 +186,10 @@ export const overviewPtBr = {
       title: "Tickets",
       description: "Crie painéis de tickets com cargos, categorias e mensagens personalizadas.",
     },
+    recurringMessages: {
+      title: "Mensagens Recorrentes",
+      description: "Agende anúncios automáticos em qualquer canal em intervalos fixos.",
+    },
     tempVoice: {
       title: "Canal de Voz Temporário",
       description: "Entre para criar salas de voz pessoais sob uma categoria.",
@@ -252,6 +264,10 @@ export const overviewFr = {
     tickets: {
       title: "Tickets",
       description: "Créez des panneaux de tickets avec rôles, catégories et messages personnalisés.",
+    },
+    recurringMessages: {
+      title: "Messages Récurrents",
+      description: "Planifiez des annonces automatiques dans n'importe quel salon à intervalle fixe.",
     },
     tempVoice: {
       title: "Salon Vocal Temporaire",
@@ -328,6 +344,10 @@ export const overviewDe = {
       title: "Tickets",
       description: "Erstelle Support-Ticket-Panels mit benutzerdefinierten Rollen, Kategorien und Nachrichten.",
     },
+    recurringMessages: {
+      title: "Wiederkehrende Nachrichten",
+      description: "Plane automatische Ankündigungen in beliebigen Kanälen in festen Intervallen.",
+    },
     tempVoice: {
       title: "Temporärer Sprachkanal",
       description: "Tritt bei, um persönliche Sprachräume unter einer Kategorie zu erstellen.",
@@ -402,6 +422,10 @@ export const overviewJa = {
     tickets: {
       title: "チケット",
       description: "カスタムロール、カテゴリ、メッセージでサポートチケットパネルを作成。",
+    },
+    recurringMessages: {
+      title: "定期メッセージ",
+      description: "任意のチャンネルに固定間隔で自動アナウンスをスケジュール。",
     },
     tempVoice: {
       title: "一時ボイスチャンネル",
