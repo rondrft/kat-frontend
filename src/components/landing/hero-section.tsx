@@ -38,7 +38,7 @@ const imageVariants = {
 
 export function HeroSection() {
   return (
-    <section className="flex min-h-[calc(100vh-3.5rem)] items-center pl-6 sm:pl-12 lg:pl-20 xl:pl-28">
+    <section className="flex min-h-[calc(100vh-3.5rem)] items-center pl-6 sm:pl-16 lg:pl-24 xl:pl-32 pr-0">
       <div className="flex w-full items-center gap-0">
 
         {/* Left: text + buttons */}
@@ -57,7 +57,7 @@ export function HeroSection() {
 
           <motion.h1
             variants={itemVariants}
-            className="font-hero text-4xl font-extrabold uppercase leading-[1.05] tracking-tight sm:text-5xl lg:text-5xl xl:text-6xl"
+            className="font-hero text-5xl font-extrabold uppercase leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl"
           >
             <span className="block text-foreground/90">Build <span className="text-foreground">Faster</span>.</span>
             <span className="block text-foreground/90">Run <span className="text-foreground">Smarter</span></span>
@@ -105,7 +105,7 @@ export function HeroSection() {
             alt="Kat"
             width={800}
             height={800}
-            className="h-[80vh] w-auto"
+            className="h-[72vh] w-auto"
             priority
           />
         </motion.div>
