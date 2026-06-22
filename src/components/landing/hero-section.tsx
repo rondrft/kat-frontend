@@ -110,9 +110,9 @@ export function HeroSection() {
           <Image
             src="/katrun.png"
             alt="Kat"
-            width={420}
-            height={420}
-            className="h-auto w-[340px] xl:w-[420px]"
+            width={800}
+            height={800}
+            className="h-[65vh] w-auto"
             priority
           />
         </motion.div>
