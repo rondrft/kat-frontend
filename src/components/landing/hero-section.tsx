@@ -99,7 +99,7 @@ export function HeroSection() {
 
         {/* Right: image — flex-1 so it fills the remaining space */}
         <motion.div
-          className="hidden min-w-0 flex-1 items-center justify-center lg:flex"
+          className="hidden min-w-0 flex-1 items-center justify-center lg:flex -ml-24 xl:-ml-32"
           variants={imageVariants}
           initial="hidden"
           animate="visible"
