@@ -57,15 +57,11 @@ export function HeroSection() {
 
           <motion.h1
             variants={itemVariants}
-            className="font-hero text-4xl font-extrabold uppercase leading-[0.95] tracking-tight sm:text-5xl lg:text-5xl xl:text-6xl"
+            className="font-hero text-4xl font-extrabold uppercase leading-[1.05] tracking-tight sm:text-5xl lg:text-5xl xl:text-6xl"
           >
-            <span className="text-foreground/90">Build </span>
-            <span className="text-foreground">Faster</span>
-            <span className="text-foreground/90">. Run </span>
-            <span className="text-foreground">Smarter</span>
-            <span className="text-foreground/90"> With </span>
-            <ShineText>Kat</ShineText>
-            <span className="text-foreground/90">.</span>
+            <span className="block text-foreground/90">Build <span className="text-foreground">Faster</span>.</span>
+            <span className="block text-foreground/90">Run <span className="text-foreground">Smarter</span></span>
+            <span className="block text-foreground/90">With <ShineText>Kat</ShineText>.</span>
           </motion.h1>
 
           <motion.p
@@ -99,7 +95,7 @@ export function HeroSection() {
 
         {/* Right: image — flex-1 so it fills the remaining space */}
         <motion.div
-          className="hidden min-w-0 flex-1 items-center justify-center lg:flex -ml-24 xl:-ml-32"
+          className="hidden min-w-0 flex-1 items-center justify-center lg:flex -ml-48 xl:-ml-56"
           variants={imageVariants}
           initial="hidden"
           animate="visible"
