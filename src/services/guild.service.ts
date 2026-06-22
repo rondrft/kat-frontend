@@ -8,7 +8,7 @@ import type {
   GuildBrandingRequest,
 } from "@/features/branding/types/branding";
 import type { ApiResponse, PageResponse } from "@/types/api";
-import type { Guild, GuildSettings } from "@/types/guild";
+import type { Guild, GuildSettings, DashboardAccess } from "@/types/guild";
 import type { LoggingConfig } from "@/types/logging";
 import type { MonthlyJoinStats } from "@/features/dashboard/types/monthly-joins";
 import type { NewMember } from "@/features/dashboard/types/new-member";
@@ -89,6 +89,33 @@ export const guildService = {
       settings,
     );
     return data.data;
+  },
+
+  async getDashboardAccess(guildId: string): Promise<DashboardAccess> {
+    try {
+      const { data } = await apiClient.get<ApiResponse<DashboardAccess> | DashboardAccess>(
+        endpoints.guilds.dashboardAccess(guildId),
+      );
+      const raw = unwrapApiData(data) as Record<string, unknown>;
+      return {
+        allowedUserIds: Array.isArray(raw.allowedUserIds) ? raw.allowedUserIds.map(String) : [],
+        allowedRoleIds: Array.isArray(raw.allowedRoleIds) ? raw.allowedRoleIds.map(String) : [],
+      };
+    } catch {
+      return { allowedUserIds: [], allowedRoleIds: [] };
+    }
+  },
+
+  async saveDashboardAccess(guildId: string, payload: DashboardAccess): Promise<DashboardAccess> {
+    const { data } = await apiClient.put<ApiResponse<DashboardAccess> | DashboardAccess>(
+      endpoints.guilds.dashboardAccess(guildId),
+      payload,
+    );
+    const raw = unwrapApiData(data) as Record<string, unknown>;
+    return {
+      allowedUserIds: Array.isArray(raw.allowedUserIds) ? raw.allowedUserIds.map(String) : [],
+      allowedRoleIds: Array.isArray(raw.allowedRoleIds) ? raw.allowedRoleIds.map(String) : [],
+    };
   },
 
   async getGuildStats(guildId: string): Promise<GuildStats> {

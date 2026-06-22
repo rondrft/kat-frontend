@@ -10,6 +10,7 @@ export const endpoints = {
     list: "/guilds",
     byId: (guildId: string) => `/guilds/${guildId}`,
     settings: (guildId: string) => `/guilds/${guildId}/settings`,
+    dashboardAccess: (guildId: string) => `/guilds/${guildId}/settings/access`,
     stats: (guildId: string) => `/guilds/${guildId}/stats`,
     recentMembers: (guildId: string) => `/guilds/${guildId}/members/recent`,
     memberStats: (guildId: string) => `/guilds/${guildId}/members/stats`,

@@ -12,6 +12,15 @@ export const settingsEn = {
   export: "Export configuration",
   exportDesc: "Download all server settings as a JSON file.",
   exportBtn: "Export",
+  tabGeneral: "General",
+  tabAccess: "Dashboard Access",
+  accessInfo: "By default, only the server owner can access the dashboard. You can authorize specific roles or users here.",
+  allowedRoles: "Roles with access",
+  allowedRolesDesc: "Users with these roles will be able to log in to the dashboard.",
+  allowedUsers: "Users with access",
+  allowedUsersDesc: "Users authorized by their Discord ID.",
+  userIdPlaceholder: "Discord ID (e.g. 123456789012345678)",
+  invalidUserId: "Invalid ID — must be a 17–20 digit number",
 } as const;
 
 export const settingsEs = {
@@ -28,6 +37,15 @@ export const settingsEs = {
   export: "Exportar configuración",
   exportDesc: "Descarga todos los ajustes del servidor como un archivo JSON.",
   exportBtn: "Exportar",
+  tabGeneral: "General",
+  tabAccess: "Acceso al dashboard",
+  accessInfo: "Por defecto, solo el dueño del servidor puede acceder al dashboard. Podés autorizar roles o usuarios específicos desde aquí.",
+  allowedRoles: "Roles con acceso",
+  allowedRolesDesc: "Los usuarios con estos roles podrán iniciar sesión en el dashboard.",
+  allowedUsers: "Usuarios con acceso",
+  allowedUsersDesc: "Usuarios autorizados por su ID de Discord.",
+  userIdPlaceholder: "ID de Discord (ej. 123456789012345678)",
+  invalidUserId: "ID inválida, debe ser un número de 17–20 dígitos",
 } as const;
 
 export const settingsPtBr = {
@@ -44,6 +62,15 @@ export const settingsPtBr = {
   export: "Exportar configuração",
   exportDesc: "Baixar todas as configurações do servidor como JSON.",
   exportBtn: "Exportar",
+  tabGeneral: "Geral",
+  tabAccess: "Acesso ao dashboard",
+  accessInfo: "Por padrão, apenas o dono do servidor pode acessar o dashboard. Você pode autorizar cargos ou usuários específicos aqui.",
+  allowedRoles: "Cargos com acesso",
+  allowedRolesDesc: "Usuários com esses cargos poderão fazer login no dashboard.",
+  allowedUsers: "Usuários com acesso",
+  allowedUsersDesc: "Usuários autorizados pelo ID do Discord.",
+  userIdPlaceholder: "ID do Discord (ex. 123456789012345678)",
+  invalidUserId: "ID inválido, deve ser um número de 17–20 dígitos",
 } as const;
 
 export const settingsFr = {
@@ -60,6 +87,15 @@ export const settingsFr = {
   export: "Exporter la configuration",
   exportDesc: "Télécharger tous les paramètres du serveur au format JSON.",
   exportBtn: "Exporter",
+  tabGeneral: "Général",
+  tabAccess: "Accès au tableau de bord",
+  accessInfo: "Par défaut, seul le propriétaire du serveur peut accéder au tableau de bord. Vous pouvez autoriser des rôles ou utilisateurs spécifiques ici.",
+  allowedRoles: "Rôles avec accès",
+  allowedRolesDesc: "Les utilisateurs avec ces rôles pourront se connecter au tableau de bord.",
+  allowedUsers: "Utilisateurs avec accès",
+  allowedUsersDesc: "Utilisateurs autorisés par leur identifiant Discord.",
+  userIdPlaceholder: "ID Discord (ex. 123456789012345678)",
+  invalidUserId: "ID invalide, doit être un nombre de 17–20 chiffres",
 } as const;
 
 export const settingsDe = {
@@ -76,6 +112,15 @@ export const settingsDe = {
   export: "Konfiguration exportieren",
   exportDesc: "Alle Servereinstellungen als JSON-Datei herunterladen.",
   exportBtn: "Exportieren",
+  tabGeneral: "Allgemein",
+  tabAccess: "Dashboard-Zugang",
+  accessInfo: "Standardmäßig kann nur der Serverinhaber auf das Dashboard zugreifen. Du kannst hier bestimmte Rollen oder Nutzer autorisieren.",
+  allowedRoles: "Rollen mit Zugang",
+  allowedRolesDesc: "Nutzer mit diesen Rollen können sich im Dashboard anmelden.",
+  allowedUsers: "Nutzer mit Zugang",
+  allowedUsersDesc: "Autorisierte Nutzer nach ihrer Discord-ID.",
+  userIdPlaceholder: "Discord-ID (z.B. 123456789012345678)",
+  invalidUserId: "Ungültige ID, muss eine 17–20-stellige Zahl sein",
 } as const;
 
 export const settingsJa = {
@@ -92,4 +137,13 @@ export const settingsJa = {
   export: "設定をエクスポート",
   exportDesc: "すべてのサーバー設定をJSONファイルとしてダウンロードします。",
   exportBtn: "エクスポート",
+  tabGeneral: "一般",
+  tabAccess: "ダッシュボードアクセス",
+  accessInfo: "デフォルトではサーバーオーナーのみがダッシュボードにアクセスできます。特定のロールやユーザーをここで承認できます。",
+  allowedRoles: "アクセス権のあるロール",
+  allowedRolesDesc: "これらのロールを持つユーザーはダッシュボードにログインできます。",
+  allowedUsers: "アクセス権のあるユーザー",
+  allowedUsersDesc: "Discord IDで承認されたユーザー。",
+  userIdPlaceholder: "Discord ID（例：123456789012345678）",
+  invalidUserId: "無効なID、17〜20桁の数字である必要があります",
 } as const;

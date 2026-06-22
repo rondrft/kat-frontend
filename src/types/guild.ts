@@ -15,3 +15,8 @@ export type GuildSettings = {
   locale: string;
   moderationEnabled: boolean;
 };
+
+export type DashboardAccess = {
+  allowedUserIds: string[];
+  allowedRoleIds: string[];
+};
