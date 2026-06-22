@@ -19,6 +19,12 @@ export function SiteFooter() {
       >
         Terms of Service
       </Link>
+      <Link
+        href={siteConfig.links.refund}
+        className="transition-colors hover:text-foreground"
+      >
+        Refund Policy
+      </Link>
     </footer>
   );
 }

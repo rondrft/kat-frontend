@@ -23,6 +23,7 @@ export const siteConfig = {
     github: "https://github.com",
     privacy: "/privacy",
     terms: "/terms",
+    refund: "/refund",
   },
   ogImage: "/logo/og-image.png",
   locale: "es_ES",

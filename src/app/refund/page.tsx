@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service",
+  title: "Refund Policy",
 };
 
-export default function TermsOfServicePage() {
+export default function RefundPolicyPage() {
   return (
     <iframe
-      src="/terms.pdf"
+      src="/refund.pdf"
       className="fixed inset-0 h-full w-full border-0"
-      title="Terms of Service"
+      title="Refund Policy"
     />
   );
 }
