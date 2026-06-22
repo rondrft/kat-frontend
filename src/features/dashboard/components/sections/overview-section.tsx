@@ -239,6 +239,7 @@ function OverviewSectionComponent() {
         open={tempVoiceOpen}
         onOpenChange={setTempVoiceOpen}
         guildId={selectedGuildId}
+        isPremium={isPremium}
       />
 
       <AutoRolesModal

@@ -50,4 +50,17 @@ export function useSaveTempVoiceConfig(guildId: string | null) {
   });
 }
 
+export function useDeleteAllTempVoiceChannels(guildId: string | null) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => guildService.deleteAllTempVoiceChannels(guildId!),
+    onSuccess: () => {
+      if (guildId) {
+        queryClient.invalidateQueries({ queryKey: tempVoiceConfigQueryKey(guildId) });
+      }
+    },
+  });
+}
+
 export type { TempVoiceConfig, TempVoiceSaveRequest };

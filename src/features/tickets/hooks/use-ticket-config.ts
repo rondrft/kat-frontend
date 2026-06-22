@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TicketConfigFormValues } from "@/features/tickets/types/ticket-config";
 import type { TicketConfigSchemaType } from "@/features/tickets/schemas/ticket-config-schema";
 import {
-  deleteAllTempVoiceChannels,
   getTicketConfig,
   resetTicketSystem,
   saveTicketConfig,
@@ -47,17 +46,3 @@ export function useResetTicketSystem(guildId: string | null) {
   });
 }
 
-export function useDeleteAllTempVoiceChannels(guildId: string | null) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: () => deleteAllTempVoiceChannels(guildId!),
-    onSuccess: () => {
-      if (guildId) {
-        queryClient.invalidateQueries({
-          queryKey: ["guilds", guildId, "voice", "temp"],
-        });
-      }
-    },
-  });
-}

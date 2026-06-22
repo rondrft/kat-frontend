@@ -220,6 +220,10 @@ export const guildService = {
     return unwrapApiData(data) as TempVoiceConfig;
   },
 
+  async deleteAllTempVoiceChannels(guildId: string): Promise<void> {
+    await apiClient.delete(endpoints.guilds.tempVoiceChannels(guildId));
+  },
+
   async getActionsConfig(guildId: string): Promise<ActionsConfig | null> {
     try {
       const { data } = await apiClient.get<

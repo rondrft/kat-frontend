@@ -88,6 +88,3 @@ export async function resetTicketSystem(guildId: string): Promise<void> {
   await apiClient.delete(endpoints.guilds.tickets(guildId));
 }
 
-export async function deleteAllTempVoiceChannels(guildId: string): Promise<void> {
-  await apiClient.delete(endpoints.guilds.tempVoiceChannels(guildId));
-}

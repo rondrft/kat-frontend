@@ -21,7 +21,6 @@ import { useGuildCategories } from "@/features/voice/hooks/use-guild-categories"
 import { useGuildTextChannels } from "@/features/auto-roles/hooks/use-guild-text-channels";
 import { useGuildRoles } from "@/features/auto-roles/hooks/use-guild-roles";
 import {
-  useDeleteAllTempVoiceChannels,
   useResetTicketSystem,
   useSaveTicketConfig,
   useTicketConfig,
@@ -134,7 +133,6 @@ export function TicketsModal({ open, onOpenChange, guildId }: TicketsModalProps)
 
   const saveMutation = useSaveTicketConfig(guildId);
   const resetMutation = useResetTicketSystem(guildId);
-  const deleteTempVoiceMutation = useDeleteAllTempVoiceChannels(guildId);
 
   const form = useForm<TicketConfigSchemaType>({
     resolver: zodResolver(ticketConfigSchema),
@@ -218,23 +216,6 @@ export function TicketsModal({ open, onOpenChange, guildId }: TicketsModalProps)
         error instanceof AppError
           ? error.message
           : "Could not reset ticket system.";
-      setSaveError(message);
-    }
-  };
-
-  const handleDeleteTempVoice = async () => {
-    if (!guildId) return;
-    setSaveSuccess(null);
-    setSaveError(null);
-
-    try {
-      await deleteTempVoiceMutation.mutateAsync();
-      setSaveSuccess("All temporary voice channels are being deleted.");
-    } catch (error) {
-      const message =
-        error instanceof AppError
-          ? error.message
-          : "Could not delete temporary voice channels.";
       setSaveError(message);
     }
   };
@@ -581,37 +562,20 @@ export function TicketsModal({ open, onOpenChange, guildId }: TicketsModalProps)
             <div className="space-y-3 border-t border-black/[0.08] pt-5 dark:border-white/10">
               <p className="text-sm font-medium">Danger zone</p>
 
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="w-full"
-                  disabled={resetMutation.isPending}
-                  onClick={handleResetTickets}
-                >
-                  {resetMutation.isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="mr-2 h-4 w-4" />
-                  )}
-                  Delete ticket system
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="w-full"
-                  disabled={deleteTempVoiceMutation.isPending}
-                  onClick={handleDeleteTempVoice}
-                >
-                  {deleteTempVoiceMutation.isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="mr-2 h-4 w-4" />
-                  )}
-                  Delete all temp voice channels
-                </Button>
-              </div>
+              <Button
+                type="button"
+                variant="destructive"
+                className="w-full"
+                disabled={resetMutation.isPending}
+                onClick={handleResetTickets}
+              >
+                {resetMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-2 h-4 w-4" />
+                )}
+                Delete ticket system
+              </Button>
             </div>
           </form>
         )}
