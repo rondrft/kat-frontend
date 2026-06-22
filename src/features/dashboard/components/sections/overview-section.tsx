@@ -209,6 +209,9 @@ function OverviewSectionComponent() {
             disableHoverMotion
             onClick={() => setTicketsOpen(true)}
           />
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row">
           <OverviewFeatureCard
             title={t.overview.featureCards.recurringMessages.title}
             description={t.overview.featureCards.recurringMessages.description}
