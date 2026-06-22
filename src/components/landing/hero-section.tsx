@@ -43,7 +43,7 @@ export function HeroSection() {
 
         {/* Left: text + buttons */}
         <motion.div
-          className="flex w-full max-w-lg shrink-0 flex-col lg:max-w-xl"
+          className="relative z-10 flex w-full max-w-lg shrink-0 flex-col lg:max-w-xl"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -95,7 +95,7 @@ export function HeroSection() {
 
         {/* Right: image — flex-1 so it fills the remaining space */}
         <motion.div
-          className="hidden min-w-0 flex-1 items-center justify-center lg:flex -ml-48 xl:-ml-56"
+          className="relative z-0 hidden min-w-0 flex-1 items-center justify-center lg:flex -ml-48 xl:-ml-56"
           variants={imageVariants}
           initial="hidden"
           animate="visible"
