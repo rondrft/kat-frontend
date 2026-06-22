@@ -1,15 +1,5 @@
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Privacy Policy",
-};
+import { redirect } from "next/navigation";
 
 export default function PrivacyPolicyPage() {
-  return (
-    <iframe
-      src="/privacy.pdf"
-      className="fixed inset-0 h-full w-full border-0"
-      title="Privacy Policy"
-    />
-  );
+  redirect("/privacy.pdf");
 }

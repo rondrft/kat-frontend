@@ -1,15 +1,5 @@
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Terms of Service",
-};
+import { redirect } from "next/navigation";
 
 export default function TermsOfServicePage() {
-  return (
-    <iframe
-      src="/terms.pdf"
-      className="fixed inset-0 h-full w-full border-0"
-      title="Terms of Service"
-    />
-  );
+  redirect("/terms.pdf");
 }
