@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { BackgroundEffects, HeroSection } from "@/components/landing";
-import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 
 export const metadata: Metadata = {
@@ -15,7 +14,6 @@ export default function HomePage() {
       <main>
         <HeroSection />
       </main>
-      <SiteFooter />
     </div>
   );
 }

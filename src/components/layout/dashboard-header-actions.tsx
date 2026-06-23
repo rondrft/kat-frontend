@@ -1,6 +1,7 @@
 "use client";
 
-import { LogIn, LogOut } from "lucide-react";
+import { useState } from "react";
+import { Activity, LogIn, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +15,7 @@ import {
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { GuildSelector } from "@/features/guilds";
 import { getDiscordAvatarUrl } from "@/utils/discord";
+import { BotStatusModal } from "@/features/bot-status/components/bot-status-modal";
 
 function DashboardHeaderAuthPlaceholder() {
   return (
@@ -30,6 +32,7 @@ function DashboardHeaderAuthPlaceholder() {
 
 function DashboardUserMenu() {
   const { user, isAuthenticated, logout, loginWithDiscord, status } = useAuth();
+  const [statusOpen, setStatusOpen] = useState(false);
 
   const isRecovering = status === "loading" && !user;
 
@@ -58,32 +61,39 @@ function DashboardUserMenu() {
   const initial = (displayName.trim().charAt(0) || "?").toUpperCase();
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="relative h-9 w-9 rounded-full p-0 ring-2 ring-transparent transition-[box-shadow] hover:ring-kat/30"
-        >
-          <Avatar className="h-9 w-9">
-            <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" />
-            <AvatarFallback delayMs={0} className="bg-muted text-sm font-medium">
-              {initial}
-            </AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52">
-        <DropdownMenuLabel className="font-normal">
-          <p className="font-medium">{displayName}</p>
-          <p className="text-xs text-muted-foreground">@{user.username}</p>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void logout()}>
-          <LogOut className="mr-2 h-4 w-4" />
-          Cerrar sesión
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="relative h-9 w-9 rounded-full p-0 ring-2 ring-transparent transition-[box-shadow] hover:ring-kat/30"
+          >
+            <Avatar className="h-9 w-9">
+              <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" />
+              <AvatarFallback delayMs={0} className="bg-muted text-sm font-medium">
+                {initial}
+              </AvatarFallback>
+            </Avatar>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-52">
+          <DropdownMenuLabel className="font-normal">
+            <p className="font-medium">{displayName}</p>
+            <p className="text-xs text-muted-foreground">@{user.username}</p>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setStatusOpen(true)}>
+            <Activity className="mr-2 h-4 w-4" />
+            Estado del bot
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => void logout()}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Cerrar sesión
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <BotStatusModal open={statusOpen} onOpenChange={setStatusOpen} />
+    </>
   );
 }
 
