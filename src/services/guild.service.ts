@@ -34,6 +34,8 @@ import type {
 } from "@/features/works/types/work-config";
 import type {
   LevelingConfig,
+  LevelRoleReward,
+  LevelRoleRewardRequest,
   LevelingSaveRequest,
 } from "@/features/leveling/types/leveling-config";
 import type {
@@ -297,6 +299,32 @@ export const guildService = {
       ApiResponse<LevelingConfig> | LevelingConfig
     >(endpoints.guilds.leveling(guildId), payload);
     return unwrapApiData(data) as LevelingConfig;
+  },
+
+  async getLevelRoleRewards(guildId: string): Promise<LevelRoleReward[]> {
+    try {
+      const { data } = await apiClient.get<
+        ApiResponse<LevelRoleReward[]> | LevelRoleReward[]
+      >(endpoints.guilds.levelingRoleRewards(guildId));
+      return (unwrapApiData(data) as LevelRoleReward[]) ?? [];
+    } catch (error) {
+      if (error instanceof AppError && error.status === 404) return [];
+      throw error;
+    }
+  },
+
+  async saveLevelRoleReward(
+    guildId: string,
+    payload: LevelRoleRewardRequest,
+  ): Promise<LevelRoleReward> {
+    const { data } = await apiClient.post<
+      ApiResponse<LevelRoleReward> | LevelRoleReward
+    >(endpoints.guilds.levelingRoleRewards(guildId), payload);
+    return unwrapApiData(data) as LevelRoleReward;
+  },
+
+  async deleteLevelRoleReward(guildId: string, level: number): Promise<void> {
+    await apiClient.delete(endpoints.guilds.levelingRoleReward(guildId, level));
   },
 
   async getLoggingConfig(guildId: string): Promise<LoggingConfig | null> {
