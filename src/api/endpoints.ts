@@ -5,6 +5,7 @@ export const endpoints = {
     logout: "/auth/logout",
     refresh: "/auth/refresh",
     discordCallback: "/auth/discord/callback",
+    oauthState: "/auth/oauth/state",
   },
   guilds: {
     list: "/guilds",

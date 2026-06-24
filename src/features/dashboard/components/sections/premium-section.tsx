@@ -366,7 +366,7 @@ function CheckoutView({ plan, plans, onBack }: CheckoutViewProps) {
           </Button>
 
           <p className="text-center text-xs text-muted-foreground">
-            You will be redirected to MercadoPago's secure checkout.
+            You will be redirected to MercadoPago&apos;s secure checkout.
             Your payment details are never stored on our servers.
           </p>
         </div>

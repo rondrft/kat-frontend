@@ -16,6 +16,13 @@ export const authService = {
     );
   },
 
+  async getOAuthState(): Promise<string> {
+    const { data } = await apiClient.get<{ success: boolean; data: { state: string } }>(
+      endpoints.auth.oauthState,
+    );
+    return data.data.state;
+  },
+
   async logout(): Promise<void> {
     await apiClient.post(endpoints.auth.logout);
   },

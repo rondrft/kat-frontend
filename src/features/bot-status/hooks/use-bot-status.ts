@@ -5,26 +5,27 @@ import { apiClient } from "@/api/client";
 import { endpoints } from "@/api/endpoints";
 import { useAuthStore } from "@/store/auth-store";
 import { getStoredAccessToken } from "@/features/auth/lib/auth-session";
-import type { OwnerMetrics } from "@/types/owner";
+import type { BotStatus } from "@/features/bot-status/types";
 import type { ApiResponse } from "@/types/api";
 
-export const ownerMetricsQueryKey = ["owner", "metrics"] as const;
+export const botStatusQueryKey = ["bot", "status"] as const;
 
-export function useOwnerMetrics() {
+export function useBotStatus(enabled: boolean) {
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
   const status = useAuthStore((s) => s.status);
   const userId = useAuthStore((s) => s.session?.user?.id);
   const accessToken = useAuthStore((s) => s.session?.accessToken);
   const token = accessToken ?? (hasHydrated ? getStoredAccessToken() : null);
-  const enabled = hasHydrated && status !== "unauthenticated" && Boolean(userId || token);
+  const canFetch = hasHydrated && status !== "unauthenticated" && Boolean(userId || token) && enabled;
 
   return useQuery({
-    queryKey: ownerMetricsQueryKey,
+    queryKey: botStatusQueryKey,
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<OwnerMetrics>>(endpoints.owner.metrics);
+      const { data } = await apiClient.get<ApiResponse<BotStatus>>(endpoints.bot.status);
       return data.data;
     },
-    enabled,
-    staleTime: 60_000,
+    enabled: canFetch,
+    refetchInterval: 15_000,
+    staleTime: 10_000,
   });
 }

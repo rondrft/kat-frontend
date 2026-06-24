@@ -37,7 +37,7 @@ export function useAuth() {
     return () => window.removeEventListener("kat:unauthorized", handleUnauthorized);
   }, [queryClient, router]);
 
-  const loginWithDiscord = useCallback(() => {
+  const loginWithDiscord = useCallback(async () => {
     if (!isDiscordOAuthConfigured()) {
       window.alert(
         "Falta configurar Discord OAuth.\n\n1. Crea una app en https://discord.com/developers/applications\n2. Copia el Client ID\n3. Añade en .env.local:\n   NEXT_PUBLIC_DISCORD_CLIENT_ID=tu_client_id\n4. En OAuth2 → Redirects, agrega:\n   http://localhost:3000/auth/callback\n5. Reinicia npm run dev",
@@ -45,9 +45,9 @@ export function useAuth() {
       return;
     }
 
-    const state = crypto.randomUUID();
-    sessionStorage.setItem("kat-oauth-state", state);
     setStatus("loading");
+    const state = await authService.getOAuthState();
+    sessionStorage.setItem("kat-oauth-state", state);
     window.location.href = buildDiscordAuthorizeUrl(state);
   }, [setStatus]);
 

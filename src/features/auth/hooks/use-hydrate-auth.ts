@@ -50,6 +50,7 @@ export function useHydrateAuth() {
     }
 
     if (status === "authenticated") return;
+    if (status === "unauthenticated") return;
 
     let cancelled = false;
     setStatus("loading");
