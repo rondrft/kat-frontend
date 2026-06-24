@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useState } from "react";
-import { ArrowUp, Coins, Crown, Gift, LayoutTemplate, MessageSquare, Paintbrush, RefreshCw, Sparkles, Ticket, Trophy } from "lucide-react";
+import { ArrowUp, Coins, Crown, DatabaseBackup, Gift, LayoutTemplate, MessageSquare, Paintbrush, RefreshCw, Sparkles, Ticket, Trophy } from "lucide-react";
 import { ActionsModal } from "@/features/actions/components/actions-modal";
 import { overviewExtraFeatures } from "@/features/dashboard/config/overview-extra-features";
 import { MonthlyJoinsChart } from "@/features/dashboard/components/widgets/monthly-joins-chart";
@@ -23,6 +23,7 @@ import { GiveawayModal } from "@/features/giveaways/components/giveaway-modal";
 import { TicketsModal } from "@/features/tickets/components/tickets-modal";
 import { RecurringMessagesModal } from "@/features/recurring-messages/components/recurring-messages-modal";
 import { BrandingModal } from "@/features/branding/components/branding-modal";
+import { BackupModal } from "@/features/backup/components/backup-modal";
 import { ServerTemplatesModal } from "@/features/server-templates/components/server-templates-modal";
 import { ServerLeaderboardModal } from "@/features/server-leaderboard/components/server-leaderboard-modal";
 import { usePremiumStatus } from "@/features/guilds/hooks/use-premium-status";
@@ -50,6 +51,7 @@ function OverviewSectionComponent() {
   const [brandingOpen, setBrandingOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const [backupOpen, setBackupOpen] = useState(false);
 
   const { data: premiumData } = usePremiumStatus(selectedGuildId);
   const isPremium = premiumData?.isPremium ?? false;
@@ -256,6 +258,16 @@ function OverviewSectionComponent() {
             disableHoverMotion
             onClick={() => setLeaderboardOpen(true)}
           />
+          <OverviewFeatureCard
+            title={t.overview.featureCards.serverBackup.title}
+            description={t.overview.featureCards.serverBackup.description}
+            icon={DatabaseBackup}
+            className={cn("h-full w-full sm:min-w-0 sm:flex-1", BOTTOM_PANEL_HEIGHT)}
+            badge="configure"
+            badgeLabel={t.overview.badges.configure}
+            disableHoverMotion
+            onClick={() => setBackupOpen(true)}
+          />
         </div>
       </div>
 
@@ -335,6 +347,14 @@ function OverviewSectionComponent() {
       <ServerLeaderboardModal
         open={leaderboardOpen}
         onOpenChange={setLeaderboardOpen}
+        guildId={selectedGuildId}
+      />
+
+      <BackupModal
+        open={backupOpen}
+        onOpenChange={setBackupOpen}
+        guildId={selectedGuildId}
+        isPremium={isPremium}
       />
     </>
   );

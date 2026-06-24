@@ -52,6 +52,10 @@ export const overviewEn = {
       title: "Server Leaderboard",
       description: "See the top servers using Kat Bot, ranked by member count.",
     },
+    serverBackup: {
+      title: "Server Backup",
+      description: "Save and restore your server structure — roles, categories, and channels.",
+    },
   },
   badges: {
     soon: "Soon",
@@ -142,6 +146,10 @@ export const overviewEs = {
     serverLeaderboard: {
       title: "Clasificación de Servidores",
       description: "Mira los mejores servidores que usan Kat Bot, clasificados por miembros.",
+    },
+    serverBackup: {
+      title: "Copia de Seguridad",
+      description: "Guarda y restaura la estructura de tu servidor — roles, categorías y canales.",
     },
   },
   badges: {
@@ -234,6 +242,10 @@ export const overviewPtBr = {
       title: "Ranking de Servidores",
       description: "Veja os melhores servidores usando o Kat Bot, classificados por membros.",
     },
+    serverBackup: {
+      title: "Backup do Servidor",
+      description: "Salve e restaure a estrutura do seu servidor — cargos, categorias e canais.",
+    },
   },
   badges: {
     soon: "Em Breve",
@@ -324,6 +336,10 @@ export const overviewFr = {
     serverLeaderboard: {
       title: "Classement des Serveurs",
       description: "Découvrez les meilleurs serveurs utilisant Kat Bot, classés par membres.",
+    },
+    serverBackup: {
+      title: "Sauvegarde du Serveur",
+      description: "Sauvegardez et restaurez la structure de votre serveur — rôles, catégories et salons.",
     },
   },
   badges: {
@@ -416,6 +432,10 @@ export const overviewDe = {
       title: "Server-Rangliste",
       description: "Sieh die besten Server, die Kat Bot nutzen, nach Mitgliederzahl gerankt.",
     },
+    serverBackup: {
+      title: "Server-Backup",
+      description: "Speichere und stelle deine Serverstruktur wieder her — Rollen, Kategorien und Kanäle.",
+    },
   },
   badges: {
     soon: "Demnächst",
@@ -506,6 +526,10 @@ export const overviewJa = {
     serverLeaderboard: {
       title: "サーバーランキング",
       description: "Kat Botを使用しているトップサーバーをメンバー数でランキング。",
+    },
+    serverBackup: {
+      title: "サーバーバックアップ",
+      description: "サーバー構造（ロール、カテゴリ、チャンネル）を保存・復元。",
     },
   },
   badges: {

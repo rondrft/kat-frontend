@@ -7,6 +7,8 @@ import type {
   GuildBranding,
   GuildBrandingRequest,
 } from "@/features/branding/types/branding";
+import type { LeaderboardSettings } from "@/features/server-leaderboard/types/server-leaderboard";
+import type { ServerBackup } from "@/features/backup/types/backup";
 import type { ApiResponse, PageResponse } from "@/types/api";
 import type { Guild, GuildSettings, DashboardAccess } from "@/types/guild";
 import type { LoggingConfig } from "@/types/logging";
@@ -415,6 +417,44 @@ export const guildService = {
   async saveGuildBranding(guildId: string, req: GuildBrandingRequest): Promise<GuildBranding> {
     const { data } = await apiClient.put<GuildBranding>(endpoints.guilds.branding(guildId), req);
     return data;
+  },
+
+  async getLeaderboardSettings(guildId: string): Promise<LeaderboardSettings> {
+    const { data } = await apiClient.get<ApiResponse<LeaderboardSettings>>(
+      endpoints.leaderboard.settings(guildId),
+    );
+    return unwrapApiData(data) as LeaderboardSettings;
+  },
+
+  async saveLeaderboardSettings(guildId: string, showOnLeaderboard: boolean): Promise<LeaderboardSettings> {
+    const { data } = await apiClient.put<ApiResponse<LeaderboardSettings>>(
+      endpoints.leaderboard.settings(guildId),
+      { showOnLeaderboard },
+    );
+    return unwrapApiData(data) as LeaderboardSettings;
+  },
+
+  async listBackups(guildId: string): Promise<ServerBackup[]> {
+    const { data } = await apiClient.get<ApiResponse<ServerBackup[]>>(
+      endpoints.guilds.backups(guildId),
+    );
+    return unwrapApiData(data) as ServerBackup[];
+  },
+
+  async createBackup(guildId: string, name: string): Promise<ServerBackup> {
+    const { data } = await apiClient.post<ApiResponse<ServerBackup>>(
+      endpoints.guilds.backups(guildId),
+      { name },
+    );
+    return unwrapApiData(data) as ServerBackup;
+  },
+
+  async restoreBackup(guildId: string, id: string): Promise<void> {
+    await apiClient.post(endpoints.guilds.backupRestore(guildId, id), {});
+  },
+
+  async deleteBackup(guildId: string, id: string): Promise<void> {
+    await apiClient.delete(endpoints.guilds.backupById(guildId, id));
   },
 
   async getRecentMembers(guildId: string, limit = 8): Promise<NewMember[]> {

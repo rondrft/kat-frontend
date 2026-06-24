@@ -56,12 +56,16 @@ export const endpoints = {
     recurringMessages: (guildId: string) => `/guilds/${guildId}/recurring-messages`,
     recurringMessageById: (guildId: string, id: number) => `/guilds/${guildId}/recurring-messages/${id}`,
     branding: (guildId: string) => `/guilds/${guildId}/branding`,
+    backups: (guildId: string) => `/guilds/${guildId}/backups`,
+    backupRestore: (guildId: string, id: string) => `/guilds/${guildId}/backups/${id}/restore`,
+    backupById: (guildId: string, id: string) => `/guilds/${guildId}/backups/${id}`,
   },
   payment: {
     createOrder: "/payment/orders",
   },
   leaderboard: {
     servers: "/leaderboard/servers",
+    settings: (guildId: string) => `/guilds/${guildId}/leaderboard/settings`,
   },
   bot: {
     status: "/bot/status",
