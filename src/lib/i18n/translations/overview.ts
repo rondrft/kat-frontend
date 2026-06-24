@@ -48,6 +48,10 @@ export const overviewEn = {
       title: "Server Templates",
       description: "Start your community faster with ready-to-use server layouts.",
     },
+    serverLeaderboard: {
+      title: "Server Leaderboard",
+      description: "See the top servers using Kat Bot, ranked by member count.",
+    },
   },
   badges: {
     soon: "Soon",
@@ -134,6 +138,10 @@ export const overviewEs = {
     serverTemplates: {
       title: "Plantillas de Servidor",
       description: "Comienza tu comunidad más rápido con estructuras listas para usar.",
+    },
+    serverLeaderboard: {
+      title: "Clasificación de Servidores",
+      description: "Mira los mejores servidores que usan Kat Bot, clasificados por miembros.",
     },
   },
   badges: {
@@ -222,6 +230,10 @@ export const overviewPtBr = {
       title: "Templates de Servidor",
       description: "Comece sua comunidade mais rápido com layouts prontos para usar.",
     },
+    serverLeaderboard: {
+      title: "Ranking de Servidores",
+      description: "Veja os melhores servidores usando o Kat Bot, classificados por membros.",
+    },
   },
   badges: {
     soon: "Em Breve",
@@ -308,6 +320,10 @@ export const overviewFr = {
     serverTemplates: {
       title: "Modèles de Serveur",
       description: "Démarrez votre communauté plus vite avec des mises en page prêtes à l'emploi.",
+    },
+    serverLeaderboard: {
+      title: "Classement des Serveurs",
+      description: "Découvrez les meilleurs serveurs utilisant Kat Bot, classés par membres.",
     },
   },
   badges: {
@@ -396,6 +412,10 @@ export const overviewDe = {
       title: "Server-Vorlagen",
       description: "Starte deine Community schneller mit fertigen Server-Layouts.",
     },
+    serverLeaderboard: {
+      title: "Server-Rangliste",
+      description: "Sieh die besten Server, die Kat Bot nutzen, nach Mitgliederzahl gerankt.",
+    },
   },
   badges: {
     soon: "Demnächst",
@@ -482,6 +502,10 @@ export const overviewJa = {
     serverTemplates: {
       title: "サーバーテンプレート",
       description: "既製のサーバーレイアウトでコミュニティをすばやく始めましょう。",
+    },
+    serverLeaderboard: {
+      title: "サーバーランキング",
+      description: "Kat Botを使用しているトップサーバーをメンバー数でランキング。",
     },
   },
   badges: {

@@ -60,6 +60,9 @@ export const endpoints = {
   payment: {
     createOrder: "/payment/orders",
   },
+  leaderboard: {
+    servers: "/leaderboard/servers",
+  },
   bot: {
     status: "/bot/status",
     stats: "/bot/stats",
