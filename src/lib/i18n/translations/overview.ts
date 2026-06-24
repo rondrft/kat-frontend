@@ -44,6 +44,10 @@ export const overviewEn = {
       title: "Auto Roles",
       description: "Assign roles on join, boost, or reaction.",
     },
+    serverTemplates: {
+      title: "Server Templates",
+      description: "Start your community faster with ready-to-use server layouts.",
+    },
   },
   badges: {
     soon: "Soon",
@@ -126,6 +130,10 @@ export const overviewEs = {
     autoRoles: {
       title: "Roles Automáticos",
       description: "Asigna roles al unirse, impulsar o reaccionar.",
+    },
+    serverTemplates: {
+      title: "Plantillas de Servidor",
+      description: "Comienza tu comunidad más rápido con estructuras listas para usar.",
     },
   },
   badges: {
@@ -210,6 +218,10 @@ export const overviewPtBr = {
       title: "Cargos Automáticos",
       description: "Atribua cargos ao entrar, impulsionar ou reagir.",
     },
+    serverTemplates: {
+      title: "Templates de Servidor",
+      description: "Comece sua comunidade mais rápido com layouts prontos para usar.",
+    },
   },
   badges: {
     soon: "Em Breve",
@@ -292,6 +304,10 @@ export const overviewFr = {
     autoRoles: {
       title: "Rôles Auto",
       description: "Attribuez des rôles à l'arrivée, au boost ou à la réaction.",
+    },
+    serverTemplates: {
+      title: "Modèles de Serveur",
+      description: "Démarrez votre communauté plus vite avec des mises en page prêtes à l'emploi.",
     },
   },
   badges: {
@@ -376,6 +392,10 @@ export const overviewDe = {
       title: "Auto-Rollen",
       description: "Weise Rollen beim Beitritt, Boost oder Reaktion zu.",
     },
+    serverTemplates: {
+      title: "Server-Vorlagen",
+      description: "Starte deine Community schneller mit fertigen Server-Layouts.",
+    },
   },
   badges: {
     soon: "Demnächst",
@@ -458,6 +478,10 @@ export const overviewJa = {
     autoRoles: {
       title: "自動ロール",
       description: "参加、ブースト、またはリアクション時にロールを割り当て。",
+    },
+    serverTemplates: {
+      title: "サーバーテンプレート",
+      description: "既製のサーバーレイアウトでコミュニティをすばやく始めましょう。",
     },
   },
   badges: {

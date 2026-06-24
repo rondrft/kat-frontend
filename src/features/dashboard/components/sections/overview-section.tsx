@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useState } from "react";
-import { ArrowUp, Coins, Crown, Gift, MessageSquare, Paintbrush, RefreshCw, Sparkles, Ticket } from "lucide-react";
+import { ArrowUp, Coins, Crown, Gift, LayoutTemplate, MessageSquare, Paintbrush, RefreshCw, Sparkles, Ticket } from "lucide-react";
 import { ActionsModal } from "@/features/actions/components/actions-modal";
 import { overviewExtraFeatures } from "@/features/dashboard/config/overview-extra-features";
 import { MonthlyJoinsChart } from "@/features/dashboard/components/widgets/monthly-joins-chart";
@@ -23,6 +23,7 @@ import { GiveawayModal } from "@/features/giveaways/components/giveaway-modal";
 import { TicketsModal } from "@/features/tickets/components/tickets-modal";
 import { RecurringMessagesModal } from "@/features/recurring-messages/components/recurring-messages-modal";
 import { BrandingModal } from "@/features/branding/components/branding-modal";
+import { ServerTemplatesModal } from "@/features/server-templates/components/server-templates-modal";
 import { usePremiumStatus } from "@/features/guilds/hooks/use-premium-status";
 import { useGuildStore } from "@/store/guild-store";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -46,6 +47,7 @@ function OverviewSectionComponent() {
   const [ticketsOpen, setTicketsOpen] = useState(false);
   const [recurringOpen, setRecurringOpen] = useState(false);
   const [brandingOpen, setBrandingOpen] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
 
   const { data: premiumData } = usePremiumStatus(selectedGuildId);
   const isPremium = premiumData?.isPremium ?? false;
@@ -232,6 +234,16 @@ function OverviewSectionComponent() {
             disableHoverMotion
             onClick={isPremium ? () => setBrandingOpen(true) : undefined}
           />
+          <OverviewFeatureCard
+            title={t.overview.featureCards.serverTemplates.title}
+            description={t.overview.featureCards.serverTemplates.description}
+            icon={LayoutTemplate}
+            className={cn("h-full w-full sm:min-w-0 sm:flex-1", BOTTOM_PANEL_HEIGHT)}
+            badge="configure"
+            badgeLabel={t.overview.badges.configure}
+            disableHoverMotion
+            onClick={() => setTemplatesOpen(true)}
+          />
         </div>
       </div>
 
@@ -300,6 +312,12 @@ function OverviewSectionComponent() {
         onOpenChange={setBrandingOpen}
         guildId={selectedGuildId}
         isPremium={isPremium}
+      />
+
+      <ServerTemplatesModal
+        open={templatesOpen}
+        onOpenChange={setTemplatesOpen}
+        guildId={selectedGuildId}
       />
     </>
   );
