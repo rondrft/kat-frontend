@@ -59,6 +59,7 @@ export const endpoints = {
     backups: (guildId: string) => `/guilds/${guildId}/backups`,
     backupRestore: (guildId: string, id: string) => `/guilds/${guildId}/backups/${id}/restore`,
     backupById: (guildId: string, id: string) => `/guilds/${guildId}/backups/${id}`,
+    security: (guildId: string) => `/guilds/${guildId}/security`,
   },
   payment: {
     createOrder: "/payment/orders",

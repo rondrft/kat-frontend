@@ -9,6 +9,7 @@ import type {
 } from "@/features/branding/types/branding";
 import type { LeaderboardSettings } from "@/features/server-leaderboard/types/server-leaderboard";
 import type { ServerBackup } from "@/features/backup/types/backup";
+import type { AntiRaidConfig } from "@/features/moderation/types/anti-raid";
 import type { ApiResponse, PageResponse } from "@/types/api";
 import type { Guild, GuildSettings, DashboardAccess } from "@/types/guild";
 import type { LoggingConfig } from "@/types/logging";
@@ -455,6 +456,21 @@ export const guildService = {
 
   async deleteBackup(guildId: string, id: string): Promise<void> {
     await apiClient.delete(endpoints.guilds.backupById(guildId, id));
+  },
+
+  async getAntiRaidConfig(guildId: string): Promise<AntiRaidConfig> {
+    const { data } = await apiClient.get<ApiResponse<AntiRaidConfig>>(
+      endpoints.guilds.security(guildId),
+    );
+    return unwrapApiData(data) as AntiRaidConfig;
+  },
+
+  async saveAntiRaidConfig(guildId: string, config: AntiRaidConfig): Promise<AntiRaidConfig> {
+    const { data } = await apiClient.put<ApiResponse<AntiRaidConfig>>(
+      endpoints.guilds.security(guildId),
+      config,
+    );
+    return unwrapApiData(data) as AntiRaidConfig;
   },
 
   async getRecentMembers(guildId: string, limit = 8): Promise<NewMember[]> {

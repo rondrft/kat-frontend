@@ -51,6 +51,10 @@ const SecurityScanner = dynamic(
   () => import("@/features/moderation/components/security-scanner").then((m) => ({ default: m.SecurityScanner })),
   { ssr: false },
 );
+const AntiRaidPanel = dynamic(
+  () => import("@/features/moderation/components/anti-raid-panel").then((m) => ({ default: m.AntiRaidPanel })),
+  { ssr: false },
+);
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -1561,7 +1565,10 @@ function ModerationSectionComponent({ guildId: guildIdProp }: ModerationSectionP
           </div>
         </section>
       ) : guildId ? (
-        <SecurityScanner guildId={guildId} />
+        <div className="flex flex-col gap-8">
+          <AntiRaidPanel guildId={guildId} />
+          <SecurityScanner guildId={guildId} />
+        </div>
       ) : null}
 
       {tab !== "security" ? (
