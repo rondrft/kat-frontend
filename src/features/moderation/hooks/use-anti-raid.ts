@@ -25,6 +25,7 @@ export function useAntiRaidConfig(guildId: string | null) {
     staleTime: 60 * 1000,
     placeholderData: (previous) => previous,
     retry: false,
+    refetchOnWindowFocus: false,
   });
 }
 

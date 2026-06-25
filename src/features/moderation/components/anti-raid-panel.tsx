@@ -53,9 +53,13 @@ export function AntiRaidPanel({ guildId }: Props) {
   }
 
   async function handleSave() {
-    await save.mutateAsync(form);
-    setSavedIndicator(true);
-    setTimeout(() => setSavedIndicator(false), 2000);
+    try {
+      await save.mutateAsync(form);
+      setSavedIndicator(true);
+      setTimeout(() => setSavedIndicator(false), 2000);
+    } catch {
+      // save.isError surfaces the error in the UI
+    }
   }
 
   if (isLoading) {
