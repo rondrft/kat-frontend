@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Crown, Info, Loader2, MessageCircle, Trophy, Users, Zap } from "lucide-react";
+import { Crown, Info, Loader2, MessageCircle, Settings, Trophy, Users, Zap } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
@@ -10,7 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 import { useServerLeaderboard } from "@/features/server-leaderboard/hooks/use-server-leaderboard";
+import {
+  useLeaderboardSettings,
+  useUpdateLeaderboardSettings,
+} from "@/features/server-leaderboard/hooks/use-leaderboard-settings";
 import type { ServerLeaderboardEntry } from "@/features/server-leaderboard/types/server-leaderboard";
 import { cn } from "@/lib/utils";
 import { formatCompactNumber } from "@/utils/format";
@@ -18,9 +23,10 @@ import { formatCompactNumber } from "@/utils/format";
 type ServerLeaderboardModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  guildId?: string | null;
 };
 
-type Tab = "ranking" | "info";
+type Tab = "ranking" | "info" | "settings";
 
 type PodiumTone = "gold" | "silver" | "bronze";
 
@@ -261,13 +267,55 @@ function InfoTab() {
   );
 }
 
-export function ServerLeaderboardModal({ open, onOpenChange }: ServerLeaderboardModalProps) {
+function SettingsTab({ guildId }: { guildId: string }) {
+  const { data: settings, isLoading } = useLeaderboardSettings(guildId);
+  const { mutate: updateSettings, isPending } = useUpdateLeaderboardSettings(guildId);
+
+  const showOnLeaderboard = settings?.showOnLeaderboard ?? false;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-3 rounded-xl border border-blue-500/20 bg-blue-500/[0.06] p-4">
+        <Zap className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Your server only appears on the public leaderboard if you opt in. It is hidden by default and only admins can change this setting.
+        </p>
+      </div>
+
+      <div className="rounded-xl bg-black/[0.025] p-4 dark:bg-white/[0.03]">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold">Appear in Server Leaderboard</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+              Make this server visible in the public ranking of Kat Bot servers, sorted by member count.
+            </p>
+          </div>
+          {isLoading ? (
+            <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
+          ) : (
+            <Switch
+              checked={showOnLeaderboard}
+              onCheckedChange={(checked) => updateSettings(checked)}
+              disabled={isPending}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ServerLeaderboardModal({ open, onOpenChange, guildId }: ServerLeaderboardModalProps) {
   const [tab, setTab] = useState<Tab>("ranking");
   const { data: entries = [], isLoading } = useServerLeaderboard();
 
-  const TABS: { id: Tab; label: string; icon: typeof Trophy }[] = [
+  const hasGuild = Boolean(guildId);
+
+  type TabConfig = { id: Tab; label: string; icon: typeof Trophy };
+  const TABS: TabConfig[] = [
     { id: "ranking", label: "Ranking", icon: Trophy },
     { id: "info", label: "How it works", icon: Info },
+    ...(hasGuild ? [{ id: "settings" as Tab, label: "Settings", icon: Settings }] : []),
   ];
 
   return (
@@ -305,7 +353,9 @@ export function ServerLeaderboardModal({ open, onOpenChange }: ServerLeaderboard
           ))}
         </div>
 
-        {isLoading ? (
+        {tab === "settings" && guildId ? (
+          <SettingsTab guildId={guildId} />
+        ) : tab === "ranking" && isLoading ? (
           <div className="flex min-h-[200px] items-center justify-center">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>

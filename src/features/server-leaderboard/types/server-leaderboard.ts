@@ -7,3 +7,8 @@ export type ServerLeaderboardEntry = {
   isPublic: boolean;
   showOnLeaderboard: boolean;
 };
+
+export type LeaderboardSettings = {
+  guildId: string;
+  showOnLeaderboard: boolean;
+};
