@@ -202,7 +202,7 @@ export function ActionsModal({ open, onOpenChange, guildId }: ActionsModalProps)
                       </p>
                       <div className="mt-3 flex aspect-video w-full max-w-[480px] items-center justify-center overflow-hidden rounded-lg bg-[#1e1f22]">
                         <img
-                          src="/kiss.gif"
+                          src="/kiss.webp"
                           alt="Kiss GIF"
                           className="h-full w-full object-cover"
                         />
