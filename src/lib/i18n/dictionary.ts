@@ -2,6 +2,7 @@ import type { Locale } from "./config";
 import { commonEn, commonEs, commonPtBr, commonFr, commonDe, commonJa } from "./translations/common";
 import { sectionsEn, sectionsEs, sectionsPtBr, sectionsFr, sectionsDe, sectionsJa } from "./translations/sections";
 import { authEn, authEs, authPtBr, authFr, authDe, authJa } from "./translations/auth";
+import { landingEn, landingEs, landingPtBr, landingFr, landingDe, landingJa } from "./translations/landing";
 import { settingsEn, settingsEs, settingsPtBr, settingsFr, settingsDe, settingsJa } from "./translations/settings";
 import { sidebarEn, sidebarEs, sidebarPtBr, sidebarFr, sidebarDe, sidebarJa } from "./translations/sidebar";
 import { dashboardEn, dashboardEs, dashboardPtBr, dashboardFr, dashboardDe, dashboardJa } from "./translations/dashboard";
@@ -29,6 +30,7 @@ interface DictSchema {
   premium: Record<string, unknown>;
   statistics: Record<string, unknown>;
   modals: Record<string, unknown>;
+  landing: Record<string, string>;
 }
 
 const es = {
@@ -46,6 +48,7 @@ const es = {
   premium: premiumEs,
   statistics: statisticsEs,
   modals: modalsEs,
+  landing: landingEs,
 } as const satisfies DictSchema;
 
 export type Dictionary = typeof es;
@@ -65,6 +68,7 @@ const en = {
   premium: premiumEn,
   statistics: statisticsEn,
   modals: modalsEn,
+  landing: landingEn,
 } as const satisfies DictSchema;
 
 const ptBr = {
@@ -82,6 +86,7 @@ const ptBr = {
   premium: premiumPtBr,
   statistics: statisticsPtBr,
   modals: modalsPtBr,
+  landing: landingPtBr,
 } as const satisfies DictSchema;
 
 const fr = {
@@ -99,6 +104,7 @@ const fr = {
   premium: premiumFr,
   statistics: statisticsFr,
   modals: modalsFr,
+  landing: landingFr,
 } as const satisfies DictSchema;
 
 const de = {
@@ -116,6 +122,7 @@ const de = {
   premium: premiumDe,
   statistics: statisticsDe,
   modals: modalsDe,
+  landing: landingDe,
 } as const satisfies DictSchema;
 
 const ja = {
@@ -133,6 +140,7 @@ const ja = {
   premium: premiumJa,
   statistics: statisticsJa,
   modals: modalsJa,
+  landing: landingJa,
 } as const satisfies DictSchema;
 
 export const dictionaries = {
