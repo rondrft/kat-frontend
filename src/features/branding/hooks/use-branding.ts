@@ -30,6 +30,7 @@ export function useGuildBranding(guildId: string | null, enabled = true) {
     queryFn: () => guildService.getGuildBranding(guildId!),
     enabled: queryEnabled,
     staleTime: 60_000,
+    placeholderData: (previous) => previous,
   });
 }
 

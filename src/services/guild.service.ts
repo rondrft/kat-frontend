@@ -409,8 +409,6 @@ export const guildService = {
     return {
       guildId: data.guildId ?? guildId,
       avatarUrl: data.avatarUrl ?? null,
-      bannerUrl: data.bannerUrl ?? null,
-      description: data.description ?? null,
       botName: data.botName ?? null,
     };
   },

@@ -34,7 +34,7 @@ export const overviewEn = {
     },
     branding: {
       title: "Server Branding",
-      description: "Custom bot name, avatar, banner, and description for your server.",
+      description: "Custom bot name and avatar for your server.",
     },
     tempVoice: {
       title: "Temporary Voice Channel",
@@ -129,7 +129,7 @@ export const overviewEs = {
     },
     branding: {
       title: "Branding del Servidor",
-      description: "Nombre, avatar, banner y descripción personalizados del bot en tu servidor.",
+      description: "Nombre y avatar personalizados del bot en tu servidor.",
     },
     tempVoice: {
       title: "Canal de Voz Temporal",
@@ -224,7 +224,7 @@ export const overviewPtBr = {
     },
     branding: {
       title: "Branding do Servidor",
-      description: "Nome, avatar, banner e descrição personalizados do bot no seu servidor.",
+      description: "Nome e avatar personalizados do bot no seu servidor.",
     },
     tempVoice: {
       title: "Canal de Voz Temporário",
@@ -319,7 +319,7 @@ export const overviewFr = {
     },
     branding: {
       title: "Identité du Serveur",
-      description: "Nom, avatar, bannière et description personnalisés du bot sur votre serveur.",
+      description: "Nom et avatar personnalisés du bot sur votre serveur.",
     },
     tempVoice: {
       title: "Salon Vocal Temporaire",
@@ -414,7 +414,7 @@ export const overviewDe = {
     },
     branding: {
       title: "Server-Branding",
-      description: "Benutzerdefinierter Bot-Name, Avatar, Banner und Beschreibung für deinen Server.",
+      description: "Benutzerdefinierter Bot-Name und Avatar für deinen Server.",
     },
     tempVoice: {
       title: "Temporärer Sprachkanal",
@@ -509,7 +509,7 @@ export const overviewJa = {
     },
     branding: {
       title: "サーバーブランディング",
-      description: "サーバー専用のボット名、アバター、バナー、説明をカスタマイズ。",
+      description: "サーバー専用のボット名とアバターをカスタマイズ。",
     },
     tempVoice: {
       title: "一時ボイスチャンネル",

@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useGuildBranding, useSaveGuildBranding } from "@/features/branding/hooks/use-branding";
+import { isSafeImageUrl } from "@/lib/url";
 import { AppError } from "@/lib/errors";
 
 type BrandingModalProps = {
@@ -30,20 +31,27 @@ type BrandingModalProps = {
   isPremium: boolean;
 };
 
+function isHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 const URL_OR_EMPTY = z
   .string()
   .nullable()
   .transform((v) => v?.trim() || null)
   .refine(
-    (v) => !v || /^https?:\/\/.+/.test(v),
-    "Must be a valid URL starting with http(s)://",
+    (v) => !v || isHttpUrl(v),
+    "Must be a valid http or https URL",
   );
 
 const formSchema = z.object({
   botName: z.string().max(100).nullable().transform((v) => v?.trim() || null),
   avatarUrl: URL_OR_EMPTY,
-  bannerUrl: URL_OR_EMPTY,
-  description: z.string().max(500).nullable().transform((v) => v?.trim() || null),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -61,10 +69,11 @@ export function BrandingModal({ open, onOpenChange, guildId, isPremium }: Brandi
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { botName: null, avatarUrl: null, bannerUrl: null, description: null },
+    defaultValues: { botName: null, avatarUrl: null },
   });
 
-  const { register, handleSubmit, reset, formState: { errors } } = form;
+  const { register, handleSubmit, reset, watch, formState: { errors } } = form;
+  const watchAvatarUrl = watch("avatarUrl");
 
   useEffect(() => {
     if (!open) {
@@ -76,8 +85,6 @@ export function BrandingModal({ open, onOpenChange, guildId, isPremium }: Brandi
     reset({
       botName: saved.botName ?? null,
       avatarUrl: saved.avatarUrl ?? null,
-      bannerUrl: saved.bannerUrl ?? null,
-      description: saved.description ?? null,
     });
   }, [open, isLoading, saved, reset]);
 
@@ -90,8 +97,6 @@ export function BrandingModal({ open, onOpenChange, guildId, isPremium }: Brandi
       await saveMutation.mutateAsync({
         botName: values.botName,
         avatarUrl: values.avatarUrl,
-        bannerUrl: values.bannerUrl,
-        description: values.description,
       });
       setSaveSuccess("Branding saved.");
     } catch (error) {
@@ -121,7 +126,7 @@ export function BrandingModal({ open, onOpenChange, guildId, isPremium }: Brandi
           </div>
           <DialogTitle>Server Branding</DialogTitle>
           <DialogDescription>
-            Customize how Kat appears in your server — avatar, banner, and description.
+            Customize the bot&apos;s name and avatar in this server. Changes apply directly in Discord.
             Premium only.
           </DialogDescription>
         </DialogHeader>
@@ -171,40 +176,20 @@ export function BrandingModal({ open, onOpenChange, guildId, isPremium }: Brandi
                 disabled={formDisabled}
                 className="w-full rounded-lg border border-black/[0.08] bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 dark:border-white/10"
               />
+              {isSafeImageUrl(watchAvatarUrl) && (
+                <div className="overflow-hidden rounded-lg border border-black/[0.08] dark:border-white/10">
+                  <img
+                    src={watchAvatarUrl}
+                    alt="Avatar preview"
+                    className="h-20 w-20 object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                </div>
+              )}
               <p className="text-[10px] text-muted-foreground">
-                Used as the author icon in embeds sent by Kat in this server.
+                Applied as Kat&apos;s guild avatar in Discord. Leave blank to restore the default.
               </p>
               {errors.avatarUrl && <p className="text-xs text-destructive">{errors.avatarUrl.message}</p>}
-            </div>
-
-            <div className="space-y-1">
-              <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                <Image className="h-3.5 w-3.5" />
-                Banner URL
-              </label>
-              <input
-                {...register("bannerUrl")}
-                placeholder="https://..."
-                disabled={formDisabled}
-                className="w-full rounded-lg border border-black/[0.08] bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 dark:border-white/10"
-              />
-              <p className="text-[10px] text-muted-foreground">
-                Shown as the embed image in pinned or featured bot messages.
-              </p>
-              {errors.bannerUrl && <p className="text-xs text-destructive">{errors.bannerUrl.message}</p>}
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">Description</label>
-              <textarea
-                {...register("description")}
-                rows={3}
-                placeholder="A short description about this bot in your server..."
-                disabled={formDisabled}
-                className="w-full resize-none rounded-lg border border-black/[0.08] bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 dark:border-white/10"
-              />
-              <p className="text-[10px] text-muted-foreground">Max 500 characters. Shown in bot info embeds.</p>
-              {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
             </div>
 
             {saveSuccess && (
