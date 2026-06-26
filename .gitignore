@@ -46,3 +46,6 @@ next-env.d.ts
 
 # husky
 .husky/_
+
+.CLAUDE.md
+.ARCHITECTURE.md

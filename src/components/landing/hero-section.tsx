@@ -1,126 +1,143 @@
 "use client";
 
+import { useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { LayoutDashboard } from "lucide-react";
-import { motion } from "framer-motion";
-import { siteConfig } from "@/config/site";
-import { ShineText } from "@/components/landing/shine-text";
-import { Button } from "@/components/ui/button";
-import { DiscordLoginButton } from "@/features/auth";
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.14, delayChildren: 0.08 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 28, filter: "blur(10px)" },
-  visible: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.75, ease: [0.22, 1, 0.36, 1] },
-  },
-};
+import { UserRound, LayoutDashboard } from "lucide-react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useMotionValue,
+  useSpring,
+} from "framer-motion";
+import { useTheme } from "next-themes";
+import { FluidCanvas } from "./fluid-canvas";
 
 export function HeroSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const cardRef    = useRef<HTMLDivElement>(null);
+  const { resolvedTheme } = useTheme();
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end end"],
+  });
+
+  const scale           = useTransform(scrollYProgress, [0, 0.5, 1], [1.15, 0.85, 0.48]);
+  const borderRadius    = useTransform(scrollYProgress, [0, 0.5, 1], [0, 30, 70]);
+  const blockBgLight    = useTransform(scrollYProgress, [0, 1], ["#ffffff", "#c8e8ff"]);
+  const blockBgDark     = useTransform(scrollYProgress, [0, 1], ["#0a0a0f", "#0b1c33"]);
+  const backgroundColor = resolvedTheme === "dark" ? blockBgDark : blockBgLight;
+  const navScale        = useTransform(scrollYProgress, [0, 0.6], [1, 0.88]);
+
+  // ── Parallax ────────────────────────────────────────────
+  const mouseX  = useMotionValue(0);
+  const mouseY  = useMotionValue(0);
+  const smoothX = useSpring(mouseX, { stiffness: 35, damping: 22 });
+  const smoothY = useSpring(mouseY, { stiffness: 35, damping: 22 });
+  const rotateX   = useTransform(smoothY, [-1, 1], [8, -8]);
+  const rotateY   = useTransform(smoothX, [-1, 1], [-12, 12]);
+  const parallaxX = useTransform(smoothX, [-1, 1], [-25, 25]);
+  const parallaxY = useTransform(smoothY, [-1, 1], [-18, 18]);
+
+  useEffect(() => {
+    const isDark = () => document.documentElement.classList.contains("dark");
+    const update = (v: number) => {
+      const from: [number, number, number] = isDark() ? [10, 10, 15] : [255, 255, 255];
+      const to:   [number, number, number] = isDark() ? [3, 13, 28]  : [255, 255, 255];
+      const r = Math.round(from[0] + (to[0] - from[0]) * v);
+      const g = Math.round(from[1] + (to[1] - from[1]) * v);
+      const b = Math.round(from[2] + (to[2] - from[2]) * v);
+      document.documentElement.style.backgroundColor = `rgb(${r},${g},${b})`;
+    };
+    const unsubscribe = scrollYProgress.on("change", update);
+    update(scrollYProgress.get());
+    return () => {
+      unsubscribe();
+      document.documentElement.style.backgroundColor = "";
+    };
+  }, [scrollYProgress]);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      mouseX.set((e.clientX / window.innerWidth)  * 2 - 1);
+      mouseY.set((e.clientY / window.innerHeight) * 2 - 1);
+    };
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, [mouseX, mouseY]);
+
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden -translate-y-10">
-      {/* KAT background text */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center select-none">
-        <span className="text-[clamp(12rem,30vw,40rem)] font-black leading-none text-foreground/[0.03] tracking-tight">
-          KAT
-        </span>
-      </div>
+    <section ref={sectionRef} className="relative h-[250vh]">
 
-      {/* Center image */}
       <motion.div
-        className="relative z-10 flex items-center justify-center"
-        initial={{ opacity: 0, scale: 0.92, filter: "blur(10px)" }}
-        animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-        transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+        className="fixed top-8 left-8 z-50 origin-top-left"
+        style={{ scale: navScale }}
       >
-        <Image
-          src="/katrunv2.png"
-          alt="Kat"
-          width={900}
-          height={900}
-          className="h-[80vh] w-auto object-contain"
-          priority
-        />
-      </motion.div>
-
-      {/* Bottom-left content */}
-      <motion.div
-        className="absolute bottom-14 left-6 z-20 max-w-xl sm:left-10 lg:left-16 xl:left-24"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.p
-          variants={itemVariants}
-          className="mb-5 font-hero text-base font-bold uppercase tracking-[0.35em] text-muted-foreground/70 sm:text-lg"
-        >
-          Discord automation
-        </motion.p>
-
-        <motion.h1
-          variants={itemVariants}
-          className="font-hero text-3xl font-extrabold uppercase leading-snug tracking-tight sm:text-4xl lg:text-5xl"
-        >
-          <span className="block text-foreground/80">Build <span className="text-foreground">Faster</span>.</span>
-          <span className="block text-foreground/80">Run <span className="text-foreground">Smarter</span></span>
-          <span className="block text-foreground/80">With <ShineText>Kat</ShineText>.</span>
-        </motion.h1>
-
-        <motion.p
-          variants={itemVariants}
-          className="mt-4 font-hero text-base font-semibold uppercase tracking-[0.2em] text-muted-foreground/60 sm:text-lg"
-        >
-          Speed meets simplicity — powered by Kat
-        </motion.p>
-
-        <motion.div
-          variants={itemVariants}
-          className="mt-7 flex flex-col gap-3 sm:flex-row sm:gap-4"
-        >
-          <DiscordLoginButton
-            label="Login with Discord"
-            className="h-12 min-w-[200px] rounded-full font-semibold uppercase tracking-wide text-base"
-          />
-          <Button
-            variant="outline"
-            size="default"
-            asChild
-            className="h-12 min-w-[200px] rounded-full border-border/80 bg-background/40 font-semibold uppercase tracking-wide text-base backdrop-blur-sm transition-colors hover:border-kat/50 hover:bg-kat/10"
-          >
-            <Link href="/dashboard">
-              <LayoutDashboard className="mr-2 h-5 w-5" />
-              Dashboard
-            </Link>
-          </Button>
-        </motion.div>
-      </motion.div>
-
-      {/* Bottom-right footer links */}
-      <div className="absolute bottom-12 right-6 z-20 flex flex-col items-end gap-1.5 text-xs text-muted-foreground/50 sm:right-10 lg:right-16 xl:right-24">
-        <span>© {new Date().getFullYear()} {siteConfig.name}</span>
-        <div className="flex gap-3">
-          <Link href={siteConfig.links.privacy} className="transition-colors hover:text-foreground/70">
-            Privacy Policy
-          </Link>
-          <Link href={siteConfig.links.terms} className="transition-colors hover:text-foreground/70">
-            Terms of Service
-          </Link>
-          <Link href={siteConfig.links.refund} className="transition-colors hover:text-foreground/70">
-            Refund Policy
-          </Link>
+        <div className="flex flex-col items-center leading-none">
+          <span className="courier-prime-regular text-[28px] tracking-[0.1em] uppercase text-foreground/50">
+            Discord
+          </span>
+          <span className="lilita-one-regular font-bold text-6xl tracking-tight text-foreground leading-none">
+            KAT
+          </span>
         </div>
+      </motion.div>
+
+      <motion.div
+        className="fixed top-8 right-8 z-50 origin-top-right flex items-center gap-3"
+        style={{ scale: navScale }}
+      >
+        <button
+          type="button"
+          className="flex items-center gap-3 px-8 h-16 rounded-xl bg-[#7ac8f5] text-slate-800 font-semibold text-lg tracking-wide select-none transition-colors hover:bg-[#5bb8e8]"
+        >
+          <UserRound className="w-6 h-6" />
+          LOGIN
+        </button>
+        <Link
+          href="/dashboard"
+          className="group relative flex items-center justify-center w-16 h-16 rounded-xl border-[3px] border-black dark:border-white overflow-hidden"
+        >
+          <span className="absolute top-0 left-0 right-0 h-0 group-hover:h-full bg-[#7ac8f5] rounded-b-[50%] group-hover:rounded-b-none transition-all duration-300 ease-in-out" />
+          <LayoutDashboard className="w-7 h-7 text-foreground relative z-10 group-hover:text-slate-800 transition-colors duration-300" />
+        </Link>
+      </motion.div>
+
+      <div
+        className="sticky top-0 h-screen w-full overflow-hidden hero-scene"
+        style={{ perspective: "1000px" }}
+      >
+        <motion.div
+          ref={cardRef}
+          className="absolute inset-0 overflow-hidden"
+          style={{ scale, backgroundColor, borderRadius }}
+        >
+          <FluidCanvas isDark={resolvedTheme === "dark"} />
+
+          <div
+            className="absolute inset-0"
+            style={{ transform: "translateY(8%)", zIndex: 2 }}
+          >
+            <motion.div
+              className="absolute inset-0"
+              style={{ rotateX, rotateY, x: parallaxX, y: parallaxY }}
+            >
+              <Image
+                src="/kat.png"
+                alt="Kat"
+                fill
+                className="object-contain select-none pointer-events-none"
+                priority
+                sizes="100vw"
+                draggable={false}
+              />
+            </motion.div>
+          </div>
+        </motion.div>
       </div>
+
     </section>
   );
 }
