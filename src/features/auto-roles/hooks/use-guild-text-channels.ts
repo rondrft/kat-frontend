@@ -27,6 +27,7 @@ export function useGuildTextChannels(guildId: string | null, active = true) {
     queryFn: () => guildService.getGuildTextChannels(guildId!),
     enabled,
     staleTime: 60 * 1000,
+    placeholderData: (previous) => previous,
   });
 }
 

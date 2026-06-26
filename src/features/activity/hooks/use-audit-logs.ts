@@ -30,7 +30,6 @@ export function useAuditLogs(guildId: string | null) {
     enabled,
     staleTime: 60_000,
     placeholderData: (previous) => previous,
-    refetchOnWindowFocus: true,
     retry: false,
   });
 }

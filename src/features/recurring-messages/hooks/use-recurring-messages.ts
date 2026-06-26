@@ -30,6 +30,7 @@ export function useRecurringMessages(guildId: string | null, enabled = true) {
     queryFn: () => guildService.getRecurringMessages(guildId!),
     enabled: queryEnabled,
     staleTime: 30_000,
+    placeholderData: (previous) => previous,
   });
 }
 

@@ -25,7 +25,7 @@ export function useBotStatus(enabled: boolean) {
       return data.data;
     },
     enabled: canFetch,
-    refetchInterval: 15_000,
-    staleTime: 10_000,
+    refetchInterval: 60_000,
+    staleTime: 60_000,
   });
 }

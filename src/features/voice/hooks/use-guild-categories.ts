@@ -24,6 +24,7 @@ export function useGuildCategories(guildId: string | null) {
     queryFn: () => guildService.getGuildCategories(guildId!),
     enabled,
     staleTime: 60 * 1000,
+    placeholderData: (previous) => previous,
   });
 }
 

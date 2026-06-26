@@ -33,6 +33,7 @@ export function useWorkConfig(guildId: string | null, enabled = true) {
     queryFn: () => guildService.getWorkConfig(guildId!),
     enabled: queryEnabled,
     staleTime: 60_000,
+    placeholderData: (previous) => previous,
   });
 }
 

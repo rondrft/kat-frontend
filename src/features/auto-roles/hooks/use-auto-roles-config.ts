@@ -33,6 +33,7 @@ export function useAutoRolesConfig(guildId: string | null, active = true) {
     queryFn: () => guildService.getAutoRolesConfig(guildId!),
     enabled: queryEnabled,
     staleTime: 60_000,
+    placeholderData: (previous) => previous,
   });
 }
 

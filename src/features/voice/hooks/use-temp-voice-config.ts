@@ -33,6 +33,7 @@ export function useTempVoiceConfig(guildId: string | null, enabled = true) {
     queryFn: () => guildService.getTempVoiceConfig(guildId!),
     enabled: queryEnabled,
     staleTime: 60_000,
+    placeholderData: (previous) => previous,
   });
 }
 

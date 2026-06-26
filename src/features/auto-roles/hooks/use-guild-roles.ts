@@ -25,6 +25,7 @@ export function useGuildRoles(guildId: string | null, active = true) {
     queryFn: () => guildService.getGuildRoles(guildId!),
     enabled,
     staleTime: 60 * 1000,
+    placeholderData: (previous) => previous,
   });
 }
 

@@ -110,7 +110,6 @@ export function useRanking(guildId: string | null) {
     enabled,
     staleTime: 60_000,
     placeholderData: (previous) => previous,
-    refetchOnWindowFocus: true,
     retry: false,
   });
 }

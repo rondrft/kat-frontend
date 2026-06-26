@@ -33,6 +33,7 @@ export function useActionsConfig(guildId: string | null, enabled = true) {
     queryFn: () => guildService.getActionsConfig(guildId!),
     enabled: queryEnabled,
     staleTime: 60_000,
+    placeholderData: (previous) => previous,
   });
 }
 

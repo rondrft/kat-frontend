@@ -16,6 +16,7 @@ export function useTicketConfig(guildId: string | null) {
     queryFn: () => getTicketConfig(guildId!),
     enabled: Boolean(guildId),
     staleTime: 60_000,
+    placeholderData: (previous) => previous,
   });
 }
 

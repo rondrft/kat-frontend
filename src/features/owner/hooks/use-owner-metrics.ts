@@ -26,5 +26,6 @@ export function useOwnerMetrics() {
     },
     enabled,
     staleTime: 60_000,
+    placeholderData: (previous) => previous,
   });
 }
