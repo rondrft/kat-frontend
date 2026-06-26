@@ -5,9 +5,9 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("kat-access-token")?.value;
 
   if (!token) {
-    const loginUrl = new URL("/auth/login", request.url);
-    loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
+    const homeUrl = new URL("/", request.url);
+    homeUrl.searchParams.set("expired", "1");
+    return NextResponse.redirect(homeUrl);
   }
 
   return NextResponse.next();

@@ -4,17 +4,16 @@ import { LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { isDiscordOAuthConfigured } from "@/config/discord";
 import { useAuth } from "@/features/auth/hooks/use-auth";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 type DiscordLoginButtonProps = {
   label?: string;
   className?: string;
 };
 
-export function DiscordLoginButton({
-  label = "Iniciar sesión con Discord",
-  className,
-}: DiscordLoginButtonProps) {
+export function DiscordLoginButton({ label, className }: DiscordLoginButtonProps) {
   const { loginWithDiscord, status } = useAuth();
+  const { auth } = useTranslation();
   const configured = isDiscordOAuthConfigured();
 
   return (
@@ -28,7 +27,7 @@ export function DiscordLoginButton({
       }
     >
       <LogIn className="mr-2 h-4 w-4" />
-      {status === "loading" ? "Redirigiendo…" : label}
+      {status === "loading" ? auth.redirecting : (label ?? auth.loginWithDiscord)}
     </Button>
   );
 }

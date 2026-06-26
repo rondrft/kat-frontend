@@ -16,7 +16,11 @@ import { useGuildStore } from "@/store/guild-store";
 export function useAuth() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { session, status, logout: clearAuth, setStatus, hasHydrated } = useAuthStore();
+  const session = useAuthStore((s) => s.session);
+  const status = useAuthStore((s) => s.status);
+  const hasHydrated = useAuthStore((s) => s.hasHydrated);
+  const setStatus = useAuthStore((s) => s.setStatus);
+  const clearAuth = useAuthStore((s) => s.logout);
 
   useLayoutEffect(() => {
     if (!session?.user?.id && hasRecoverableAuthSession()) {
@@ -30,7 +34,7 @@ export function useAuth() {
       storeLogout();
       useGuildStore.getState().clearSelectedGuild();
       queryClient.removeQueries({ queryKey: guildsQueryKey });
-      router.replace("/dashboard");
+      router.replace("/?expired=1");
     };
 
     window.addEventListener("kat:unauthorized", handleUnauthorized);
@@ -58,7 +62,7 @@ export function useAuth() {
     clearAuth();
     useGuildStore.getState().clearSelectedGuild();
     queryClient.removeQueries({ queryKey: guildsQueryKey });
-    router.replace("/dashboard");
+    router.replace("/");
   }, [clearAuth, queryClient, router]);
 
   const isAuthenticated =
