@@ -27,7 +27,12 @@ export function useGiveaway(guildId: string | null, giveawayId: string | null) {
     refetchInterval: (query) => {
       const data = query.state.data;
       if (!data || data.ended) return false;
-      return 3000;
+      if (data.endTime) {
+        const remaining = new Date(data.endTime).getTime() - Date.now();
+        if (remaining > 120_000) return 30_000;
+        return 5_000;
+      }
+      return 30_000;
     },
   });
 }
@@ -41,7 +46,7 @@ export function useGiveawayParticipants(
     queryKey: giveawayParticipantsQueryKey(guildId ?? "", giveawayId ?? ""),
     queryFn: () => giveawayService.getParticipants(guildId!, giveawayId!),
     enabled: Boolean(guildId) && Boolean(giveawayId),
-    refetchInterval: ended ? false : 3000,
+    refetchInterval: ended ? false : 30_000,
   });
 }
 

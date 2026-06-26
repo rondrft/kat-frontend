@@ -438,7 +438,7 @@ function LogsSectionComponent({ guildId: guildIdProp }: LogsSectionProps) {
   // ── Queries ──────────────────────────────────────────────────────────────
 
   const { data: channels = [], isLoading: channelsLoading } = useQuery({
-    queryKey: ["guilds", guildId, "text-channels"],
+    queryKey: ["guilds", guildId, "channels", "text"],
     queryFn: () => guildService.getGuildTextChannels(guildId!),
     enabled: Boolean(guildId),
     staleTime: 60 * 1000,
