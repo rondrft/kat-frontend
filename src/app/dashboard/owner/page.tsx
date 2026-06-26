@@ -88,7 +88,7 @@ function MetricCard({
   accent,
   children,
 }: {
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   value?: string | number;
   label: string;
   accent: string;

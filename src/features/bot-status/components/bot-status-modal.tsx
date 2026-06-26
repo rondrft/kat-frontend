@@ -44,7 +44,7 @@ function getShardForGuild(guildId: string, totalShards: number): number | null {
   }
 }
 
-function StatCard({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | number }) {
+function StatCard({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string | number }) {
   return (
     <div className="flex flex-col gap-1 rounded-xl border border-border/60 bg-muted/30 p-4">
       <div className="flex items-center gap-2 text-muted-foreground">
