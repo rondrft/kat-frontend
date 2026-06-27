@@ -87,7 +87,17 @@ export function HeroSection() {
         <motion.div
           ref={cardRef}
           className="absolute inset-0 overflow-hidden bg-white dark:bg-[#060900]"
-          style={{ scale, opacity: cardOpacity, borderRadius }}
+          style={{
+            scale,
+            opacity: cardOpacity,
+            borderRadius,
+            backgroundColor:
+              resolvedTheme === "dark"
+                ? "#060900"
+                : resolvedTheme === "light"
+                  ? "#ffffff"
+                  : undefined,
+          }}
         >
           <FluidCanvas isDark={resolvedTheme === "dark"} />
 
@@ -112,7 +122,7 @@ export function HeroSection() {
               style={{ rotateX, rotateY, x: parallaxX, y: parallaxY }}
             >
               <Image
-                src="/kat.png"
+                src="/katv2.png"
                 alt="Kat"
                 fill
                 className="object-contain select-none pointer-events-none"

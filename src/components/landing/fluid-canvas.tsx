@@ -371,6 +371,18 @@ class FluidSim {
 
   setTheme(isDark: boolean) {
     this.isDark = isDark;
+    this.clearDye();
+  }
+
+  private clearDye() {
+    const gl = this.gl;
+    for (const fbo of [this.density.read, this.density.write]) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.fbo);
+      gl.viewport(0, 0, fbo.w, fbo.h);
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
   private tex(unit: number, f: FBO): number {
@@ -529,7 +541,7 @@ class FluidSim {
       const p = this.pDisplay;
       gl.useProgram(p.prog);
       gl.uniform1i(this.ul(p, "uDensity"), this.tex(0, this.density.read));
-      gl.uniform1f(this.ul(p, "uAlphaMax"), this.isDark ? 0.62 : 0.30);
+      gl.uniform1f(this.ul(p, "uAlphaMax"), this.isDark ? 0.62 : 0.45);
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       gl.viewport(0, 0, this.canvas.width, this.canvas.height);
       gl.enable(gl.BLEND);
