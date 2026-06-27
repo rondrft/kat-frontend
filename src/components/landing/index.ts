@@ -7,3 +7,4 @@ export { DiscordSlogan } from "./discord-slogan";
 export { HeroSection } from "./hero-section";
 export { KatShowcase } from "./kat-showcase";
 export { ShineText } from "./shine-text";
+export { SmartSystems } from "./smart-systems";

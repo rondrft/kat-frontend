@@ -6,6 +6,7 @@ import {
   DiscordSlogan,
   HeroSection,
   KatShowcase,
+  SmartSystems,
 } from "@/components/landing";
 import { SmoothScroll } from "@/components/smooth-scroll";
 import { AuroraBackground } from "@/components/ui/aurora-background";
@@ -28,6 +29,7 @@ export default function HomePage() {
             <DiscordSlogan />
             <KatShowcase />
             <CommunityReveal />
+            <SmartSystems />
           </main>
         </div>
       </SmoothScroll>
