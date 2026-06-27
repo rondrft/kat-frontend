@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import {
   AuthExpiredBanner,
-  CommunitySection,
+  CommunityReveal,
   DiscordSlogan,
   HeroSection,
   KatShowcase,
@@ -27,7 +27,7 @@ export default function HomePage() {
             <HeroSection />
             <DiscordSlogan />
             <KatShowcase />
-            <CommunitySection />
+            <CommunityReveal />
           </main>
         </div>
       </SmoothScroll>

@@ -1,6 +1,7 @@
 export { AnimatedGradientText } from "./animated-gradient-text";
 export { AuthExpiredBanner } from "./auth-expired-banner";
 export { BackgroundEffects } from "./background-effects";
+export { CommunityReveal } from "./community-reveal";
 export { CommunitySection } from "./community-section";
 export { DiscordSlogan } from "./discord-slogan";
 export { HeroSection } from "./hero-section";
