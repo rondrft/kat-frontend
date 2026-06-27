@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Sparkles, Command } from "lucide-react";
@@ -17,6 +17,7 @@ import { FluidCanvas } from "./fluid-canvas";
 export function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const cardRef    = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
   const { resolvedTheme } = useTheme();
 
   const { scrollYProgress } = useScroll({
@@ -47,6 +48,8 @@ export function HeroSection() {
     window.addEventListener("mousemove", onMove);
     return () => window.removeEventListener("mousemove", onMove);
   }, [mouseX, mouseY]);
+
+  useEffect(() => { setMounted(true); }, []);
 
   return (
     <section ref={sectionRef} className="relative h-[250vh]">
@@ -91,12 +94,9 @@ export function HeroSection() {
             scale,
             opacity: cardOpacity,
             borderRadius,
-            backgroundColor:
-              resolvedTheme === "dark"
-                ? "#060900"
-                : resolvedTheme === "light"
-                  ? "#ffffff"
-                  : undefined,
+            backgroundColor: mounted
+              ? resolvedTheme === "dark" ? "#060900" : "#ffffff"
+              : undefined,
           }}
         >
           <FluidCanvas isDark={resolvedTheme === "dark"} />
