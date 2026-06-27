@@ -20,14 +20,14 @@ function normalizedColor(r: number, g: number, b: number): [number, number, numb
 }
 
 const COLORS_LIGHT: [number, number, number][] = [
-  normalizedColor(0.478, 0.784, 0.961),
-  normalizedColor(0.635, 0.882, 1.000),
-  normalizedColor(0.875, 0.961, 1.000),
+  normalizedColor(0.839, 1.000, 0.000),
+  normalizedColor(0.918, 1.000, 0.541),
+  normalizedColor(0.969, 1.000, 0.839),
 ];
 const COLORS_DARK: [number, number, number][] = [
-  normalizedColor(0.114, 0.373, 0.569),
-  normalizedColor(0.150, 0.450, 0.670),
-  normalizedColor(0.063, 0.165, 0.290),
+  normalizedColor(0.839, 1.000, 0.000),
+  normalizedColor(0.900, 1.000, 0.200),
+  normalizedColor(0.700, 0.880, 0.100),
 ];
 
 // ── Shaders ────────────────────────────────────────────────────────────────
@@ -157,10 +157,11 @@ const DISPLAY_FRAG = `#version 300 es
 precision highp float;
 in vec2 vUv;
 uniform sampler2D uDensity;
+uniform float uAlphaMax;
 out vec4 o;
 void main() {
   vec3 col = max(texture(uDensity, vUv).rgb, vec3(0.0));
-  float a = clamp(length(col) * 3.0, 0.0, 0.30);
+  float a = clamp(length(col) * 3.0, 0.0, uAlphaMax);
   o = vec4(col, a);
 }`;
 
@@ -270,7 +271,7 @@ class FluidSim {
     this.pDivergence = mk(DIVERGENCE_FRAG, ["uVelocity","uTs"]);
     this.pPressure   = mk(PRESSURE_FRAG,   ["uPressure","uDivergence","uTs"]);
     this.pGradient   = mk(GRADIENT_FRAG,   ["uPressure","uVelocity","uTs"]);
-    this.pDisplay    = mk(DISPLAY_FRAG,    ["uDensity"]);
+    this.pDisplay    = mk(DISPLAY_FRAG,    ["uDensity", "uAlphaMax"]);
   }
 
   private buildQuad() {
@@ -528,6 +529,7 @@ class FluidSim {
       const p = this.pDisplay;
       gl.useProgram(p.prog);
       gl.uniform1i(this.ul(p, "uDensity"), this.tex(0, this.density.read));
+      gl.uniform1f(this.ul(p, "uAlphaMax"), this.isDark ? 0.62 : 0.30);
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       gl.viewport(0, 0, this.canvas.width, this.canvas.height);
       gl.enable(gl.BLEND);

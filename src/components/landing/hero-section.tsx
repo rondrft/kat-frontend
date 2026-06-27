@@ -3,7 +3,7 @@
 import { useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { UserRound, LayoutDashboard } from "lucide-react";
+import { Sparkles, Command } from "lucide-react";
 import {
   motion,
   useScroll,
@@ -24,12 +24,10 @@ export function HeroSection() {
     offset: ["start start", "end end"],
   });
 
-  const scale           = useTransform(scrollYProgress, [0, 0.5, 1], [1.15, 0.85, 0.48]);
-  const borderRadius    = useTransform(scrollYProgress, [0, 0.5, 1], [0, 30, 70]);
-  const blockBgLight    = useTransform(scrollYProgress, [0, 1], ["#ffffff", "#c8e8ff"]);
-  const blockBgDark     = useTransform(scrollYProgress, [0, 1], ["#0a0a0f", "#0b1c33"]);
-  const backgroundColor = resolvedTheme === "dark" ? blockBgDark : blockBgLight;
-  const navScale        = useTransform(scrollYProgress, [0, 0.6], [1, 0.88]);
+  const scale        = useTransform(scrollYProgress, [0, 0.5, 1], [1.15, 0.85, 0.48]);
+  const borderRadius = useTransform(scrollYProgress, [0, 0.5, 1], [0, 8, 18]);
+  const cardOpacity  = useTransform(scrollYProgress, [0, 1], [1, 0.35]);
+  const navScale     = useTransform(scrollYProgress, [0, 0.6], [1, 0.88]);
 
   // ── Parallax ────────────────────────────────────────────
   const mouseX  = useMotionValue(0);
@@ -40,24 +38,6 @@ export function HeroSection() {
   const rotateY   = useTransform(smoothX, [-1, 1], [-12, 12]);
   const parallaxX = useTransform(smoothX, [-1, 1], [-25, 25]);
   const parallaxY = useTransform(smoothY, [-1, 1], [-18, 18]);
-
-  useEffect(() => {
-    const isDark = () => document.documentElement.classList.contains("dark");
-    const update = (v: number) => {
-      const from: [number, number, number] = isDark() ? [10, 10, 15] : [255, 255, 255];
-      const to:   [number, number, number] = isDark() ? [3, 13, 28]  : [255, 255, 255];
-      const r = Math.round(from[0] + (to[0] - from[0]) * v);
-      const g = Math.round(from[1] + (to[1] - from[1]) * v);
-      const b = Math.round(from[2] + (to[2] - from[2]) * v);
-      document.documentElement.style.backgroundColor = `rgb(${r},${g},${b})`;
-    };
-    const unsubscribe = scrollYProgress.on("change", update);
-    update(scrollYProgress.get());
-    return () => {
-      unsubscribe();
-      document.documentElement.style.backgroundColor = "";
-    };
-  }, [scrollYProgress]);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -75,46 +55,53 @@ export function HeroSection() {
         className="fixed top-8 left-8 z-50 origin-top-left"
         style={{ scale: navScale }}
       >
-        <div className="flex flex-col items-center leading-none">
-          <span className="courier-prime-regular text-[28px] tracking-[0.1em] uppercase text-foreground/50">
-            Discord
-          </span>
-          <span className="lilita-one-regular font-bold text-6xl tracking-tight text-foreground leading-none">
-            KAT
-          </span>
-        </div>
+        <span className="font-sans font-black text-[3.25rem] sm:text-[4.25rem] tracking-[-0.04em] leading-none text-foreground">
+          KAT
+        </span>
       </motion.div>
 
       <motion.div
-        className="fixed top-8 right-8 z-50 origin-top-right flex items-center gap-3"
+        className="fixed top-8 right-8 z-50 origin-top-right flex items-center gap-2.5 sm:gap-3"
         style={{ scale: navScale }}
       >
         <button
           type="button"
-          className="flex items-center gap-3 px-8 h-16 rounded-xl bg-[#7ac8f5] text-slate-800 font-semibold text-lg tracking-wide select-none transition-colors hover:bg-[#5bb8e8]"
+          className="flex items-center gap-2.5 sm:gap-3 px-6 sm:px-8 h-[4.5rem] rounded-[14px] bg-[#d6ff00] text-black font-black text-sm sm:text-[1.05rem] tracking-[0.04em] select-none transition-colors hover:bg-[#c4ec00]"
         >
-          <UserRound className="w-6 h-6" />
+          <Sparkles className="w-5 h-5 sm:w-[1.25rem] sm:h-[1.25rem] shrink-0" />
           LOGIN
         </button>
         <Link
           href="/dashboard"
-          className="group relative flex items-center justify-center w-16 h-16 rounded-xl border-[3px] border-black dark:border-white overflow-hidden"
+          className="group relative flex items-center justify-center w-[4.5rem] h-[4.5rem] rounded-[14px] border-[2.5px] border-black/40 dark:border-[#d6ff00]/60"
         >
-          <span className="absolute top-0 left-0 right-0 h-0 group-hover:h-full bg-[#7ac8f5] rounded-b-[50%] group-hover:rounded-b-none transition-all duration-300 ease-in-out" />
-          <LayoutDashboard className="w-7 h-7 text-foreground relative z-10 group-hover:text-slate-800 transition-colors duration-300" />
+          <span className="absolute inset-0 rounded-[14px] bg-[#d6ff00] [clip-path:inset(100%_0_0_0_round_14px)] group-hover:[clip-path:inset(0%_0_0_0_round_14px)] transition-[clip-path] duration-300 ease-in-out" />
+          <Command className="w-[1.25rem] h-[1.25rem] text-foreground relative z-10 group-hover:text-black transition-colors duration-200" />
         </Link>
       </motion.div>
 
       <div
-        className="sticky top-0 h-screen w-full overflow-hidden hero-scene"
+        className="sticky top-0 h-screen w-full overflow-hidden"
         style={{ perspective: "1000px" }}
       >
         <motion.div
           ref={cardRef}
-          className="absolute inset-0 overflow-hidden"
-          style={{ scale, backgroundColor, borderRadius }}
+          className="absolute inset-0 overflow-hidden bg-white dark:bg-[#060900]"
+          style={{ scale, opacity: cardOpacity, borderRadius }}
         >
           <FluidCanvas isDark={resolvedTheme === "dark"} />
+
+          <div
+            className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
+            style={{ zIndex: 1 }}
+          >
+            <span
+              className="font-sans font-black text-foreground/[0.06]"
+              style={{ fontSize: "clamp(10rem, 40vw, 30rem)", lineHeight: 1, letterSpacing: "-0.05em" }}
+            >
+              KAT
+            </span>
+          </div>
 
           <div
             className="absolute inset-0"
