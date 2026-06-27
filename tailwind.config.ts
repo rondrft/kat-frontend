@@ -72,10 +72,15 @@ const config: Config = {
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
+        aurora: {
+          from: { backgroundPosition: "50% 50%, 50% 50%" },
+          to: { backgroundPosition: "350% 50%, 350% 50%" },
+        },
       },
       animation: {
         "fade-in": "fade-in 0.3s ease-out forwards",
         "fade-in-scale": "fade-in-scale 0.2s ease-out forwards",
+        aurora: "aurora 60s linear infinite",
       },
     },
   },
