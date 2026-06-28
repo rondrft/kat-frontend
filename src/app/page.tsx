@@ -8,6 +8,7 @@ import {
   KatShowcase,
   SmartSystems,
 } from "@/components/landing";
+import { PixelTrailGlobal } from "@/components/landing/pixel-trail-global";
 import { SmoothScroll } from "@/components/smooth-scroll";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 
@@ -19,8 +20,9 @@ export default function HomePage() {
   return (
     <>
       <AuroraBackground />
+      <PixelTrailGlobal />
       <SmoothScroll>
-        <div className="relative min-h-screen [overflow-x:clip]">
+        <div className="landing-content relative min-h-screen [overflow-x:clip]">
           <Suspense>
             <AuthExpiredBanner />
           </Suspense>

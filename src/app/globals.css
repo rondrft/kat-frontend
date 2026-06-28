@@ -26,7 +26,7 @@
 
 @layer base {
   :root {
-    --background: 218 14% 84%;
+    --background: 0 0% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -219,6 +219,14 @@
   to {
     background-position: 350% 50%, 350% 50%;
   }
+}
+
+/* Landing page sits on a dark lime base in light mode — override foreground tokens
+   so all text-foreground / text-muted-foreground children render white without
+   touching individual landing components. Has no effect in dark mode (same value). */
+:root .landing-content {
+  --foreground: 0 0% 98%;
+  --muted-foreground: 0 0% 68%;
 }
 
 /* ── Scrollbar ─────────────────────────────────────────── */
