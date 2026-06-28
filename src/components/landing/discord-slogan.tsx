@@ -97,7 +97,7 @@ function SloganLine({ line, inView }: { line: LineConfig; inView: boolean }) {
           ) : (
             <span
               key={word.text}
-              className="outfit font-semibold leading-none tracking-[-0.04em] text-foreground/60 dark:text-white/50"
+              className="outfit font-semibold leading-none tracking-[-0.04em] text-[#d6ff00] dark:text-white/50"
               style={{ fontSize: "clamp(1.8rem, 7.5vw, 7.5rem)" }}
             >
               {word.text}
