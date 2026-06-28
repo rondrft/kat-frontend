@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
+import { MaskRevealLine, MASK_TOTAL } from "./mask-reveal-line";
 
 type WordConfig = {
   text:   string;
@@ -22,7 +23,7 @@ const LINES: LineConfig[] = [
       { text: "BUILD", weight: "heavy" },
       { text: "YOUR",  weight: "light" },
     ],
-    delay: 0.05,
+    delay: 0.03,
     shine: true,
   },
   {
@@ -31,7 +32,7 @@ const LINES: LineConfig[] = [
       { text: "DISCORD", weight: "heavy" },
       { text: "SERVER",  weight: "light" },
     ],
-    delay: 0.52,
+    delay: 0.31,
     shine: true,
   },
   {
@@ -41,7 +42,7 @@ const LINES: LineConfig[] = [
       { text: "RIGHT", weight: "heavy" },
       { text: "WAY",   weight: "light" },
     ],
-    delay: 1.0,
+    delay: 0.60,
     shine: true,
   },
   {
@@ -50,29 +51,40 @@ const LINES: LineConfig[] = [
       { text: "WITH", weight: "light" },
       { text: "KAT",  weight: "heavy" },
     ],
-    delay: 1.52,
+    delay: 0.91,
     shine: false,
   },
 ];
 
-const MASK_ENTER = 0.30;
-const MASK_EXIT  = 0.42;
-const MASK_TOTAL = MASK_ENTER + MASK_EXIT;
-const MASK_FRAC  = MASK_ENTER / MASK_TOTAL;
-
 function SloganLine({ line, inView }: { line: LineConfig; inView: boolean }) {
-  const textDelay  = line.delay + MASK_ENTER;
-  const shineDelay = line.delay + MASK_TOTAL + 0.12;
+  const shineDelay = line.delay + MASK_TOTAL + 0.10;
 
   return (
-    <div className="relative overflow-hidden py-px">
-      <motion.div
-        className="flex items-baseline justify-center"
-        style={{ gap: "0.28em" }}
-        initial={{ opacity: 0 }}
-        animate={inView ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ delay: textDelay, duration: 0.01 }}
-      >
+    <MaskRevealLine
+      delay={line.delay}
+      inView={inView}
+      shine={
+        line.shine ? (
+          <motion.div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(90deg, transparent 15%, rgba(255,255,255,0.20) 50%, transparent 85%)",
+              zIndex: 5,
+            }}
+            initial={{ x: "-130%" }}
+            animate={inView ? { x: "240%" } : { x: "-130%" }}
+            transition={{
+              delay:    shineDelay,
+              duration: 0.85,
+              ease:     [0.25, 0.46, 0.45, 0.94],
+            }}
+          />
+        ) : undefined
+      }
+    >
+      <div className="flex items-baseline justify-center" style={{ gap: "0.28em" }}>
         {line.words.map((word) =>
           word.weight === "heavy" ? (
             <span
@@ -92,41 +104,8 @@ function SloganLine({ line, inView }: { line: LineConfig; inView: boolean }) {
             </span>
           )
         )}
-      </motion.div>
-
-      {line.shine && (
-        <motion.div
-          aria-hidden
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "linear-gradient(90deg, transparent 15%, rgba(255,255,255,0.20) 50%, transparent 85%)",
-            zIndex: 5,
-          }}
-          initial={{ x: "-130%" }}
-          animate={inView ? { x: "240%" } : { x: "-130%" }}
-          transition={{
-            delay:    shineDelay,
-            duration: 1.15,
-            ease:     [0.25, 0.46, 0.45, 0.94],
-          }}
-        />
-      )}
-
-      <motion.div
-        aria-hidden
-        className="absolute inset-0"
-        style={{ backgroundColor: "#d6ff00", zIndex: 10 }}
-        initial={{ x: "-101%" }}
-        animate={inView ? { x: ["-101%", "0%", "101%"] } : { x: "-101%" }}
-        transition={{
-          delay:    line.delay,
-          duration: MASK_TOTAL,
-          times:    [0, MASK_FRAC, 1],
-          ease:     "easeInOut",
-        }}
-      />
-    </div>
+      </div>
+    </MaskRevealLine>
   );
 }
 

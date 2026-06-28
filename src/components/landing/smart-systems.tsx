@@ -8,6 +8,7 @@ import {
   useScroll,
   useTransform,
 } from "framer-motion";
+import { MaskRevealLine } from "./mask-reveal-line";
 import {
   UserPlus,
   Terminal,
@@ -151,68 +152,75 @@ export function SmartSystems() {
     <section ref={sectionRef} className="relative px-8 md:px-16 py-28 md:py-44">
 
       {/* ── Section title ─────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 28 }}
-        animate={inView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="mb-20 md:mb-28"
-      >
-        <p className="mb-4 text-[11px] font-black uppercase tracking-[0.28em] text-[#d6ff00]">
+      <div className="mb-20 md:mb-28">
+        <motion.p
+          className="mb-4 text-[11px] font-black uppercase tracking-[0.28em] text-[#d6ff00]"
+          initial={{ opacity: 0, y: 10 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        >
           Platform
-        </p>
-        <div>
+        </motion.p>
+        <MaskRevealLine delay={0.08} inView={inView}>
           <span
             className="outfit block font-black leading-[0.88] tracking-[-0.04em] text-foreground"
             style={{ fontSize: "clamp(3.5rem, 8vw, 8.5rem)" }}
           >
             POWERFUL
           </span>
+        </MaskRevealLine>
+        <MaskRevealLine delay={0.30} inView={inView}>
           <span
             className="outfit block font-black leading-[0.88] tracking-[-0.04em] text-[#d6ff00]"
             style={{ fontSize: "clamp(3.5rem, 8vw, 8.5rem)" }}
           >
             BY DESIGN.
           </span>
-        </div>
-      </motion.div>
+        </MaskRevealLine>
+      </div>
 
       {/* ── Two-column editorial ──────────────────────────────────────── */}
       <div className="flex flex-col gap-16 lg:flex-row lg:items-start lg:gap-20">
 
         {/* Left — message */}
-        <motion.div
-          className="shrink-0 lg:w-[36%]"
-          initial={{ opacity: 0, x: -28 }}
-          animate={inView ? { opacity: 1, x: 0 } : {}}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
-        >
+        <div className="shrink-0 lg:w-[36%]">
           <div className="mb-8">
-            <span
-              className="outfit block font-black leading-[0.88] tracking-[-0.04em] text-foreground"
-              style={{ fontSize: "clamp(2rem, 4.5vw, 5rem)" }}
-            >
-              SMART
-            </span>
-            <span
-              className="outfit block font-black leading-[0.88] tracking-[-0.04em] text-[#d6ff00]"
-              style={{ fontSize: "clamp(2rem, 4.5vw, 5rem)" }}
-            >
-              SYSTEMS.
-            </span>
+            <MaskRevealLine delay={0.18} inView={inView}>
+              <span
+                className="outfit block font-black leading-[0.88] tracking-[-0.04em] text-foreground"
+                style={{ fontSize: "clamp(2rem, 4.5vw, 5rem)" }}
+              >
+                SMART
+              </span>
+            </MaskRevealLine>
+            <MaskRevealLine delay={0.40} inView={inView}>
+              <span
+                className="outfit block font-black leading-[0.88] tracking-[-0.04em] text-[#d6ff00]"
+                style={{ fontSize: "clamp(2rem, 4.5vw, 5rem)" }}
+              >
+                SYSTEMS.
+              </span>
+            </MaskRevealLine>
           </div>
 
-          <p className="mb-10 max-w-[300px] text-sm leading-relaxed text-foreground/50">
-            Kat combines intelligent tools and seamless workflows to make managing your Discord server effortless.
-          </p>
-
-          <button
-            type="button"
-            className="inline-flex items-center gap-3 rounded-[14px] bg-[#d6ff00] px-7 h-[3.25rem] text-black font-black text-[13px] tracking-[0.04em] select-none transition-colors hover:bg-[#c4ec00]"
+          <motion.div
+            initial={{ opacity: 0, x: -24 }}
+            animate={inView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.55 }}
           >
-            EXPLORE FEATURES
-            <ArrowRight className="h-4 w-4" />
-          </button>
-        </motion.div>
+            <p className="mb-10 max-w-[300px] text-sm leading-relaxed text-foreground/50">
+              Kat combines intelligent tools and seamless workflows to make managing your Discord server effortless.
+            </p>
+
+            <button
+              type="button"
+              className="inline-flex items-center gap-3 rounded-[14px] bg-[#d6ff00] px-7 h-[3.25rem] text-black font-black text-[13px] tracking-[0.04em] select-none transition-colors hover:bg-[#c4ec00]"
+            >
+              EXPLORE FEATURES
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </motion.div>
+        </div>
 
         {/* Right — feature cards with scroll parallax */}
         <motion.div className="flex-1" style={{ y: cardsY }}>
