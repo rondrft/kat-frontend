@@ -114,6 +114,7 @@ export function HeroSection() {
           </div>
 
           <div
+            data-pixel-trail-exclude=""
             className="absolute inset-0"
             style={{ transform: "translateY(8%)", zIndex: 2 }}
           >
