@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -57,7 +57,7 @@ type LevelingModalProps = {
   guildId: string | null;
 };
 
-const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
+const TABS: { id: Tab; label: string; icon: ComponentType<{ className?: string }> }[] = [
   { id: "general", label: "General", icon: ArrowUp },
   { id: "xp", label: "XP & Cooldown", icon: Zap },
   { id: "notifications", label: "Notifications", icon: Bell },
