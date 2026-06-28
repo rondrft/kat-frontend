@@ -10,6 +10,7 @@ import {
   useTransform,
   useMotionValue,
   useSpring,
+  useMotionValueEvent,
 } from "framer-motion";
 import { useTheme } from "next-themes";
 import { FluidCanvas } from "./fluid-canvas";
@@ -17,7 +18,8 @@ import { FluidCanvas } from "./fluid-canvas";
 export function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const cardRef    = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted]     = useState(false);
+  const [navOnCard, setNavOnCard] = useState(true);
   const { resolvedTheme } = useTheme();
 
   const { scrollYProgress } = useScroll({
@@ -29,6 +31,12 @@ export function HeroSection() {
   const borderRadius = useTransform(scrollYProgress, [0, 0.5, 1], [0, 8, 18]);
   const cardOpacity  = useTransform(scrollYProgress, [0, 1], [1, 0.35]);
   const navScale     = useTransform(scrollYProgress, [0, 0.6], [1, 0.88]);
+
+  // Switch nav colours when the white card is no longer covering the aurora.
+  // The card occupies the full viewport until ~0.18 progress, so flip there.
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    setNavOnCard(v < 0.18);
+  });
 
   // ── Parallax ────────────────────────────────────────────
   const mouseX  = useMotionValue(0);
@@ -51,6 +59,17 @@ export function HeroSection() {
 
   useEffect(() => { setMounted(true); }, []);
 
+  const inDark   = mounted && resolvedTheme === "dark";
+  // Before mount: fall back to CSS variable so both themes render correctly via SSR.
+  // After mount: explicit black (on card) or white (off card / dark mode).
+  const navWhite = inDark || !navOnCard;
+  const navColorClass  = !mounted ? "text-foreground" : navWhite ? "text-white" : "text-black";
+  const borderClass    = !mounted
+    ? "border-foreground/40 dark:border-[#d6ff00]/60"
+    : inDark
+      ? "border-[#d6ff00]/60"
+      : navOnCard ? "border-black/40" : "border-white/40";
+
   return (
     <section ref={sectionRef} className="relative h-[250vh]">
 
@@ -58,7 +77,7 @@ export function HeroSection() {
         className="fixed top-8 left-8 z-50 origin-top-left"
         style={{ scale: navScale }}
       >
-        <span className="font-sans font-black text-[3.25rem] sm:text-[4.25rem] tracking-[-0.04em] leading-none text-foreground">
+        <span className={`font-sans font-black text-[3.25rem] sm:text-[4.25rem] tracking-[-0.04em] leading-none transition-colors duration-300 ${navColorClass}`}>
           KAT
         </span>
       </motion.div>
@@ -76,10 +95,10 @@ export function HeroSection() {
         </button>
         <Link
           href="/dashboard"
-          className="group relative flex items-center justify-center w-[4.5rem] h-[4.5rem] rounded-[14px] border-[2.5px] border-black/40 dark:border-[#d6ff00]/60"
+          className={`group relative flex items-center justify-center w-[4.5rem] h-[4.5rem] rounded-[14px] border-[2.5px] transition-colors duration-300 ${borderClass}`}
         >
           <span className="absolute inset-0 rounded-[14px] bg-[#d6ff00] [clip-path:inset(100%_0_0_0_round_14px)] group-hover:[clip-path:inset(0%_0_0_0_round_14px)] transition-[clip-path] duration-300 ease-in-out" />
-          <Command className="w-[1.25rem] h-[1.25rem] text-foreground relative z-10 group-hover:text-black transition-colors duration-200" />
+          <Command className={`w-[1.25rem] h-[1.25rem] relative z-10 group-hover:text-black transition-colors duration-200 ${navColorClass}`} />
         </Link>
       </motion.div>
 
