@@ -603,7 +603,7 @@ export function FluidCanvas({ isDark }: { isDark: boolean }) {
     if (!canvas?.parentElement) return;
     const parent = canvas.parentElement;
 
-    const sim   = new FluidSim(canvas, isDark);
+    const sim = new FluidSim(canvas, isDark);
     simRef.current = sim;
 
     const ro = new ResizeObserver((entries) => {
@@ -614,6 +614,20 @@ export function FluidCanvas({ isDark }: { isDark: boolean }) {
     });
     ro.observe(parent);
 
+    // Pause the simulation when the hero card scrolls out of view.
+    // Saves ~26 GPU draw calls/frame while the user is past the hero section.
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          sim.start();
+        } else {
+          sim.pause();
+        }
+      },
+      { threshold: 0 },
+    );
+    io.observe(parent);
+
     const { width, height } = parent.getBoundingClientRect();
     if (width > 0) sim.resize(width, height);
 
@@ -621,6 +635,7 @@ export function FluidCanvas({ isDark }: { isDark: boolean }) {
 
     return () => {
       ro.disconnect();
+      io.disconnect();
       sim.destroy();
       simRef.current = null;
     };

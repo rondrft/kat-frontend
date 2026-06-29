@@ -3,15 +3,23 @@
 import { useRef, useEffect, useMemo } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { shaderMaterial } from "@react-three/drei";
-import * as THREE from "three";
+import {
+  Vector2,
+  Vector4,
+  Texture,
+  Color,
+  CanvasTexture,
+  NearestFilter,
+  ClampToEdgeWrapping,
+} from "three";
 
 const TrailMaterial = shaderMaterial(
   {
-    resolution:  new THREE.Vector2(),
-    mouseTrail:  new THREE.Texture(),
+    resolution:  new Vector2(),
+    mouseTrail:  new Texture(),
     gridSize:    52.0,
-    pixelColor:  new THREE.Color("#d6ff00"),
-    excludeRect: new THREE.Vector4(0, 0, 0, 0),
+    pixelColor:  new Color("#d6ff00"),
+    excludeRect: new Vector4(0, 0, 0, 0),
   },
   `void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`,
   `
@@ -56,32 +64,44 @@ type SceneProps = {
 };
 
 function Scene({ gridSize, trailSize, maxAge, interpolate, color, minMovePx, getExcludeRect }: SceneProps) {
-  const { size } = useThree();
+  const { size, invalidate } = useThree();
 
   const [trailCanvas, trailCtx, trailTex] = useMemo(() => {
     const canvas  = document.createElement("canvas");
     canvas.width  = canvas.height = 512;
     const ctx     = canvas.getContext("2d")!;
-    const tex     = new THREE.CanvasTexture(canvas);
+    const tex     = new CanvasTexture(canvas);
     // flipY=false: canvas-bottom maps to GPU UV.y=1 → matches gl_FragCoord bottom-up convention
     tex.flipY     = false;
-    tex.minFilter = THREE.NearestFilter;
-    tex.magFilter = THREE.NearestFilter;
-    tex.wrapS     = THREE.ClampToEdgeWrapping;
-    tex.wrapT     = THREE.ClampToEdgeWrapping;
+    tex.minFilter = NearestFilter;
+    tex.magFilter = NearestFilter;
+    tex.wrapS     = ClampToEdgeWrapping;
+    tex.wrapT     = ClampToEdgeWrapping;
     return [canvas, ctx, tex] as const;
   }, []);
 
-  const mat        = useMemo(() => new TrailMaterial(), []);
-  const newPtsRef  = useRef<Array<{ x: number; y: number }>>([]);
-  // Stores the last committed position in both normalised and pixel coords.
-  // Only updates when movement exceeds minMovePx, so the threshold comparison
-  // is always against the last point that actually produced trail output.
-  const lastPosRef = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
+  const mat             = useMemo(() => new TrailMaterial(), []);
+  const newPtsRef       = useRef<Array<{ x: number; y: number }>>([]);
+  const dirtyRef        = useRef(false);
+  // Tracks estimated maximum luminance in the trail canvas (0–1).
+  // Updated to 1 when points are added, decayed each frame using the same exponential
+  // as the canvas fade. When it drops below 1/255, the canvas is effectively black —
+  // we skip both the fillRect pass and the GPU texture upload.
+  const contentAlphaRef = useRef(0);
+  // Stores the last committed position in normalised and pixel coords.
+  const lastPosRef      = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
 
   useEffect(() => {
     mat.uniforms.pixelColor!.value.set(color);
   }, [color, mat]);
+
+  // Dispose GPU resources when the component unmounts.
+  useEffect(() => {
+    return () => {
+      trailTex.dispose();
+      mat.dispose();
+    };
+  }, [trailTex, mat]);
 
   useEffect(() => {
     const step = trailSize / Math.max(1, interpolate);
@@ -90,11 +110,8 @@ function Scene({ gridSize, trailSize, maxAge, interpolate, color, minMovePx, get
       const last = lastPosRef.current;
 
       // Ignore micro-movements — only commit when the cursor has moved enough.
-      // We compare against the last *committed* position, not every raw event,
-      // so slow continuous dragging never accumulates.
       if (last && Math.hypot(e.clientX - last.px, e.clientY - last.py) < minMovePx) return;
 
-      // y = 1 - clientY/h so that screen-top → y=1, screen-bottom → y=0
       const x = e.clientX / window.innerWidth;
       const y = 1 - e.clientY / window.innerHeight;
 
@@ -102,8 +119,7 @@ function Scene({ gridSize, trailSize, maxAge, interpolate, color, minMovePx, get
         const dx   = x - last.x;
         const dy   = y - last.y;
         const dist = Math.hypot(dx, dy);
-        // If the cursor teleported (mouse left viewport while idle, then re-entered),
-        // just repark without drawing a connecting line.
+        // Skip teleportation gaps (mouse re-entered viewport after leaving).
         if (dist <= 0.25) {
           const steps = Math.max(1, Math.ceil(dist / step));
           for (let i = 1; i <= steps; i++) {
@@ -116,49 +132,74 @@ function Scene({ gridSize, trailSize, maxAge, interpolate, color, minMovePx, get
       }
 
       lastPosRef.current = { x, y, px: e.clientX, py: e.clientY };
+      // Wake up the render loop — with frameloop="demand" no frames run without this.
+      invalidate();
     };
 
     window.addEventListener("pointermove", onMove, { passive: true });
     return () => window.removeEventListener("pointermove", onMove);
-  }, [trailSize, interpolate, minMovePx]);
+  }, [trailSize, interpolate, minMovePx, invalidate]);
 
   useFrame((_, delta) => {
     const { width, height } = trailCanvas;
+    const hasNewPts = newPtsRef.current.length > 0;
 
-    // Exponential fade: reaches ~1% brightness after maxAge ms
-    const fadeAlpha = 1 - Math.pow(0.01, delta / (maxAge / 1000));
-    trailCtx.save();
-    trailCtx.globalCompositeOperation = "source-over";
-    trailCtx.globalAlpha              = Math.min(1, fadeAlpha);
-    trailCtx.fillStyle                = "#000000";
-    trailCtx.fillRect(0, 0, width, height);
-    trailCtx.restore();
-
-    const r = trailSize * width;
-    for (const { x, y } of newPtsRef.current) {
-      const px   = x * width;
-      const py   = y * height;
-      const grad = trailCtx.createRadialGradient(px, py, 0, px, py, r);
-      grad.addColorStop(0, "rgba(255,255,255,1)");
-      grad.addColorStop(1, "rgba(255,255,255,0)");
-      trailCtx.save();
-      trailCtx.globalCompositeOperation = "screen";
-      trailCtx.fillStyle                = grad;
-      trailCtx.beginPath();
-      trailCtx.arc(px, py, r, 0, Math.PI * 2);
-      trailCtx.fill();
-      trailCtx.restore();
+    if (hasNewPts) {
+      contentAlphaRef.current = 1;
+      const r = trailSize * width;
+      for (const { x, y } of newPtsRef.current) {
+        const px   = x * width;
+        const py   = y * height;
+        const grad = trailCtx.createRadialGradient(px, py, 0, px, py, r);
+        grad.addColorStop(0, "rgba(255,255,255,1)");
+        grad.addColorStop(1, "rgba(255,255,255,0)");
+        trailCtx.save();
+        trailCtx.globalCompositeOperation = "screen";
+        trailCtx.fillStyle                = grad;
+        trailCtx.beginPath();
+        trailCtx.arc(px, py, r, 0, Math.PI * 2);
+        trailCtx.fill();
+        trailCtx.restore();
+      }
+      newPtsRef.current = [];
+      dirtyRef.current  = true;
     }
-    newPtsRef.current = [];
+
+    // Only run the fade pass and schedule the next frame while content is visible.
+    // contentAlphaRef tracks estimated peak canvas luminance; skips all CPU/GPU
+    // work once the trail has fully faded (saves ~60 fillRect + texture uploads/s).
+    if (contentAlphaRef.current > 0.004) {
+      const fadeAlpha = 1 - Math.pow(0.01, delta / (maxAge / 1000));
+      contentAlphaRef.current *= (1 - fadeAlpha);
+
+      trailCtx.save();
+      trailCtx.globalCompositeOperation = "source-over";
+      trailCtx.globalAlpha              = Math.min(1, fadeAlpha);
+      trailCtx.fillStyle                = "#000000";
+      trailCtx.fillRect(0, 0, width, height);
+      trailCtx.restore();
+      dirtyRef.current = true;
+
+      // Keep rendering until the trail is invisible, then let the loop idle.
+      if (contentAlphaRef.current > 0.004) {
+        invalidate();
+      } else {
+        contentAlphaRef.current = 0;
+      }
+    }
 
     const excl = getExcludeRect?.() ?? null;
     mat.uniforms.excludeRect!.value.set(
       excl?.x ?? 0, excl?.y ?? 0, excl?.w ?? 0, excl?.h ?? 0,
     );
 
-    trailTex.needsUpdate                  = true;
-    mat.uniforms.mouseTrail!.value        = trailTex;
-    mat.uniforms.gridSize!.value          = gridSize;
+    if (dirtyRef.current) {
+      trailTex.needsUpdate           = true;
+      mat.uniforms.mouseTrail!.value = trailTex;
+      dirtyRef.current               = false;
+    }
+
+    mat.uniforms.gridSize!.value         = gridSize;
     mat.uniforms.resolution!.value.set(size.width, size.height);
   });
 
@@ -200,7 +241,6 @@ export function PixelTrail({
   return (
     <>
       {gooeyEnabled && (
-        // Hidden SVG defines the filter — width:0/height:0 takes no space
         <svg
           aria-hidden
           style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
@@ -214,16 +254,15 @@ export function PixelTrail({
                 values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9"
                 result="goo"
               />
-              {/* Restore original (non-blurred) colors within the goo shape */}
               <feComposite in="SourceGraphic" in2="goo" operator="atop" />
             </filter>
           </defs>
         </svg>
       )}
       <Canvas
+        frameloop="demand"
         gl={{ antialias: false, powerPreference: "high-performance", alpha: true }}
-        // Without this the WebGL clear color defaults to opaque black, painting over backgrounds
-        onCreated={({ gl }) => gl.setClearColor(new THREE.Color(0, 0, 0), 0)}
+        onCreated={({ gl }) => gl.setClearColor(new Color(0, 0, 0), 0)}
         style={{
           position:      "fixed",
           inset:         0,
