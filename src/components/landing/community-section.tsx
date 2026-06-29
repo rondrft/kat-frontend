@@ -48,7 +48,7 @@ export function CommunitySection() {
         style={{ x: leftX, rotate: -8 }}
       >
         <Image
-          src="/leftkat.png"
+          src="/leftkat.webp"
           alt=""
           width={480}
           height={720}
@@ -64,7 +64,7 @@ export function CommunitySection() {
         style={{ x: rightX, rotate: 8 }}
       >
         <Image
-          src="/rightkat.png"
+          src="/rightkat.webp"
           alt=""
           width={480}
           height={720}

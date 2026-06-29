@@ -23,7 +23,7 @@ function DashboardShellComponent() {
             <DynamicContent />
           </div>
           <Image
-            src="/kathand.png"
+            src="/kathand.webp"
             alt=""
             width={700}
             height={480}
