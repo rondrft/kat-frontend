@@ -37,7 +37,7 @@ async function onResponseError(error: AxiosError<ApiErrorBody>): Promise<never> 
 
   if (status === 401) {
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("kat:unauthorized"));
+      window.dispatchEvent(new CustomEvent("kat:unauthorized"));
     }
     throw AppError.fromApiBody({
       status: 401,

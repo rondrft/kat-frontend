@@ -10,7 +10,7 @@ const clientEnvSchema = z.object({
   NEXT_PUBLIC_DISCORD_BOT_PERMISSIONS: z.string().optional(),
   NEXT_PUBLIC_ENABLE_DEVTOOLS: z
     .enum(["true", "false"])
-    .default("true")
+    .default("false")
     .transform((v) => v === "true"),
 });
 

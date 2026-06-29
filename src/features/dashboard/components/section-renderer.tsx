@@ -3,6 +3,7 @@
 import { lazy, memo, Suspense } from "react";
 import { dashboardSectionMap } from "@/features/dashboard/config/sections";
 import type { DashboardSectionId } from "@/features/dashboard/types";
+import { SectionPlaceholder } from "@/features/dashboard/components/placeholders/section-placeholder";
 
 const OverviewSection = lazy(() =>
   import("@/features/dashboard/components/sections/overview-section").then((m) => ({
@@ -44,12 +45,6 @@ const PremiumSection = lazy(() =>
   import("@/features/dashboard/components/sections/premium-section").then((m) => ({
     default: m.PremiumSection,
   })),
-);
-
-const SectionPlaceholder = lazy(() =>
-  import("@/features/dashboard/components/placeholders/section-placeholder").then(
-    (m) => ({ default: m.SectionPlaceholder }),
-  ),
 );
 
 function SectionFallback() {
@@ -121,11 +116,7 @@ function SectionRendererComponent({ sectionId }: SectionRendererProps) {
 
   const section = dashboardSectionMap[sectionId];
 
-  return (
-    <Suspense fallback={<SectionFallback />}>
-      <SectionPlaceholder section={section} />
-    </Suspense>
-  );
+  return <SectionPlaceholder section={section} />;
 }
 
 export const SectionRenderer = memo(SectionRendererComponent);
