@@ -523,7 +523,7 @@ function StatisticsContent({
   };
   createdFallback: string;
 }) {
-  const activityDays = buildActivityDays(stats, joinDays);
+  const activityDays = useMemo(() => buildActivityDays(stats, joinDays), [stats, joinDays]);
 
   return (
     <div className="space-y-4">

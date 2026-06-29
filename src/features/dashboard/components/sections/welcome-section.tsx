@@ -41,27 +41,27 @@ function WelcomeSectionComponent({ guildId: guildIdProp }: WelcomeSectionProps) 
   const selectedGuildId = useGuildStore((s) => s.selectedGuildId);
   const guildId = guildIdProp ?? selectedGuildId;
 
-  const TEMPLATE_VARIABLES = [
+  const TEMPLATE_VARIABLES = useMemo(() => [
     { token: "{user}", description: t.welcome.variables.user },
     { token: "{userMention}", description: t.welcome.variables.userMention },
     { token: "{server}", description: t.welcome.variables.server },
     { token: "{count}", description: t.welcome.variables.count },
     { token: "{boostCount}", description: t.welcome.variables.boostCount },
-  ];
+  ], [t]);
 
-  const sampleUser = {
+  const sampleUser = useMemo(() => ({
     username: t.welcome.sampleUsername,
     avatar: "https://cdn.discordapp.com/embed/avatars/2.png",
     memberCount: 1284,
     boostCount: 2,
-  };
+  }), [t]);
 
-  const PANEL_OPTIONS: {
+  const PANEL_OPTIONS = useMemo((): {
     id: ActivePanel;
     label: string;
     description: string;
     icon: typeof PartyPopper;
-  }[] = [
+  }[] => [
     {
       id: "welcome",
       label: t.welcome.tabs.welcome.label,
@@ -80,7 +80,7 @@ function WelcomeSectionComponent({ guildId: guildIdProp }: WelcomeSectionProps) 
       description: t.welcome.variablesPanel.heading,
       icon: Braces,
     },
-  ];
+  ], [t]);
   const { data: guilds = [] } = useGuilds();
   const selectedGuild = guilds.find((guild) => guild.id === guildId);
   const serverName = selectedGuild?.name ?? t.welcome.fallbackServerName;

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { ArrowUp, Coins, Crown, DatabaseBackup, Gift, LayoutTemplate, MessageSquare, Paintbrush, RefreshCw, Sparkles, Ticket, Trophy } from "lucide-react";
 import { ActionsModal } from "@/features/actions/components/actions-modal";
 import { overviewExtraFeatures } from "@/features/dashboard/config/overview-extra-features";
@@ -38,20 +38,7 @@ function OverviewSectionComponent() {
   const t = useTranslation();
   const selectedGuildId = useGuildStore((s) => s.selectedGuildId);
   const hasGuild = Boolean(selectedGuildId);
-  const [tempVoiceOpen, setTempVoiceOpen] = useState(false);
-  const [autoRolesOpen, setAutoRolesOpen] = useState(false);
-  const [actionsOpen, setActionsOpen] = useState(false);
-  const [boosterRolesOpen, setBoosterRolesOpen] = useState(false);
-  const [levelingOpen, setLevelingOpen] = useState(false);
-  const [messageSenderOpen, setMessageSenderOpen] = useState(false);
-  const [giveawayOpen, setGiveawayOpen] = useState(false);
-  const [workOpen, setWorkOpen] = useState(false);
-  const [ticketsOpen, setTicketsOpen] = useState(false);
-  const [recurringOpen, setRecurringOpen] = useState(false);
-  const [brandingOpen, setBrandingOpen] = useState(false);
-  const [templatesOpen, setTemplatesOpen] = useState(false);
-  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
-  const [backupOpen, setBackupOpen] = useState(false);
+  const [activeModal, setActiveModal] = useState<string | null>(null);
 
   const { data: premiumData } = usePremiumStatus(selectedGuildId);
   const isPremium = premiumData?.isPremium ?? false;
@@ -70,6 +57,10 @@ function OverviewSectionComponent() {
   const showMembersLoading = hasGuild && membersPending && members.length === 0;
   const showStatsLoading = hasGuild && statsPending && !joinStats;
   const showAlertsLoading = hasGuild && alertsPending && alerts.length === 0;
+
+  const closeModal = useCallback((open: boolean) => {
+    if (!open) setActiveModal(null);
+  }, []);
 
   return (
     <>
@@ -105,7 +96,7 @@ function OverviewSectionComponent() {
                 badgeLabel={t.overview.badges.configure}
                 disableHoverMotion
                 bgImage="/catbg.jpeg"
-                onClick={() => setActionsOpen(true)}
+                onClick={() => setActiveModal("actions")}
               />
               <OverviewFeatureCard
                 title={t.overview.featureCards.boosterRoles.title}
@@ -115,7 +106,7 @@ function OverviewSectionComponent() {
                 badge="premium"
                 badgeLabel={t.overview.badges.premium}
                 disableHoverMotion
-                onClick={isPremium ? () => setBoosterRolesOpen(true) : undefined}
+                onClick={isPremium ? () => setActiveModal("boosterRoles") : undefined}
               />
             </div>
           </div>
@@ -144,9 +135,9 @@ function OverviewSectionComponent() {
                   bgImage={feature.bgImage}
                   onClick={
                     feature.id === "tempVoice"
-                      ? () => setTempVoiceOpen(true)
+                      ? () => setActiveModal("tempVoice")
                       : feature.id === "autoRoles"
-                        ? () => setAutoRolesOpen(true)
+                        ? () => setActiveModal("autoRoles")
                         : undefined
                   }
                 />
@@ -172,7 +163,7 @@ function OverviewSectionComponent() {
             badge="configure"
             badgeLabel={t.overview.badges.configure}
             disableHoverMotion
-            onClick={() => setMessageSenderOpen(true)}
+            onClick={() => setActiveModal("messageSender")}
           />
           <OverviewFeatureCard
             title={t.overview.featureCards.giveaways.title}
@@ -182,7 +173,7 @@ function OverviewSectionComponent() {
             badge="configure"
             badgeLabel={t.overview.badges.configure}
             disableHoverMotion
-            onClick={() => setGiveawayOpen(true)}
+            onClick={() => setActiveModal("giveaway")}
           />
           <OverviewFeatureCard
             title={t.overview.featureCards.leveling.title}
@@ -193,7 +184,7 @@ function OverviewSectionComponent() {
             badgeLabel={t.overview.badges.configure}
             disableHoverMotion
             bgImage="/handbg.jpeg"
-            onClick={() => setLevelingOpen(true)}
+            onClick={() => setActiveModal("leveling")}
           />
           <OverviewFeatureCard
             title={t.overview.featureCards.katWorks.title}
@@ -203,7 +194,7 @@ function OverviewSectionComponent() {
             badge="configure"
             badgeLabel={t.overview.badges.configure}
             disableHoverMotion
-            onClick={() => setWorkOpen(true)}
+            onClick={() => setActiveModal("work")}
           />
           <OverviewFeatureCard
             title={t.overview.featureCards.tickets.title}
@@ -213,7 +204,7 @@ function OverviewSectionComponent() {
             badge="configure"
             badgeLabel={t.overview.badges.configure}
             disableHoverMotion
-            onClick={() => setTicketsOpen(true)}
+            onClick={() => setActiveModal("tickets")}
           />
         </div>
 
@@ -226,7 +217,7 @@ function OverviewSectionComponent() {
             badge="configure"
             badgeLabel={t.overview.badges.configure}
             disableHoverMotion
-            onClick={() => setRecurringOpen(true)}
+            onClick={() => setActiveModal("recurring")}
           />
           <OverviewFeatureCard
             title={t.overview.featureCards.branding.title}
@@ -236,7 +227,7 @@ function OverviewSectionComponent() {
             badge="premium"
             badgeLabel={t.overview.badges.premium}
             disableHoverMotion
-            onClick={isPremium ? () => setBrandingOpen(true) : undefined}
+            onClick={isPremium ? () => setActiveModal("branding") : undefined}
           />
           <OverviewFeatureCard
             title={t.overview.featureCards.serverTemplates.title}
@@ -246,7 +237,7 @@ function OverviewSectionComponent() {
             badge="configure"
             badgeLabel={t.overview.badges.configure}
             disableHoverMotion
-            onClick={() => setTemplatesOpen(true)}
+            onClick={() => setActiveModal("templates")}
           />
           <OverviewFeatureCard
             title={t.overview.featureCards.serverLeaderboard.title}
@@ -256,7 +247,7 @@ function OverviewSectionComponent() {
             badge="configure"
             badgeLabel={t.overview.badges.configure}
             disableHoverMotion
-            onClick={() => setLeaderboardOpen(true)}
+            onClick={() => setActiveModal("leaderboard")}
           />
           <OverviewFeatureCard
             title={t.overview.featureCards.serverBackup.title}
@@ -266,93 +257,94 @@ function OverviewSectionComponent() {
             badge="configure"
             badgeLabel={t.overview.badges.configure}
             disableHoverMotion
-            onClick={() => setBackupOpen(true)}
+            onClick={() => setActiveModal("backup")}
           />
         </div>
       </div>
 
       <TempVoiceChannelModal
-        open={tempVoiceOpen}
-        onOpenChange={setTempVoiceOpen}
+        open={activeModal === "tempVoice"}
+        onOpenChange={closeModal}
         guildId={selectedGuildId}
         isPremium={isPremium}
       />
 
       <AutoRolesModal
-        open={autoRolesOpen}
-        onOpenChange={setAutoRolesOpen}
+        open={activeModal === "autoRoles"}
+        onOpenChange={closeModal}
         guildId={selectedGuildId}
       />
 
       <ActionsModal
-        open={actionsOpen}
-        onOpenChange={setActionsOpen}
+        open={activeModal === "actions"}
+        onOpenChange={closeModal}
         guildId={selectedGuildId}
       />
 
       <BoosterRoleModal
-        open={boosterRolesOpen}
-        onOpenChange={setBoosterRolesOpen}
+        open={activeModal === "boosterRoles"}
+        onOpenChange={closeModal}
         guildId={selectedGuildId}
       />
 
       <LevelingModal
-        open={levelingOpen}
-        onOpenChange={setLevelingOpen}
+        open={activeModal === "leveling"}
+        onOpenChange={closeModal}
         guildId={selectedGuildId}
       />
 
       <MessageSenderModal
-        open={messageSenderOpen}
-        onOpenChange={setMessageSenderOpen}
+        open={activeModal === "messageSender"}
+        onOpenChange={closeModal}
         guildId={selectedGuildId}
       />
 
       <GiveawayModal
-        open={giveawayOpen}
-        onOpenChange={setGiveawayOpen}
+        open={activeModal === "giveaway"}
+        onOpenChange={closeModal}
         guildId={selectedGuildId}
       />
+
       <WorkModal
-        open={workOpen}
-        onOpenChange={setWorkOpen}
+        open={activeModal === "work"}
+        onOpenChange={closeModal}
         guildId={selectedGuildId}
       />
 
       <TicketsModal
-        open={ticketsOpen}
-        onOpenChange={setTicketsOpen}
+        open={activeModal === "tickets"}
+        onOpenChange={closeModal}
         guildId={selectedGuildId}
       />
 
       <RecurringMessagesModal
-        open={recurringOpen}
-        onOpenChange={setRecurringOpen}
+        open={activeModal === "recurring"}
+        onOpenChange={closeModal}
         guildId={selectedGuildId}
       />
 
       <BrandingModal
-        open={brandingOpen}
-        onOpenChange={setBrandingOpen}
+        open={activeModal === "branding"}
+        onOpenChange={closeModal}
         guildId={selectedGuildId}
         isPremium={isPremium}
       />
 
       <ServerTemplatesModal
-        open={templatesOpen}
-        onOpenChange={setTemplatesOpen}
+        open={activeModal === "templates"}
+        onOpenChange={closeModal}
         guildId={selectedGuildId}
       />
 
       <ServerLeaderboardModal
-        open={leaderboardOpen}
-        onOpenChange={setLeaderboardOpen}
+        open={activeModal === "leaderboard"}
+        onOpenChange={closeModal}
         guildId={selectedGuildId}
       />
 
       <BackupModal
-        open={backupOpen}
-        onOpenChange={setBackupOpen}
+        open={activeModal === "backup"}
+        onOpenChange={closeModal}
         guildId={selectedGuildId}
         isPremium={isPremium}
       />
