@@ -192,6 +192,53 @@
   }
 }
 
+@keyframes bg-blob-main {
+  0%, 100% { scale: 1;    opacity: 0.4; }
+  25%       { scale: 1.1;  opacity: 0.55; }
+  50%       { scale: 0.95; opacity: 0.45; }
+  75%       { scale: 1.08; opacity: 0.55; }
+}
+
+@keyframes bg-blob-fade-a {
+  0%, 100% { opacity: 0.3; }
+  25%       { opacity: 0.5; }
+  50%       { opacity: 0.35; }
+  75%       { opacity: 0.5; }
+}
+
+@keyframes bg-blob-fade-b {
+  0%, 100% { opacity: 0.25; }
+  25%       { opacity: 0.45; }
+  50%       { opacity: 0.3; }
+  75%       { opacity: 0.45; }
+}
+
+@keyframes dash-blob-pulse {
+  0%, 100% { scale: 1;    opacity: 0.7; }
+  50%       { scale: 1.06; opacity: 1; }
+}
+
+@keyframes dash-blob-fade {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
+}
+
+.anim-bg-blob-main  { animation: bg-blob-main  20s ease-in-out infinite; }
+.anim-bg-blob-fade-a { animation: bg-blob-fade-a 25s ease-in-out infinite; }
+.anim-bg-blob-fade-b { animation: bg-blob-fade-b 28s ease-in-out 3s infinite; }
+.anim-dash-blob-pulse { animation: dash-blob-pulse 16s ease-in-out infinite; }
+.anim-dash-blob-fade  { animation: dash-blob-fade  14s ease-in-out 2s infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-bg-blob-main,
+  .anim-bg-blob-fade-a,
+  .anim-bg-blob-fade-b,
+  .anim-dash-blob-pulse,
+  .anim-dash-blob-fade {
+    animation: none;
+  }
+}
+
 @keyframes shine-sweep {
   0%,
   100% {
@@ -209,15 +256,6 @@
   }
   50% {
     background-position: 100% center;
-  }
-}
-
-@keyframes aurora {
-  from {
-    background-position: 50% 50%, 50% 50%;
-  }
-  to {
-    background-position: 350% 50%, 350% 50%;
   }
 }
 

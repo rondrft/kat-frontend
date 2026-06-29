@@ -1,12 +1,3 @@
-"use client";
-
-import { motion } from "framer-motion";
-
-const FADE_TRANSITION = {
-  repeat: Infinity,
-  ease: "easeInOut" as const,
-};
-
 export function BackgroundEffects() {
   return (
     <div
@@ -17,24 +8,11 @@ export function BackgroundEffects() {
 
       <div className="gradient-mesh absolute inset-0 opacity-70" />
 
-      {/* Massive deep-blue backdrop smoke — scale/opacity only (GPU-friendly) */}
-      <motion.div
-        className="absolute left-1/2 top-1/2 h-[130vh] w-[130vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600/20 blur-[200px]"
-        animate={{ scale: [1, 1.1, 0.95, 1.08, 1], opacity: [0.4, 0.55, 0.45, 0.55, 0.4] }}
-        transition={{ duration: 20, ...FADE_TRANSITION }}
-      />
+      <div className="anim-bg-blob-main absolute left-1/2 top-1/2 h-[130vh] w-[130vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600/20 blur-[200px]" />
 
-      <motion.div
-        className="absolute left-[25%] top-[15%] h-[100vh] w-[100vw] rounded-full bg-cyan-400/15 blur-[180px]"
-        animate={{ opacity: [0.3, 0.5, 0.35, 0.5, 0.3] }}
-        transition={{ duration: 25, ...FADE_TRANSITION }}
-      />
+      <div className="anim-bg-blob-fade-a absolute left-[25%] top-[15%] h-[100vh] w-[100vw] rounded-full bg-cyan-400/15 blur-[180px]" />
 
-      <motion.div
-        className="absolute right-[5%] bottom-[5%] h-[90vh] w-[90vw] rounded-full bg-indigo-500/15 blur-[200px]"
-        animate={{ opacity: [0.25, 0.45, 0.3, 0.45, 0.25] }}
-        transition={{ duration: 28, ...FADE_TRANSITION, delay: 3 }}
-      />
+      <div className="anim-bg-blob-fade-b absolute right-[5%] bottom-[5%] h-[90vh] w-[90vw] rounded-full bg-indigo-500/15 blur-[200px]" />
 
       <div
         className="absolute inset-0 opacity-[0.25] dark:opacity-[0.15]"
