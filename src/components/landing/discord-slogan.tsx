@@ -23,7 +23,7 @@ const LINES: LineConfig[] = [
       { text: "BUILD", weight: "heavy" },
       { text: "YOUR",  weight: "light" },
     ],
-    delay: 0.03,
+    delay: 0.12,
     shine: true,
   },
   {
@@ -32,7 +32,7 @@ const LINES: LineConfig[] = [
       { text: "DISCORD", weight: "heavy" },
       { text: "SERVER",  weight: "light" },
     ],
-    delay: 0.31,
+    delay: 0.58,
     shine: true,
   },
   {
@@ -42,7 +42,7 @@ const LINES: LineConfig[] = [
       { text: "RIGHT", weight: "heavy" },
       { text: "WAY",   weight: "light" },
     ],
-    delay: 0.60,
+    delay: 1.04,
     shine: true,
   },
   {
@@ -51,7 +51,7 @@ const LINES: LineConfig[] = [
       { text: "WITH", weight: "light" },
       { text: "KAT",  weight: "heavy" },
     ],
-    delay: 0.91,
+    delay: 1.50,
     shine: false,
   },
 ];
@@ -111,7 +111,7 @@ function SloganLine({ line, inView }: { line: LineConfig; inView: boolean }) {
 
 export function DiscordSlogan() {
   const ref    = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, amount: 0.1 });
+  const inView = useInView(ref, { once: true, amount: 0.2 });
 
   return (
     <section

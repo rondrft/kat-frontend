@@ -82,15 +82,16 @@ const CARDS: CardDef[] = [
 
 const gridVariants = {
   hidden:   {},
-  visible:  { transition: { staggerChildren: 0.07, delayChildren: 0.2 } },
+  visible:  { transition: { staggerChildren: 0.10, delayChildren: 0.45 } },
 };
 
 const cardVariants = {
-  hidden:   { opacity: 0, y: 20 },
+  hidden:   { opacity: 0, y: 24, filter: "blur(4px)" },
   visible:  {
     opacity: 1,
     y:       0,
-    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+    filter:  "blur(0px)",
+    transition: { duration: 0.75, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
@@ -139,7 +140,7 @@ function FeatureCard({ Icon, label, desc, badge, wide }: Omit<CardDef, "id">) {
 
 export function SmartSystems() {
   const sectionRef = useRef<HTMLElement>(null);
-  const inView     = useInView(sectionRef, { once: true, amount: 0.1 });
+  const inView     = useInView(sectionRef, { once: true, amount: 0.15 });
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -155,13 +156,13 @@ export function SmartSystems() {
       <div className="mb-20 md:mb-28">
         <motion.p
           className="mb-4 text-[11px] font-black uppercase tracking-[0.28em] text-[#A78BFA]"
-          initial={{ opacity: 0, y: 10 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
+          animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: 0.10 }}
         >
           Platform
         </motion.p>
-        <MaskRevealLine delay={0.08} inView={inView}>
+        <MaskRevealLine delay={0.20} inView={inView}>
           <span
             className="outfit block font-black leading-[0.88] tracking-[-0.04em] text-foreground"
             style={{ fontSize: "clamp(3.5rem, 8vw, 8.5rem)" }}
@@ -169,7 +170,7 @@ export function SmartSystems() {
             POWERFUL
           </span>
         </MaskRevealLine>
-        <MaskRevealLine delay={0.30} inView={inView}>
+        <MaskRevealLine delay={0.48} inView={inView}>
           <span
             className="outfit block font-black leading-[0.88] tracking-[-0.04em] text-[#A78BFA]"
             style={{ fontSize: "clamp(3.5rem, 8vw, 8.5rem)" }}
@@ -185,7 +186,7 @@ export function SmartSystems() {
         {/* Left — message */}
         <div className="shrink-0 lg:w-[36%]">
           <div className="mb-8">
-            <MaskRevealLine delay={0.18} inView={inView}>
+            <MaskRevealLine delay={0.32} inView={inView}>
               <span
                 className="outfit block font-black leading-[0.88] tracking-[-0.04em] text-foreground"
                 style={{ fontSize: "clamp(2rem, 4.5vw, 5rem)" }}
@@ -193,7 +194,7 @@ export function SmartSystems() {
                 SMART
               </span>
             </MaskRevealLine>
-            <MaskRevealLine delay={0.40} inView={inView}>
+            <MaskRevealLine delay={0.60} inView={inView}>
               <span
                 className="outfit block font-black leading-[0.88] tracking-[-0.04em] text-[#A78BFA]"
                 style={{ fontSize: "clamp(2rem, 4.5vw, 5rem)" }}
@@ -204,9 +205,9 @@ export function SmartSystems() {
           </div>
 
           <motion.div
-            initial={{ opacity: 0, x: -24 }}
-            animate={inView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.55 }}
+            initial={{ opacity: 0, x: -24, filter: "blur(4px)" }}
+            animate={inView ? { opacity: 1, x: 0, filter: "blur(0px)" } : {}}
+            transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1], delay: 0.80 }}
           >
             <p className="mb-10 max-w-[300px] text-sm leading-relaxed text-foreground/50">
               Kat combines intelligent tools and seamless workflows to make managing your Discord server effortless.
