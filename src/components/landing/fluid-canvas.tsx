@@ -20,9 +20,9 @@ function normalizedColor(r: number, g: number, b: number): [number, number, numb
 }
 
 const COLORS_LIGHT: [number, number, number][] = [
-  normalizedColor(0.839, 1.000, 0.000),
-  normalizedColor(0.918, 1.000, 0.541),
-  normalizedColor(0.969, 1.000, 0.839),
+  normalizedColor(0.549, 0.341, 0.980),
+  normalizedColor(0.655, 0.545, 0.992),
+  normalizedColor(0.769, 0.714, 1.000),
 ];
 const COLORS_DARK: [number, number, number][] = [
   normalizedColor(0.839, 1.000, 0.000),

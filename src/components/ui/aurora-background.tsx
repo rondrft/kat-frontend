@@ -49,6 +49,8 @@ export const AuroraBackground = ({
               "radial-gradient(ellipse 60% 45% at 85% 0%, rgba(196,181,253,0.35) 0%, transparent 75%)",
               // Mid lavender blend — transition between aurora and white
               "radial-gradient(ellipse 70% 35% at 50% 38%, rgba(221,214,254,0.22) 0%, transparent 70%)",
+              // Right-side cat glow — soft violet bloom where the character lives
+              "radial-gradient(ellipse 50% 55% at 80% 40%, rgba(139,92,246,0.18) 0%, transparent 65%)",
             ].join(", "),
           }}
         />
