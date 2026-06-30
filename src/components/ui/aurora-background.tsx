@@ -32,25 +32,23 @@ export const AuroraBackground = ({
     >
       {/* Light mode: Apple/visionOS — two-layer spotlight */}
       <div className="absolute inset-0 dark:hidden overflow-hidden" aria-hidden>
-        {/* Layer 1: violet ambient — large blur, halos at viewport corners and edges.
-            All 'at X% Y%' coords are relative to the -20%-inset div (140%×140% of vp).
-            Viewport corner mapping: TL=14%14%, TR=86%14%, BR=86%86%, BL=14%86%. */}
+        {/* Layer 1: violet aurora — large top-down bloom columns.
+            Gradients come from above: y=0% of the -20%-inset div = 20% above viewport top.
+            blur(160px) pushes light down into the viewport creating the aurora effect. */}
         <div
           style={{
             position: "absolute",
             inset: "-20%",
             filter: "blur(160px)",
             backgroundImage: [
-              // Top-left lavender — main colour zone, viewport corner origin
-              "radial-gradient(ellipse 62% 52% at 14% 14%, rgba(196,181,253,0.62) 0%, rgba(221,214,254,0.32) 52%, transparent 78%)",
-              // Left edge — lavender running down
-              "radial-gradient(ellipse 28% 62% at 14% 55%, rgba(167,139,250,0.44) 0%, rgba(196,181,253,0.20) 55%, transparent 78%)",
-              // Right edge halo — visible lavender on the right side
-              "radial-gradient(ellipse 38% 58% at 86% 28%, rgba(221,214,254,0.50) 0%, rgba(196,181,253,0.26) 52%, transparent 75%)",
-              // Bottom-right ambient violet
-              "radial-gradient(ellipse 48% 40% at 86% 86%, rgba(167,139,250,0.34) 0%, rgba(196,181,253,0.16) 55%, transparent 72%)",
-              // Top-right soft whisper
-              "radial-gradient(ellipse 34% 34% at 86% 14%, rgba(237,233,254,0.40) 0%, transparent 65%)",
+              // Top-centre — wide main aurora column
+              "radial-gradient(ellipse 80% 55% at 50% 0%, rgba(167,139,250,0.45) 0%, transparent 70%)",
+              // Top-left — secondary bloom
+              "radial-gradient(ellipse 60% 45% at 15% 0%, rgba(196,181,253,0.40) 0%, transparent 75%)",
+              // Top-right — secondary bloom
+              "radial-gradient(ellipse 60% 45% at 85% 0%, rgba(196,181,253,0.35) 0%, transparent 75%)",
+              // Mid lavender blend — transition between aurora and white
+              "radial-gradient(ellipse 70% 35% at 50% 38%, rgba(221,214,254,0.22) 0%, transparent 70%)",
             ].join(", "),
           }}
         />
