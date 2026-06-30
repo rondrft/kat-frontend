@@ -33,7 +33,7 @@ export function CommunityReveal() {
       <div className="sticky top-0 z-30 w-full h-screen">
         <div className="relative w-full h-full">
           <Image
-            src="/top.png"
+            src="/logo/miniature.png"
             alt=""
             fill
             className="object-cover"
