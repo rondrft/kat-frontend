@@ -184,9 +184,6 @@ export function HeroSection() {
             scale,
             opacity: cardOpacity,
             borderRadius,
-            backgroundColor: mounted
-              ? resolvedTheme === "dark" ? "#060900" : "#ffffff"
-              : undefined,
           }}
         >
           <FluidCanvas isDark={resolvedTheme === "dark"} />
