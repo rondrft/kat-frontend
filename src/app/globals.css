@@ -322,6 +322,7 @@ html:not(.dark) .kat-dashboard {
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-track {

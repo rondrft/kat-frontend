@@ -10,41 +10,17 @@ const PixelTrailCanvas = dynamic(
 );
 
 export function PixelTrailGlobal() {
-  const { resolvedTheme }          = useTheme();
-  const [mounted, setMounted]      = useState(false);
-  const [heroVisible, setHeroVisible] = useState(false);
-  const excludeElRef               = useRef<Element | null>(null);
-  const excludeEl2Ref              = useRef<Element | null>(null);
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const excludeElRef = useRef<Element | null>(null);
 
   useEffect(() => {
     setMounted(true);
-    excludeElRef.current  = document.querySelector("[data-pixel-trail-exclude]");
-    excludeEl2Ref.current = document.querySelector("[data-pixel-trail-exclude-cards]");
-
-    const heroEl = document.querySelector("[data-hero-section]");
-    if (!heroEl) return;
-    const obs = new IntersectionObserver(
-      (entries) => setHeroVisible(entries[0]?.isIntersecting ?? false),
-      { threshold: 0 },
-    );
-    obs.observe(heroEl);
-    return () => obs.disconnect();
+    excludeElRef.current = document.querySelector("[data-pixel-trail-exclude]");
   }, []);
 
   const getExcludeRect = useCallback(() => {
     const el = excludeElRef.current;
-    if (!el) return null;
-    const r = el.getBoundingClientRect();
-    return {
-      x: r.left   / window.innerWidth,
-      y: r.top    / window.innerHeight,
-      w: r.width  / window.innerWidth,
-      h: r.height / window.innerHeight,
-    };
-  }, []);
-
-  const getExcludeRect2 = useCallback(() => {
-    const el = excludeEl2Ref.current;
     if (!el) return null;
     const r = el.getBoundingClientRect();
     return {
@@ -67,9 +43,7 @@ export function PixelTrailGlobal() {
       interpolate={5}
       gooeyEnabled
       gooStrength={1}
-      active={heroVisible}
       getExcludeRect={getExcludeRect}
-      getExcludeRect2={getExcludeRect2}
     />
   );
 }

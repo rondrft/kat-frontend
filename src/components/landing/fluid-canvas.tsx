@@ -25,9 +25,9 @@ const COLORS_LIGHT: [number, number, number][] = [
   normalizedColor(0.769, 0.714, 1.000),
 ];
 const COLORS_DARK: [number, number, number][] = [
-  normalizedColor(0.839, 1.000, 0.000),
-  normalizedColor(0.900, 1.000, 0.200),
-  normalizedColor(0.700, 0.880, 0.100),
+  normalizedColor(0.486, 0.231, 0.929),
+  normalizedColor(0.655, 0.545, 0.980),
+  normalizedColor(0.769, 0.714, 1.000),
 ];
 
 // ── Shaders ────────────────────────────────────────────────────────────────

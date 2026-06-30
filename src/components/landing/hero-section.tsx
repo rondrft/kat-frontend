@@ -117,7 +117,7 @@ export function HeroSection() {
       };
 
   return (
-    <section ref={sectionRef} className="relative h-[250vh]" data-hero-section="">
+    <section ref={sectionRef} className="relative h-[250vh]">
 
       {/* Fixed nav — KAT wordmark */}
       <motion.div
@@ -164,6 +164,7 @@ export function HeroSection() {
       <div
         className="sticky top-0 h-screen w-full overflow-hidden"
         style={{ perspective: "1000px" }}
+        data-pixel-trail-exclude=""
       >
         <motion.div
           ref={cardRef}
@@ -261,7 +262,6 @@ export function HeroSection() {
           <div
             className="absolute top-0 right-0 bottom-0 w-[54%] pointer-events-none select-none"
             style={{ paddingRight: "13%", paddingLeft: "2%", zIndex: 5 }}
-            data-pixel-trail-exclude=""
           >
             {/* Crystal glass circle — light mode only */}
             <div
@@ -309,7 +309,6 @@ export function HeroSection() {
           <div
             className="absolute bottom-0 left-0 right-0 flex gap-3"
             style={{ padding: "0 12% 5.5% 12%", zIndex: 20 }}
-            data-pixel-trail-exclude-cards=""
           >
             {FEATURE_CARDS.map(({ Icon, title, desc, gradient, glow, lightText }) => (
               <div
