@@ -7,12 +7,10 @@ interface AuroraBackgroundProps extends React.HTMLProps<HTMLDivElement> {
 
 // Global fixed background layer — no children, no height.
 //
-// Both themes share the same architecture: a dark saturated base + mix-blend-screen aurora.
-//   Dark:  near-black (#060900) + screen(#d6ff00 stripes H=67°) → yellow-lime glow on black
-//   Light: dark lime  (#71AD02) + screen(#80ff00 stripes H=90°) → vivid lime-GREEN glow on green
-//
-// The aurora stripe hue matters a lot in light mode: #d6ff00 (H=67°) screen-blended over
-// #71AD02 (H=82°) produces H≈64° (yellow). Using #80ff00 (H=90°) produces H≈90° (green).
+// Light: near-white (#F9F8FF) base. mix-blend-screen over white = white (invisible),
+//        so the visual character comes entirely from the static radial spotlight:
+//        a luminous white centre with a soft lavender blush top-left — Apple/visionOS feel.
+// Dark:  near-black (#060900) + screen(#d6ff00 stripes H=67°) → yellow-lime glow on black.
 export const AuroraBackground = ({
   className,
   showRadialGradient = true,
@@ -23,42 +21,43 @@ export const AuroraBackground = ({
       aria-hidden
       className={cn(
         "fixed inset-0 -z-10 pointer-events-none overflow-hidden",
-        "bg-[#71AD02] dark:bg-[#060900]",
+        "bg-[#F9F8FF] dark:bg-[#060900]",
         "transition-colors duration-500",
         className,
       )}
       {...props}
     >
-      {/* Light mode: static radial spotlight — defines the bright zone shape */}
+      {/* Light mode: soft luminous spotlight — white-dominant, barely-lavender */}
       <div className="absolute inset-0 dark:hidden overflow-hidden" aria-hidden>
         <div
           style={{
             position: "absolute",
             inset: "-20%",
-            filter: "blur(55px)",
+            filter: "blur(60px)",
             backgroundImage: [
-              // Primary — large lime-GREEN luminous zone (H≈88°, not yellow)
-              "radial-gradient(ellipse 95% 85% at 65% 12%, rgba(180,255,20,0.84)  0%, transparent 70%)",
-              // Top-right secondary glow
-              "radial-gradient(ellipse 58% 52% at 98% -5%, rgba(190,255,70,0.58)  0%, transparent 60%)",
-              // Left shadow — deepens the base green
-              "radial-gradient(ellipse 60% 55% at -5% 65%, rgba(30,70,0,0.40)     0%, transparent 60%)",
-              // Bottom anchor
-              "radial-gradient(ellipse 85% 38% at 50% 115%, rgba(20,60,0,0.45)    0%, transparent 55%)",
+              // Luminous white centre-top — the dominant bright zone
+              "radial-gradient(ellipse 85% 65% at 50% -5%, rgba(255,255,255,0.98) 0%, rgba(248,246,255,0.55) 45%, transparent 75%)",
+              // Soft lavender blush top-left — accent, not dominant
+              "radial-gradient(ellipse 70% 50% at -5% -5%, rgba(196,181,253,0.40) 0%, rgba(237,233,254,0.18) 50%, transparent 72%)",
+              // Right white highlight — keeps right side airy
+              "radial-gradient(ellipse 50% 45% at 100% 10%, rgba(255,255,255,0.75) 0%, rgba(245,243,255,0.25) 50%, transparent 70%)",
+              // Very subtle bottom whisper
+              "radial-gradient(ellipse 65% 28% at 50% 110%, rgba(221,214,254,0.07) 0%, transparent 55%)",
             ].join(", "),
           }}
         />
       </div>
 
-      {/* Animated aurora bands — light mode uses greener stripes to avoid yellowing */}
+      {/* Animated aurora bands — light: near-white (effectively invisible on white base via screen)
+          dark: yellow-lime on near-black */}
       <div
         className={cn(
           "[--dark-gradient:repeating-linear-gradient(100deg,#060900_0%,#060900_7%,transparent_10%,transparent_12%,#060900_16%)]",
           // Dark mode: brand yellow-lime (#d6ff00, H=67°) — looks great on near-black
           "[--aurora:repeating-linear-gradient(100deg,#d6ff00_10%,#b9df00_15%,#eaff8a_20%,#f7ffd6_25%,#d6ff00_30%)]",
-          // Light mode: pure lime-green (#80ff00, H=90°) — screen-blends to green, not yellow
-          "[--aurora-lime:repeating-linear-gradient(100deg,#80ff00_10%,#5cd800_15%,#b0ff60_20%,#d8ffb0_25%,#80ff00_30%)]",
-          "[background-image:var(--aurora-lime)]",
+          // Light mode: near-white stripes — screen over white = white, just a whisper of texture
+          "[--aurora-soft:repeating-linear-gradient(100deg,#F5F3FF_10%,#EDE9FE_15%,#FFFFFF_20%,#FAF9FF_25%,#F5F3FF_30%)]",
+          "[background-image:var(--aurora-soft)]",
           "dark:[background-image:var(--dark-gradient),var(--aurora)]",
           "[background-size:300%,_200%]",
           "[background-position:50%_50%,50%_50%]",
@@ -66,7 +65,7 @@ export const AuroraBackground = ({
           "after:content-['']",
           "after:absolute",
           "after:inset-0",
-          "after:[background-image:var(--aurora-lime)]",
+          "after:[background-image:var(--aurora-soft)]",
           "after:dark:[background-image:var(--dark-gradient),var(--aurora)]",
           "after:[background-size:200%,_100%]",
           "after:animate-aurora",
