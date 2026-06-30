@@ -239,6 +239,43 @@
   }
 }
 
+@keyframes prem-blob-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(30px, -25px) scale(1.08); }
+  66%       { transform: translate(-15px, 15px) scale(0.96); }
+}
+
+@keyframes prem-blob-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(-25px, 25px) scale(0.92); }
+  66%       { transform: translate(15px, -15px) scale(1.04); }
+}
+
+@keyframes prem-blob-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(15px, -15px) scale(1.04); }
+  66%       { transform: translate(-20px, 10px) scale(0.96); }
+}
+
+@keyframes prem-dot {
+  0%, 100% { transform: translateY(0); opacity: 0.3; }
+  50%       { transform: translateY(-12px); opacity: 0.8; }
+}
+
+.anim-prem-blob-1 { animation: prem-blob-1 20s ease-in-out infinite; }
+.anim-prem-blob-2 { animation: prem-blob-2 25s ease-in-out infinite; }
+.anim-prem-blob-3 { animation: prem-blob-3 18s ease-in-out infinite; }
+.anim-prem-dot    { animation: prem-dot ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-prem-blob-1,
+  .anim-prem-blob-2,
+  .anim-prem-blob-3,
+  .anim-prem-dot {
+    animation: none;
+  }
+}
+
 @keyframes shine-sweep {
   0%,
   100% {

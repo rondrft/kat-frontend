@@ -517,31 +517,26 @@ function FaqAccordion({ questions }: { questions: { q: string; a: string }[] }) 
 
 // ---- Animated background blobs ----
 
+const PREM_DOTS = [
+  { left: "18%", top: "20%", duration: "3s",   delay: "0s" },
+  { left: "30%", top: "45%", duration: "3.5s", delay: "0.7s" },
+  { left: "42%", top: "70%", duration: "4s",   delay: "1.4s" },
+  { left: "54%", top: "20%", duration: "4.5s", delay: "2.1s" },
+  { left: "66%", top: "45%", duration: "5s",   delay: "2.8s" },
+  { left: "78%", top: "70%", duration: "5.5s", delay: "3.5s" },
+];
+
 function AnimatedBlobs() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-visible" aria-hidden>
-      <motion.div
-        className="absolute -left-16 top-8 h-72 w-72 rounded-full bg-gradient-to-br from-kat/8 to-cyan-500/5 blur-3xl"
-        animate={{ x: [0, 30, -15, 0], y: [0, -25, 15, 0], scale: [1, 1.08, 0.96, 1] }}
-        transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="absolute -right-16 top-1/4 h-72 w-72 rounded-full bg-gradient-to-bl from-violet-500/8 to-kat/5 blur-3xl"
-        animate={{ x: [0, -25, 15, 0], y: [0, 25, -15, 0], scale: [1, 0.92, 1.04, 1] }}
-        transition={{ duration: 25, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="absolute bottom-12 left-1/3 h-56 w-56 rounded-full bg-gradient-to-tr from-cyan-500/6 to-kat/5 blur-3xl"
-        animate={{ x: [0, 15, -20, 0], y: [0, -15, 10, 0], scale: [1, 1.04, 0.96, 1] }}
-        transition={{ duration: 18, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-      />
-      {Array.from({ length: 6 }).map((_, i) => (
-        <motion.div
+      <div className="anim-prem-blob-1 absolute -left-16 top-8 h-72 w-72 rounded-full bg-gradient-to-br from-kat/8 to-cyan-500/5 blur-3xl" />
+      <div className="anim-prem-blob-2 absolute -right-16 top-1/4 h-72 w-72 rounded-full bg-gradient-to-bl from-violet-500/8 to-kat/5 blur-3xl" />
+      <div className="anim-prem-blob-3 absolute bottom-12 left-1/3 h-56 w-56 rounded-full bg-gradient-to-tr from-cyan-500/6 to-kat/5 blur-3xl" />
+      {PREM_DOTS.map((dot, i) => (
+        <div
           key={i}
-          className="absolute h-1.5 w-1.5 rounded-full bg-kat/30"
-          style={{ left: `${18 + i * 12}%`, top: `${20 + (i % 3) * 25}%` }}
-          animate={{ y: [0, -12, 0], opacity: [0.3, 0.8, 0.3] }}
-          transition={{ duration: 3 + i * 0.5, repeat: Number.POSITIVE_INFINITY, delay: i * 0.7, ease: "easeInOut" }}
+          className="anim-prem-dot absolute h-1.5 w-1.5 rounded-full bg-kat/30"
+          style={{ left: dot.left, top: dot.top, animationDuration: dot.duration, animationDelay: dot.delay }}
         />
       ))}
     </div>
