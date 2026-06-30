@@ -27,22 +27,24 @@ export const AuroraBackground = ({
       )}
       {...props}
     >
-      {/* Light mode: soft luminous spotlight — white-dominant, barely-lavender */}
+      {/* Light mode: Apple/visionOS spotlight — white centre, lavender ambient surrounding */}
       <div className="absolute inset-0 dark:hidden overflow-hidden" aria-hidden>
         <div
           style={{
             position: "absolute",
             inset: "-20%",
-            filter: "blur(60px)",
+            filter: "blur(62px)",
             backgroundImage: [
-              // Luminous white centre-top — the dominant bright zone
-              "radial-gradient(ellipse 85% 65% at 50% -5%, rgba(255,255,255,0.98) 0%, rgba(248,246,255,0.55) 45%, transparent 75%)",
-              // Soft lavender blush top-left — accent, not dominant
-              "radial-gradient(ellipse 70% 50% at -5% -5%, rgba(196,181,253,0.40) 0%, rgba(237,233,254,0.18) 50%, transparent 72%)",
-              // Right white highlight — keeps right side airy
-              "radial-gradient(ellipse 50% 45% at 100% 10%, rgba(255,255,255,0.75) 0%, rgba(245,243,255,0.25) 50%, transparent 70%)",
-              // Very subtle bottom whisper
-              "radial-gradient(ellipse 65% 28% at 50% 110%, rgba(221,214,254,0.07) 0%, transparent 55%)",
+              // White luminous centre — the "screen" zone, dominant bright area
+              "radial-gradient(ellipse 72% 58% at 55% 38%, rgba(255,255,255,0.97) 0%, rgba(248,245,255,0.55) 42%, transparent 70%)",
+              // Main lavender zone top-left — clearly visible (#C4B5FD range), like reference
+              "radial-gradient(ellipse 88% 72% at -5% -5%, rgba(196,181,253,0.72) 0%, rgba(221,214,254,0.48) 38%, rgba(237,233,254,0.18) 60%, transparent 75%)",
+              // Left edge lavender — extends the purple glow down the left side
+              "radial-gradient(ellipse 38% 75% at -5% 62%, rgba(167,139,250,0.28) 0%, rgba(221,214,254,0.14) 52%, transparent 75%)",
+              // Right soft lavender halo — prevents pure white on right edge
+              "radial-gradient(ellipse 48% 52% at 108% 22%, rgba(237,233,254,0.40) 0%, rgba(221,214,254,0.18) 50%, transparent 68%)",
+              // Bottom ambient violet — very subtle anchor
+              "radial-gradient(ellipse 62% 28% at 50% 108%, rgba(196,181,253,0.14) 0%, transparent 55%)",
             ].join(", "),
           }}
         />
