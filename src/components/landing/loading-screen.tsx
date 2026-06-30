@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const IMG_SIZE = 100;
 
@@ -25,12 +25,17 @@ export function LoadingScreen() {
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
-  if (done) return null;
-
   const isZoom = phase === "zoom";
 
   return (
-    <div className={`fixed inset-0 z-[9999] overflow-hidden select-none${isZoom ? " pointer-events-none" : ""}`}>
+    <AnimatePresence>
+      {!done && (
+    <motion.div
+      key="loader"
+      className={`fixed inset-0 z-[9999] overflow-hidden select-none${isZoom ? " pointer-events-none" : ""}`}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.22, ease: "easeOut" }}
+    >
 
       {/* Background — full white/black base with subtle violet tint */}
       <motion.div
@@ -76,6 +81,8 @@ export function LoadingScreen() {
       >
         KAT
       </motion.span>
-    </div>
+    </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
