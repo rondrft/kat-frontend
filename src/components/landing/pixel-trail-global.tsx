@@ -35,8 +35,8 @@ export function PixelTrailGlobal() {
 
   return (
     <PixelTrailCanvas
-      color="#9aff00"
-      opacity={resolvedTheme === "light" ? 0.18 : 0.70}
+      color={resolvedTheme === "light" ? "#a78bfa" : "#c4b5fd"}
+      opacity={resolvedTheme === "light" ? 0.28 : 0.75}
       gridSize={140}
       trailSize={0.02}
       maxAge={300}
