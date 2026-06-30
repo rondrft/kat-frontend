@@ -14,7 +14,7 @@ export function LoadingScreen() {
   useEffect(() => {
     const w = window.innerWidth;
     const h = window.innerHeight;
-    setMaxScale(Math.ceil(Math.sqrt(w * w + h * h) * 1.6 / IMG_SIZE));
+    setMaxScale(Math.ceil(Math.sqrt(w * w + h * h) * 4.5 / IMG_SIZE));
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       const t = setTimeout(() => setDone(true), 350);
