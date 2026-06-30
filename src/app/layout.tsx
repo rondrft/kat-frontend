@@ -68,9 +68,9 @@ export const metadata: Metadata = {
     images: [siteConfig.ogImage],
   },
   icons: {
-    icon: "/logo/katweb.webp",
-    shortcut: "/logo/katweb.webp",
-    apple: "/logo/katweb.webp",
+    icon: "/logo/katweb-rounded.png",
+    shortcut: "/logo/katweb-rounded.png",
+    apple: "/logo/katweb-rounded.png",
   },
   category: "technology",
 };
