@@ -117,7 +117,7 @@ export function HeroSection() {
       };
 
   return (
-    <section ref={sectionRef} className="relative h-[250vh]">
+    <section ref={sectionRef} className="relative h-[250vh]" data-hero-section="">
 
       {/* Fixed nav — KAT wordmark */}
       <motion.div

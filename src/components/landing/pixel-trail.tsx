@@ -67,11 +67,12 @@ type SceneProps = {
   interpolate:      number;
   color:            string;
   minMovePx:        number;
+  active:           boolean;
   getExcludeRect?:  () => ExcludeRect | null;
   getExcludeRect2?: () => ExcludeRect | null;
 };
 
-function Scene({ gridSize, trailSize, maxAge, interpolate, color, minMovePx, getExcludeRect, getExcludeRect2 }: SceneProps) {
+function Scene({ gridSize, trailSize, maxAge, interpolate, color, minMovePx, active, getExcludeRect, getExcludeRect2 }: SceneProps) {
   const { size, invalidate } = useThree();
 
   const [trailCanvas, trailCtx, trailTex] = useMemo(() => {
@@ -89,6 +90,7 @@ function Scene({ gridSize, trailSize, maxAge, interpolate, color, minMovePx, get
   }, []);
 
   const mat             = useMemo(() => new TrailMaterial(), []);
+  const activeRef       = useRef(active);
   const newPtsRef       = useRef<Array<{ x: number; y: number }>>([]);
   const dirtyRef        = useRef(false);
   // Tracks estimated maximum luminance in the trail canvas (0–1).
@@ -98,6 +100,8 @@ function Scene({ gridSize, trailSize, maxAge, interpolate, color, minMovePx, get
   const contentAlphaRef = useRef(0);
   // Stores the last committed position in normalised and pixel coords.
   const lastPosRef      = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
+
+  useEffect(() => { activeRef.current = active; }, [active]);
 
   useEffect(() => {
     mat.uniforms.pixelColor!.value.set(color);
@@ -115,6 +119,7 @@ function Scene({ gridSize, trailSize, maxAge, interpolate, color, minMovePx, get
     const step = trailSize / Math.max(1, interpolate);
 
     const onMove = (e: PointerEvent) => {
+      if (!activeRef.current) return;
       const last = lastPosRef.current;
 
       // Ignore micro-movements — only commit when the cursor has moved enough.
@@ -236,6 +241,7 @@ export type PixelTrailProps = {
   gooeyEnabled?:     boolean;
   gooStrength?:      number;
   minMovePx?:        number;
+  active?:           boolean;
   getExcludeRect?:   () => ExcludeRect | null;
   getExcludeRect2?:  () => ExcludeRect | null;
 };
@@ -250,6 +256,7 @@ export function PixelTrail({
   gooeyEnabled    = true,
   gooStrength     = 2,
   minMovePx       = 8,
+  active          = true,
   getExcludeRect,
   getExcludeRect2,
 }: PixelTrailProps) {
@@ -296,6 +303,7 @@ export function PixelTrail({
           interpolate={interpolate}
           color={color}
           minMovePx={minMovePx}
+          active={active}
           getExcludeRect={getExcludeRect}
           getExcludeRect2={getExcludeRect2}
         />
