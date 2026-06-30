@@ -9,6 +9,7 @@ import {
   SmartSystems,
 } from "@/components/landing";
 import { PixelTrailGlobal } from "@/components/landing/pixel-trail-global";
+import { LoadingScreen } from "@/components/landing/loading-screen";
 import { SmoothScroll } from "@/components/smooth-scroll";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 
@@ -19,6 +20,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
+      <LoadingScreen />
       <AuroraBackground />
       <PixelTrailGlobal />
       <SmoothScroll>
