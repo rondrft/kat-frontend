@@ -25,6 +25,6 @@ export const siteConfig = {
     terms: "/terms",
     refund: "/refund",
   },
-  ogImage: "/logo/og-image.png",
+  ogImage: "/logo/miniature.png",
   locale: "es_ES",
 } as const;
