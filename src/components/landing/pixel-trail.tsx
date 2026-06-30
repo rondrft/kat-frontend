@@ -15,11 +15,12 @@ import {
 
 const TrailMaterial = shaderMaterial(
   {
-    resolution:  new Vector2(),
-    mouseTrail:  new Texture(),
-    gridSize:    52.0,
-    pixelColor:  new Color("#A78BFA"),
-    excludeRect: new Vector4(0, 0, 0, 0),
+    resolution:   new Vector2(),
+    mouseTrail:   new Texture(),
+    gridSize:     52.0,
+    pixelColor:   new Color("#A78BFA"),
+    excludeRect:  new Vector4(0, 0, 0, 0),
+    excludeRect2: new Vector4(0, 0, 0, 0),
   },
   `void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`,
   `
@@ -27,19 +28,25 @@ const TrailMaterial = shaderMaterial(
     uniform sampler2D mouseTrail;
     uniform float     gridSize;
     uniform vec3      pixelColor;
-    uniform vec4      excludeRect; // xy = top-left (DOM 0-1 coords), z = width, w = height
+    uniform vec4      excludeRect;  // xy = top-left (DOM 0-1 coords), z = width, w = height
+    uniform vec4      excludeRect2;
 
     void main() {
       vec2  uv    = gl_FragCoord.xy / resolution;
+      float domY  = 1.0 - uv.y;
 
-      // DOM y=0 is top; gl_FragCoord y=0 is bottom — flip before comparing
-      if (excludeRect.z > 0.0) {
-        float domY = 1.0 - uv.y;
-        if (uv.x  >= excludeRect.x && uv.x  <= excludeRect.x + excludeRect.z &&
-            domY  >= excludeRect.y && domY  <= excludeRect.y + excludeRect.w) {
-          gl_FragColor = vec4(0.0);
-          return;
-        }
+      if (excludeRect.z > 0.0 &&
+          uv.x >= excludeRect.x && uv.x <= excludeRect.x + excludeRect.z &&
+          domY >= excludeRect.y && domY <= excludeRect.y + excludeRect.w) {
+        gl_FragColor = vec4(0.0);
+        return;
+      }
+
+      if (excludeRect2.z > 0.0 &&
+          uv.x >= excludeRect2.x && uv.x <= excludeRect2.x + excludeRect2.z &&
+          domY >= excludeRect2.y && domY <= excludeRect2.y + excludeRect2.w) {
+        gl_FragColor = vec4(0.0);
+        return;
       }
 
       float yGrid = gridSize * resolution.y / resolution.x;
@@ -54,16 +61,17 @@ const TrailMaterial = shaderMaterial(
 type ExcludeRect = { x: number; y: number; w: number; h: number };
 
 type SceneProps = {
-  gridSize:        number;
-  trailSize:       number;
-  maxAge:          number;
-  interpolate:     number;
-  color:           string;
-  minMovePx:       number;
-  getExcludeRect?: () => ExcludeRect | null;
+  gridSize:         number;
+  trailSize:        number;
+  maxAge:           number;
+  interpolate:      number;
+  color:            string;
+  minMovePx:        number;
+  getExcludeRect?:  () => ExcludeRect | null;
+  getExcludeRect2?: () => ExcludeRect | null;
 };
 
-function Scene({ gridSize, trailSize, maxAge, interpolate, color, minMovePx, getExcludeRect }: SceneProps) {
+function Scene({ gridSize, trailSize, maxAge, interpolate, color, minMovePx, getExcludeRect, getExcludeRect2 }: SceneProps) {
   const { size, invalidate } = useThree();
 
   const [trailCanvas, trailCtx, trailTex] = useMemo(() => {
@@ -193,6 +201,11 @@ function Scene({ gridSize, trailSize, maxAge, interpolate, color, minMovePx, get
       excl?.x ?? 0, excl?.y ?? 0, excl?.w ?? 0, excl?.h ?? 0,
     );
 
+    const excl2 = getExcludeRect2?.() ?? null;
+    mat.uniforms.excludeRect2!.value.set(
+      excl2?.x ?? 0, excl2?.y ?? 0, excl2?.w ?? 0, excl2?.h ?? 0,
+    );
+
     if (dirtyRef.current) {
       trailTex.needsUpdate           = true;
       mat.uniforms.mouseTrail!.value = trailTex;
@@ -214,16 +227,17 @@ function Scene({ gridSize, trailSize, maxAge, interpolate, color, minMovePx, get
 const FILTER_ID = "pixel-trail-goo";
 
 export type PixelTrailProps = {
-  gridSize?:        number;
-  trailSize?:       number;
-  maxAge?:          number;
-  interpolate?:     number;
-  color?:           string;
-  opacity?:         number;
-  gooeyEnabled?:    boolean;
-  gooStrength?:     number;
-  minMovePx?:       number;
-  getExcludeRect?:  () => ExcludeRect | null;
+  gridSize?:         number;
+  trailSize?:        number;
+  maxAge?:           number;
+  interpolate?:      number;
+  color?:            string;
+  opacity?:          number;
+  gooeyEnabled?:     boolean;
+  gooStrength?:      number;
+  minMovePx?:        number;
+  getExcludeRect?:   () => ExcludeRect | null;
+  getExcludeRect2?:  () => ExcludeRect | null;
 };
 
 export function PixelTrail({
@@ -237,6 +251,7 @@ export function PixelTrail({
   gooStrength     = 2,
   minMovePx       = 8,
   getExcludeRect,
+  getExcludeRect2,
 }: PixelTrailProps) {
   return (
     <>
@@ -282,6 +297,7 @@ export function PixelTrail({
           color={color}
           minMovePx={minMovePx}
           getExcludeRect={getExcludeRect}
+          getExcludeRect2={getExcludeRect2}
         />
       </Canvas>
     </>

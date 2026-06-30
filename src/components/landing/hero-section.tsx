@@ -309,6 +309,7 @@ export function HeroSection() {
           <div
             className="absolute bottom-0 left-0 right-0 flex gap-3"
             style={{ padding: "0 12% 5.5% 12%", zIndex: 20 }}
+            data-pixel-trail-exclude-cards=""
           >
             {FEATURE_CARDS.map(({ Icon, title, desc, gradient, glow, lightText }) => (
               <div
