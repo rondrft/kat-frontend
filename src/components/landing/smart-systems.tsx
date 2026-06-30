@@ -100,21 +100,21 @@ function FeatureCard({ Icon, label, desc, badge, wide }: Omit<CardDef, "id">) {
   return (
     <motion.div
       variants={cardVariants}
-      className={`rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5 backdrop-blur-sm transition-colors duration-300 hover:border-white/[0.13] hover:bg-white/[0.05]${wide ? " col-span-2" : ""}`}
+      className={`rounded-2xl border border-violet-100/60 dark:border-white/[0.07] bg-white/70 dark:bg-white/[0.03] p-5 backdrop-blur-sm shadow-sm dark:shadow-none transition-colors duration-300 hover:border-violet-200/80 dark:hover:border-white/[0.13] hover:bg-white/90 dark:hover:bg-white/[0.05]${wide ? " col-span-2" : ""}`}
     >
       <div className="mb-3 flex items-center gap-3">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#d6ff00]/[0.08]">
-          <Icon className="h-4 w-4 text-[#d6ff00]" />
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-100 dark:bg-[#A78BFA]/[0.08]">
+          <Icon className="h-4 w-4 text-violet-600 dark:text-[#A78BFA]" />
         </span>
-        <span className="text-[13px] font-semibold text-white/75">{label}</span>
+        <span className="text-[13px] font-semibold text-gray-800 dark:text-white/75">{label}</span>
         {badge && (
-          <span className="ml-auto rounded px-2 py-[3px] text-[10px] font-black uppercase tracking-[0.12em] bg-white/[0.06] text-white/35">
+          <span className="ml-auto rounded px-2 py-[3px] text-[10px] font-black uppercase tracking-[0.12em] bg-violet-100 dark:bg-white/[0.06] text-violet-600 dark:text-white/35">
             {badge}
           </span>
         )}
       </div>
 
-      <p className="text-[13px] leading-relaxed text-white/35">{desc}</p>
+      <p className="text-[13px] leading-relaxed text-gray-500 dark:text-white/35">{desc}</p>
 
       {wide && (
         <div className="mt-4 space-y-[6px]">
@@ -122,11 +122,11 @@ function FeatureCard({ Icon, label, desc, badge, wide }: Omit<CardDef, "id">) {
             <div key={entry.text} className="flex items-center gap-2.5 text-[11px]">
               <span
                 className={`h-[5px] w-[5px] shrink-0 rounded-full ${
-                  entry.lime ? "bg-[#d6ff00]" : "bg-white/20"
+                  entry.lime ? "bg-violet-500" : "bg-gray-300 dark:bg-white/20"
                 }`}
               />
-              <span className="text-white/45">{entry.text}</span>
-              <span className="ml-auto shrink-0 text-white/20">{entry.time}</span>
+              <span className="text-gray-600 dark:text-white/45">{entry.text}</span>
+              <span className="ml-auto shrink-0 text-gray-400 dark:text-white/20">{entry.time}</span>
             </div>
           ))}
         </div>
@@ -154,7 +154,7 @@ export function SmartSystems() {
       {/* ── Section title ─────────────────────────────────────────────── */}
       <div className="mb-20 md:mb-28">
         <motion.p
-          className="mb-4 text-[11px] font-black uppercase tracking-[0.28em] text-[#d6ff00]"
+          className="mb-4 text-[11px] font-black uppercase tracking-[0.28em] text-[#A78BFA]"
           initial={{ opacity: 0, y: 10 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
@@ -171,7 +171,7 @@ export function SmartSystems() {
         </MaskRevealLine>
         <MaskRevealLine delay={0.30} inView={inView}>
           <span
-            className="outfit block font-black leading-[0.88] tracking-[-0.04em] text-[#d6ff00]"
+            className="outfit block font-black leading-[0.88] tracking-[-0.04em] text-[#A78BFA]"
             style={{ fontSize: "clamp(3.5rem, 8vw, 8.5rem)" }}
           >
             BY DESIGN.
@@ -195,7 +195,7 @@ export function SmartSystems() {
             </MaskRevealLine>
             <MaskRevealLine delay={0.40} inView={inView}>
               <span
-                className="outfit block font-black leading-[0.88] tracking-[-0.04em] text-[#d6ff00]"
+                className="outfit block font-black leading-[0.88] tracking-[-0.04em] text-[#A78BFA]"
                 style={{ fontSize: "clamp(2rem, 4.5vw, 5rem)" }}
               >
                 SYSTEMS.
@@ -214,7 +214,7 @@ export function SmartSystems() {
 
             <div
               aria-hidden
-              className="inline-flex items-center gap-3 rounded-[14px] bg-[#d6ff00] px-7 h-[3.25rem] text-black font-black text-[13px] tracking-[0.04em] select-none"
+              className="inline-flex items-center gap-3 rounded-[14px] bg-[#A78BFA] px-7 h-[3.25rem] text-white font-black text-[13px] tracking-[0.04em] select-none"
             >
               EXPLORE FEATURES
               <ArrowRight className="h-4 w-4" />

@@ -89,7 +89,7 @@ function SloganLine({ line, inView }: { line: LineConfig; inView: boolean }) {
           word.weight === "heavy" ? (
             <span
               key={word.text}
-              className="outfit font-black leading-none tracking-[-0.04em] text-foreground dark:text-[#d6ff00]"
+              className="outfit font-black leading-none tracking-[-0.04em] text-violet-700 dark:text-[#a78bfa]"
               style={{ fontSize: "clamp(1.8rem, 7.5vw, 7.5rem)" }}
             >
               {word.text}
@@ -97,7 +97,7 @@ function SloganLine({ line, inView }: { line: LineConfig; inView: boolean }) {
           ) : (
             <span
               key={word.text}
-              className="outfit font-semibold leading-none tracking-[-0.04em] text-[#d6ff00] dark:text-white/50"
+              className="outfit font-semibold leading-none tracking-[-0.04em] text-gray-900 dark:text-white"
               style={{ fontSize: "clamp(1.8rem, 7.5vw, 7.5rem)" }}
             >
               {word.text}

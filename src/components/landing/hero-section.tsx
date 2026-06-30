@@ -98,19 +98,19 @@ export function HeroSection() {
     : inDark  ? { color: "#ffffff" }
     : { color: lightNavColor };
   const navBorderStyle = !mounted ? undefined
-    : inDark  ? { borderColor: "rgba(214,255,0,0.6)" }
+    : inDark  ? { borderColor: "rgba(167,139,250,0.6)" }
     : { borderColor: lightBorder };
 
   const gradientStyle = !mounted || !inDark
     ? {
-        background: "linear-gradient(135deg, #7c3aed 0%, #a78bfa 40%, #c4b5fd 70%, #818cf8 100%)",
+        backgroundImage: "linear-gradient(135deg, #7c3aed 0%, #a78bfa 40%, #c4b5fd 70%, #818cf8 100%)",
         WebkitBackgroundClip: "text" as const,
         WebkitTextFillColor: "transparent",
         backgroundClip: "text" as const,
         filter: mounted ? "drop-shadow(0 0 18px rgba(139,92,246,0.28))" : undefined,
       }
     : {
-        background: "linear-gradient(135deg, #d6ff00 0%, #eaff8a 50%, #d6ff00 100%)",
+        backgroundImage: "linear-gradient(135deg, #a78bfa 0%, #c4b5fd 50%, #7c3aed 100%)",
         WebkitBackgroundClip: "text" as const,
         WebkitTextFillColor: "transparent",
         backgroundClip: "text" as const,
@@ -140,7 +140,7 @@ export function HeroSection() {
         <button
           type="button"
           onClick={loginWithDiscord}
-          className="flex items-center gap-2.5 sm:gap-3 px-6 sm:px-8 h-[4.5rem] rounded-[14px] bg-violet-600 dark:bg-[#d6ff00] text-white dark:text-black font-black text-sm sm:text-[1.05rem] tracking-[0.04em] select-none transition-colors hover:bg-violet-700 dark:hover:bg-[#c4ec00]"
+          className="flex items-center gap-2.5 sm:gap-3 px-6 sm:px-8 h-[4.5rem] rounded-[14px] bg-violet-600 dark:bg-[#7c3aed] text-white font-black text-sm sm:text-[1.05rem] tracking-[0.04em] select-none transition-colors hover:bg-violet-700 dark:hover:bg-[#6d28d9]"
         >
           <Sparkles className="w-5 h-5 sm:w-[1.25rem] sm:h-[1.25rem] shrink-0" />
           LOGIN
@@ -150,9 +150,9 @@ export function HeroSection() {
           className={`group relative flex items-center justify-center w-[4.5rem] h-[4.5rem] rounded-[14px] border-[2.5px]${!mounted ? " border-foreground/40 dark:border-[#d6ff00]/60" : ""}`}
           style={navBorderStyle}
         >
-          <span className="absolute inset-0 rounded-[14px] bg-violet-600 dark:bg-[#d6ff00] [clip-path:inset(100%_0_0_0_round_14px)] group-hover:[clip-path:inset(0%_0_0_0_round_14px)] transition-[clip-path] duration-300 ease-in-out" />
+          <span className="absolute inset-0 rounded-[14px] bg-violet-600 dark:bg-[#7c3aed] [clip-path:inset(100%_0_0_0_round_14px)] group-hover:[clip-path:inset(0%_0_0_0_round_14px)] transition-[clip-path] duration-300 ease-in-out" />
           <motion.span
-            className={`relative z-10 group-hover:text-white dark:group-hover:text-black transition-colors duration-200${!mounted ? " text-foreground" : ""}`}
+            className={`relative z-10 group-hover:text-white dark:group-hover:text-white transition-colors duration-200${!mounted ? " text-foreground" : ""}`}
             style={navColorStyle}
           >
             <Command className="w-[1.25rem] h-[1.25rem]" />
@@ -185,7 +185,7 @@ export function HeroSection() {
             style={{ zIndex: 1 }}
           >
             <span
-              className="font-sans font-black text-foreground/[0.04]"
+              className="font-sans font-black text-violet-400/[0.09] dark:text-white/[0.04]"
               style={{ fontSize: "clamp(10rem, 40vw, 30rem)", lineHeight: 1, letterSpacing: "-0.05em" }}
             >
               KAT
@@ -203,11 +203,11 @@ export function HeroSection() {
               style={{
                 padding: "0.35rem 0.85rem 0.35rem 0.55rem",
                 borderRadius: "999px",
-                background: "rgba(255,255,255,0.65)",
-                border: "1px solid rgba(196,181,253,0.45)",
+                background: inDark ? "rgba(139,92,246,0.08)" : "rgba(255,255,255,0.65)",
+                border: inDark ? "1px solid rgba(139,92,246,0.25)" : "1px solid rgba(196,181,253,0.45)",
                 backdropFilter: "blur(12px)",
                 WebkitBackdropFilter: "blur(12px)",
-                boxShadow: "0 2px 12px rgba(139,92,246,0.10), 0 1px 2px rgba(0,0,0,0.04)",
+                boxShadow: "0 2px 12px rgba(139,92,246,0.12), 0 1px 2px rgba(0,0,0,0.04)",
               }}
             >
               <span
@@ -221,7 +221,7 @@ export function HeroSection() {
               >
                 <Sparkles className="w-2.5 h-2.5 text-white" />
               </span>
-              <span className="text-[0.65rem] font-semibold tracking-[0.18em] uppercase text-violet-600/80 dark:text-[#d6ff00]/60">
+              <span className="text-[0.65rem] font-semibold tracking-[0.18em] uppercase text-violet-600/80 dark:text-[#a78bfa]/80">
                 All-in-One Discord Bot
               </span>
             </div>
@@ -313,7 +313,7 @@ export function HeroSection() {
             {FEATURE_CARDS.map(({ Icon, title, desc, gradient, glow, lightText }) => (
               <div
                 key={title}
-                className="flex-1 flex flex-row items-center gap-3.5 rounded-2xl px-4 py-5 bg-white/45 dark:bg-white/[0.04] border border-violet-100/60 dark:border-white/[0.07]"
+                className="flex-1 flex flex-row items-center gap-3.5 rounded-2xl px-4 py-6 bg-white/45 dark:bg-white/[0.04] border border-violet-100/60 dark:border-white/[0.07]"
                 style={{
                   backdropFilter: "blur(32px)",
                   WebkitBackdropFilter: "blur(32px)",
@@ -325,11 +325,11 @@ export function HeroSection() {
                   className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
                   style={!inDark
                     ? { background: gradient, boxShadow: `0 4px 16px ${glow}` }
-                    : { background: "rgba(214,255,0,0.10)", border: "1px solid rgba(214,255,0,0.15)" }
+                    : { background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.22)" }
                   }
                 >
                   <Icon
-                    className={`w-[1.1rem] h-[1.1rem] ${inDark ? "text-[#d6ff00]" : "text-white"}`}
+                    className={`w-[1.1rem] h-[1.1rem] ${inDark ? "text-[#a78bfa]" : "text-white"}`}
                   />
                 </div>
                 {/* Title + desc — right of icon */}

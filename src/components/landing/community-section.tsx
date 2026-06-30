@@ -90,7 +90,7 @@ export function CommunitySection() {
             BUILT
           </span>
           <span
-            className="outfit block font-black leading-[0.9] tracking-[-0.04em] text-[#d6ff00]"
+            className="outfit block font-black leading-[0.9] tracking-[-0.04em] text-[#A78BFA]"
             style={{ fontSize: "clamp(2rem, 5.5vw, 5.5rem)" }}
           >
             TO GROW
@@ -100,7 +100,7 @@ export function CommunitySection() {
           </p>
           <div
             aria-hidden
-            className="mt-5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#d6ff00] text-black"
+            className="mt-5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#A78BFA] text-white"
           >
             <ArrowRight className="h-4 w-4" />
           </div>
@@ -115,7 +115,7 @@ export function CommunitySection() {
           className="flex flex-1 flex-col items-center text-center md:items-start md:text-left"
         >
           <span
-            className="outfit block font-black leading-[0.9] tracking-[-0.04em] text-[#d6ff00]"
+            className="outfit block font-black leading-[0.9] tracking-[-0.04em] text-[#A78BFA]"
             style={{ fontSize: "clamp(2rem, 5.5vw, 5.5rem)" }}
           >
             YOUR
@@ -131,7 +131,7 @@ export function CommunitySection() {
           </p>
           <div
             aria-hidden
-            className="mt-5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#d6ff00] text-black"
+            className="mt-5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#A78BFA] text-white"
           >
             <ArrowRight className="h-4 w-4" />
           </div>

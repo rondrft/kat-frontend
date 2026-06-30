@@ -112,7 +112,7 @@ function CodeLine({ text }: { text: string }) {
     const rest = text.slice(spaceIdx + 1);
     return (
       <>
-        <span className="text-[#d6ff00]">{keyword} </span>
+        <span className="text-[#A78BFA]">{keyword} </span>
         <span className="text-white/75">{rest}</span>
       </>
     );
@@ -125,7 +125,7 @@ function CodeLine({ text }: { text: string }) {
     return (
       <>
         <span className="text-white/45">{prop}</span>
-        <span className="text-[#eaff8a]">{val}</span>
+        <span className="text-[#DDD6FE]">{val}</span>
       </>
     );
   }
@@ -173,7 +173,7 @@ function TerminalPanel() {
             {isTyping && (
               <div className="flex items-center">
                 <CodeLine text={partial} />
-                <span className="ml-px inline-block h-[1em] w-[2px] animate-pulse bg-[#d6ff00]" />
+                <span className="ml-px inline-block h-[1em] w-[2px] animate-pulse bg-[#A78BFA]" />
               </div>
             )}
           </div>
@@ -189,7 +189,7 @@ function FeatureAccordion() {
   const [openId, setOpenId] = useState<string>("moderation");
 
   return (
-    <div className="h-full overflow-hidden rounded-2xl border border-white/10 bg-black/25 backdrop-blur-md">
+    <div className="h-full overflow-hidden rounded-2xl border border-violet-100/60 dark:border-white/10 bg-white/80 dark:bg-black/25 backdrop-blur-md shadow-sm dark:shadow-none">
       {FEATURES.map((feature, i) => {
         const isOpen = openId === feature.id;
         const isLast = i === FEATURES.length - 1;
@@ -197,7 +197,7 @@ function FeatureAccordion() {
         return (
           <div
             key={feature.id}
-            className={isLast ? "" : "border-b border-white/[0.07]"}
+            className={isLast ? "" : "border-b border-violet-100/50 dark:border-white/[0.07]"}
           >
             <button
               type="button"
@@ -207,8 +207,8 @@ function FeatureAccordion() {
               <span
                 className={`mr-4 rounded-lg p-2 transition-colors duration-200 ${
                   isOpen
-                    ? "bg-[#d6ff00]/10 text-[#d6ff00]"
-                    : "bg-white/5 text-white/35 group-hover:text-white/60"
+                    ? "bg-[#A78BFA]/10 text-[#A78BFA]"
+                    : "bg-violet-50 dark:bg-white/5 text-gray-400 dark:text-white/35 group-hover:text-violet-500 dark:group-hover:text-white/60"
                 }`}
               >
                 <feature.Icon className="h-4 w-4" />
@@ -217,8 +217,8 @@ function FeatureAccordion() {
               <span
                 className={`text-sm font-semibold tracking-wide transition-colors duration-200 ${
                   isOpen
-                    ? "text-[#d6ff00]"
-                    : "text-white/75 group-hover:text-white"
+                    ? "text-[#A78BFA]"
+                    : "text-gray-700 dark:text-white/75 group-hover:text-gray-900 dark:group-hover:text-white"
                 }`}
               >
                 {feature.title}
@@ -227,8 +227,8 @@ function FeatureAccordion() {
               <ChevronDown
                 className={`ml-auto h-4 w-4 transition-all duration-300 ${
                   isOpen
-                    ? "rotate-180 text-[#d6ff00]/50"
-                    : "text-white/20 group-hover:text-white/40"
+                    ? "rotate-180 text-[#A78BFA]/50"
+                    : "text-gray-300 dark:text-white/20 group-hover:text-gray-400 dark:group-hover:text-white/40"
                 }`}
               />
             </button>
@@ -243,7 +243,7 @@ function FeatureAccordion() {
                   transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                   className="overflow-hidden"
                 >
-                  <p className="px-6 pb-5 pl-[4.25rem] text-sm leading-relaxed text-white/45">
+                  <p className="px-6 pb-5 pl-[4.25rem] text-sm leading-relaxed text-gray-500 dark:text-white/45">
                     {feature.desc}
                   </p>
                 </motion.div>
@@ -270,7 +270,7 @@ export function KatShowcase() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="mb-16 text-center"
         >
-          <span className="mb-3 inline-block text-[11px] font-black uppercase tracking-[0.28em] text-[#d6ff00]">
+          <span className="mb-3 inline-block text-[11px] font-black uppercase tracking-[0.28em] text-[#A78BFA]">
             Platform
           </span>
           <h2 className="outfit font-black text-4xl tracking-[-0.04em] text-foreground md:text-[3.25rem] leading-[1.1]">

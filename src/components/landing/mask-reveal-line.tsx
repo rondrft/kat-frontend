@@ -32,7 +32,7 @@ export function MaskRevealLine({ delay, inView, children, shine }: Props) {
       <motion.div
         aria-hidden
         className="absolute inset-0 pointer-events-none"
-        style={{ backgroundColor: "#d6ff00", zIndex: 10 }}
+        style={{ backgroundColor: "#A78BFA", zIndex: 10 }}
         initial={{ x: "-101%" }}
         animate={inView ? { x: ["-101%", "0%", "101%"] } : { x: "-101%" }}
         transition={{

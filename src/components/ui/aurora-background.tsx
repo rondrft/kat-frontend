@@ -8,12 +8,9 @@ interface AuroraBackgroundProps extends React.HTMLProps<HTMLDivElement> {
 // Global fixed background layer — no children, no height.
 //
 // Light: two-layer system:
-//   1. Violet ambient (blur 160px) — large diffuse halos at viewport corners/edges.
-//      Coordinates use the -20% inset div's frame: viewport top-left corner = at 14% 14%,
-//      viewport top-right = at 86% 14%, viewport bottom-right = at 86% 86%, etc.
-//   2. White spotlight (blur 45px) — concentrated at centre only (36%×28% ellipse).
-//      Sits on top; white covers ~65% of pixels, violet halos fill the remaining ~35%.
-// Dark:  near-black (#060900) + screen(#d6ff00 stripes H=67°) → yellow-lime glow on black.
+//   1. Violet ambient (blur 160px) — strong lavender/violet halos from top, right glow for cat.
+//   2. Soft white highlight (blur 45px) — gentle centre bloom, no longer fully white.
+// Dark:  near-black (#060900) + screen(violet stripes) → purple neon glow on black.
 export const AuroraBackground = ({
   className,
   showRadialGradient = true,
@@ -39,18 +36,13 @@ export const AuroraBackground = ({
           style={{
             position: "absolute",
             inset: "-20%",
-            filter: "blur(160px)",
+            filter: "blur(100px)",
             backgroundImage: [
-              // Top-centre — wide main aurora column
-              "radial-gradient(ellipse 80% 55% at 50% 0%, rgba(167,139,250,0.45) 0%, transparent 70%)",
-              // Top-left — secondary bloom
-              "radial-gradient(ellipse 60% 45% at 15% 0%, rgba(196,181,253,0.40) 0%, transparent 75%)",
-              // Top-right — secondary bloom
-              "radial-gradient(ellipse 60% 45% at 85% 0%, rgba(196,181,253,0.35) 0%, transparent 75%)",
-              // Mid lavender blend — transition between aurora and white
-              "radial-gradient(ellipse 70% 35% at 50% 38%, rgba(221,214,254,0.22) 0%, transparent 70%)",
-              // Right-side cat glow — soft violet bloom where the character lives
-              "radial-gradient(ellipse 50% 55% at 80% 40%, rgba(139,92,246,0.18) 0%, transparent 65%)",
+              "radial-gradient(ellipse 90% 65% at 50% 0%, rgba(139,92,246,0.78) 0%, transparent 68%)",
+              "radial-gradient(ellipse 70% 55% at 12% 0%, rgba(167,139,250,0.70) 0%, transparent 72%)",
+              "radial-gradient(ellipse 70% 55% at 88% 0%, rgba(167,139,250,0.65) 0%, transparent 72%)",
+              "radial-gradient(ellipse 80% 42% at 50% 42%, rgba(196,181,253,0.48) 0%, transparent 68%)",
+              "radial-gradient(ellipse 55% 60% at 82% 45%, rgba(124,58,237,0.38) 0%, transparent 62%)",
             ].join(", "),
           }}
         />
@@ -61,7 +53,7 @@ export const AuroraBackground = ({
             inset: "-20%",
             filter: "blur(45px)",
             backgroundImage:
-              "radial-gradient(ellipse 36% 28% at 50% 42%, rgba(255,255,255,0.97) 0%, rgba(248,245,255,0.55) 50%, transparent 74%)",
+              "radial-gradient(ellipse 36% 28% at 50% 42%, rgba(255,255,255,0.62) 0%, rgba(232,220,255,0.40) 50%, transparent 74%)",
           }}
         />
       </div>
@@ -71,8 +63,7 @@ export const AuroraBackground = ({
       <div
         className={cn(
           "[--dark-gradient:repeating-linear-gradient(100deg,#060900_0%,#060900_7%,transparent_10%,transparent_12%,#060900_16%)]",
-          // Dark mode: brand yellow-lime (#d6ff00, H=67°) — looks great on near-black
-          "[--aurora:repeating-linear-gradient(100deg,#d6ff00_10%,#b9df00_15%,#eaff8a_20%,#f7ffd6_25%,#d6ff00_30%)]",
+          "[--aurora:repeating-linear-gradient(100deg,#7c3aed_10%,#6d28d9_15%,#a78bfa_20%,#c4b5fd_25%,#7c3aed_30%)]",
           // Light mode: near-white stripes — screen over white = white, just a whisper of texture
           "[--aurora-soft:repeating-linear-gradient(100deg,#F5F3FF_10%,#EDE9FE_15%,#FFFFFF_20%,#FAF9FF_25%,#F5F3FF_30%)]",
           "[background-image:var(--aurora-soft)]",
