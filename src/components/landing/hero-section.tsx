@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Sparkles, Command, Zap, Shield, Gift, BarChart3 } from "lucide-react";
@@ -55,6 +56,7 @@ export function HeroSection() {
   const [mounted, setMounted] = useState(false);
   const { resolvedTheme } = useTheme();
   const { loginWithDiscord } = useAuth();
+  const router = useRouter();
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -91,6 +93,15 @@ export function HeroSection() {
   }, [mouseX, mouseY]);
 
   useEffect(() => { setMounted(true); }, []);
+
+  useEffect(() => {
+    if (typeof requestIdleCallback === "undefined") {
+      router.prefetch("/dashboard");
+      return;
+    }
+    const id = requestIdleCallback(() => router.prefetch("/dashboard"));
+    return () => cancelIdleCallback(id);
+  }, [router]);
 
   const inDark = mounted && resolvedTheme === "dark";
 
