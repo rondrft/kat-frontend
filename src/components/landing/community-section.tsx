@@ -98,12 +98,12 @@ export function CommunitySection() {
           <p className="mt-4 max-w-[240px] text-sm leading-relaxed text-foreground/50">
             Automate your server, protect your members and keep everything organized.
           </p>
-          <button
-            type="button"
-            className="mt-5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#d6ff00] text-black transition-opacity hover:opacity-80"
+          <div
+            aria-hidden
+            className="mt-5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#d6ff00] text-black"
           >
             <ArrowRight className="h-4 w-4" />
-          </button>
+          </div>
         </motion.div>
 
         {/* Center air — the editorial gap */}
@@ -129,12 +129,12 @@ export function CommunitySection() {
           <p className="mt-4 max-w-[240px] text-sm leading-relaxed text-foreground/50">
             Powerful moderation tools, smart features and a better Discord experience.
           </p>
-          <button
-            type="button"
-            className="mt-5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#d6ff00] text-black transition-opacity hover:opacity-80"
+          <div
+            aria-hidden
+            className="mt-5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#d6ff00] text-black"
           >
             <ArrowRight className="h-4 w-4" />
-          </button>
+          </div>
         </motion.div>
       </motion.div>
     </section>

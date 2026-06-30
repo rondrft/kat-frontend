@@ -212,13 +212,13 @@ export function SmartSystems() {
               Kat combines intelligent tools and seamless workflows to make managing your Discord server effortless.
             </p>
 
-            <button
-              type="button"
-              className="inline-flex items-center gap-3 rounded-[14px] bg-[#d6ff00] px-7 h-[3.25rem] text-black font-black text-[13px] tracking-[0.04em] select-none transition-colors hover:bg-[#c4ec00]"
+            <div
+              aria-hidden
+              className="inline-flex items-center gap-3 rounded-[14px] bg-[#d6ff00] px-7 h-[3.25rem] text-black font-black text-[13px] tracking-[0.04em] select-none"
             >
               EXPLORE FEATURES
               <ArrowRight className="h-4 w-4" />
-            </button>
+            </div>
           </motion.div>
         </div>
 
