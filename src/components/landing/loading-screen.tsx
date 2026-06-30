@@ -21,7 +21,7 @@ export function LoadingScreen() {
       return () => clearTimeout(t);
     }
     const t1 = setTimeout(() => setPhase("zoom"), 480);
-    const t2 = setTimeout(() => setDone(true), 1120);
+    const t2 = setTimeout(() => setDone(true), 940);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
@@ -34,14 +34,14 @@ export function LoadingScreen() {
       key="loader"
       className={`fixed inset-0 z-[9999] overflow-hidden select-none${isZoom ? " pointer-events-none" : ""}`}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.22, ease: "easeOut" }}
+      transition={{ duration: 0.14, ease: "easeOut" }}
     >
 
       {/* Background — full white/black base with subtle violet tint */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-br from-white via-white to-[#f0e8ff] dark:from-black dark:via-black dark:to-[#0a0118]"
         animate={{ opacity: isZoom ? 0 : 1 }}
-        transition={{ duration: 0.18, delay: isZoom ? 0.44 : 0, ease: "easeOut" }}
+        transition={{ duration: 0.16, delay: isZoom ? 0.28 : 0, ease: "easeOut" }}
       />
 
       {/* Silhouette — grows to cover full viewport, stays fully opaque */}
