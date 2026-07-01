@@ -58,7 +58,7 @@ function BillingToggleStatic({ toggle }: { toggle: { monthly: string; yearly: st
             )}
           >
             {isSelected && (
-              <span className="absolute inset-0 z-0 rounded-xl bg-gradient-to-r from-kat to-cyan-500 shadow-lg shadow-kat/25" />
+              <span className="absolute inset-0 z-0 rounded-xl bg-gradient-to-r from-kat to-violet-500 shadow-lg shadow-kat/25" />
             )}
             <span className="relative z-10">{option.label}</span>
             {option.suffix && (
@@ -146,7 +146,7 @@ function PricingCards({ plans, cta, lifetimeSubtext, onSelectPlan }: PricingCard
                   "absolute -top-3 left-1/2 -translate-x-1/2",
                   "inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider shadow-lg",
                   isHighlighted
-                    ? "bg-gradient-to-r from-kat to-cyan-500 text-white shadow-kat/30"
+                    ? "bg-gradient-to-r from-kat to-violet-500 text-white shadow-kat/30"
                     : isMonthly
                       ? "bg-emerald-500 text-white shadow-emerald-500/30"
                       : "bg-amber-500 text-white shadow-amber-500/30",
@@ -181,7 +181,7 @@ function PricingCards({ plans, cta, lifetimeSubtext, onSelectPlan }: PricingCard
               className={cn(
                 "relative z-10 mb-6 w-full rounded-xl py-6 text-base font-bold transition-all duration-300",
                 isHighlighted
-                  ? "bg-gradient-to-r from-kat to-cyan-500 text-white shadow-lg shadow-kat/25 hover:shadow-xl hover:shadow-kat/30 hover:scale-[1.02]"
+                  ? "bg-gradient-to-r from-kat to-violet-500 text-white shadow-lg shadow-kat/25 hover:shadow-xl hover:shadow-kat/30 hover:scale-[1.02]"
                   : "border-2 border-kat/30 bg-kat/10 text-kat hover:bg-kat/20 hover:shadow-lg hover:shadow-kat/10",
               )}
             >
@@ -201,7 +201,7 @@ function PricingCards({ plans, cta, lifetimeSubtext, onSelectPlan }: PricingCard
             </ul>
 
             {isLifetime && (
-              <div className="relative z-10 mt-6 rounded-xl bg-gradient-to-r from-amber-500/10 via-kat/5 to-cyan-500/10 p-3 text-center">
+              <div className="relative z-10 mt-6 rounded-xl bg-gradient-to-r from-amber-500/10 via-kat/5 to-violet-500/10 p-3 text-center">
                 <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">
                   <Infinity className="mr-1 inline-block h-3 w-3" />
                   {lifetimeSubtext}
@@ -269,9 +269,9 @@ function CheckoutView({ plan, plans, onBack }: CheckoutViewProps) {
 
       <div className="overflow-hidden rounded-3xl border border-black/[0.08] bg-white shadow-xl shadow-black/[0.05] dark:border-white/10 dark:bg-white/[0.03]">
         {/* Header */}
-        <div className="bg-gradient-to-r from-kat/10 to-cyan-500/10 px-8 py-6">
+        <div className="bg-gradient-to-r from-kat/10 to-violet-500/10 px-8 py-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-kat to-cyan-500 shadow-lg shadow-kat/25">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-kat to-violet-500 shadow-lg shadow-kat/25">
               <Crown className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -350,7 +350,7 @@ function CheckoutView({ plan, plans, onBack }: CheckoutViewProps) {
           <Button
             onClick={handleProceed}
             disabled={isPending || !selectedGuildId}
-            className="w-full rounded-xl bg-gradient-to-r from-kat to-cyan-500 py-6 text-base font-bold text-white shadow-lg shadow-kat/25 hover:shadow-xl hover:shadow-kat/30 disabled:opacity-60"
+            className="w-full rounded-xl bg-gradient-to-r from-kat to-violet-500 py-6 text-base font-bold text-white shadow-lg shadow-kat/25 hover:shadow-xl hover:shadow-kat/30 disabled:opacity-60"
           >
             {isPending ? (
               <>
@@ -529,9 +529,9 @@ const PREM_DOTS = [
 function AnimatedBlobs() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-visible" aria-hidden>
-      <div className="anim-prem-blob-1 absolute -left-16 top-8 h-72 w-72 rounded-full bg-gradient-to-br from-kat/8 to-cyan-500/5 blur-3xl" />
+      <div className="anim-prem-blob-1 absolute -left-16 top-8 h-72 w-72 rounded-full bg-gradient-to-br from-kat/8 to-violet-500/5 blur-3xl" />
       <div className="anim-prem-blob-2 absolute -right-16 top-1/4 h-72 w-72 rounded-full bg-gradient-to-bl from-violet-500/8 to-kat/5 blur-3xl" />
-      <div className="anim-prem-blob-3 absolute bottom-12 left-1/3 h-56 w-56 rounded-full bg-gradient-to-tr from-cyan-500/6 to-kat/5 blur-3xl" />
+      <div className="anim-prem-blob-3 absolute bottom-12 left-1/3 h-56 w-56 rounded-full bg-gradient-to-tr from-purple-500/6 to-kat/5 blur-3xl" />
       {PREM_DOTS.map((dot, i) => (
         <div
           key={i}
