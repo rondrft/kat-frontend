@@ -354,8 +354,8 @@ export function GeneralSettingsDialog({
           ) : (
             <div className="space-y-4">
               {/* Info */}
-              <div className="flex gap-3 rounded-2xl border border-blue-500/20 bg-blue-500/[0.06] p-4">
-                <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+              <div className="flex gap-3 rounded-2xl border border-violet-500/20 bg-violet-500/[0.06] p-4">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />
                 <p className="text-xs leading-relaxed text-muted-foreground">
                   {t.settings.accessInfo}
                 </p>

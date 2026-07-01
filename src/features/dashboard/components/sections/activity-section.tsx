@@ -149,7 +149,7 @@ function getActionBadgeClassName(action: string) {
     return "border-violet-500/20 bg-violet-500/10 text-violet-600 dark:text-violet-300";
   }
 
-  return "border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-300";
+  return "border-violet-500/20 bg-violet-500/10 text-violet-600 dark:text-violet-300";
 }
 
 function UserAvatar({
@@ -447,7 +447,7 @@ function RankingRow({ entry, rank, fallbackInitial = "?" }: { entry: RankingEntr
   return (
     <li className="group relative flex items-center gap-3 rounded-xl bg-white/70 px-3 py-2.5 transition-colors hover:bg-white/90 dark:bg-black/[0.18] dark:hover:bg-black/[0.3]">
       {/* Left accent bar */}
-      <div className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-gradient-to-b from-purple-500 to-blue-500 opacity-40 transition-opacity group-hover:opacity-80 dark:opacity-60 dark:group-hover:opacity-100" />
+      <div className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-gradient-to-b from-violet-500 to-purple-600 opacity-40 transition-opacity group-hover:opacity-80 dark:opacity-60 dark:group-hover:opacity-100" />
 
       {/* Rank pill */}
       <span className="flex h-6 w-8 items-center justify-center rounded-md bg-purple-100 font-mono text-xs font-bold text-purple-700 dark:bg-purple-500/15 dark:text-purple-300">

@@ -128,7 +128,7 @@ type StatCardProps = {
   value: string;
   detail: string;
   icon: typeof Users;
-  tone?: "blue" | "violet" | "cyan" | "slate";
+  tone?: "blue" | "violet" | "fuchsia" | "slate";
   className?: string;
 };
 
@@ -143,7 +143,7 @@ function StatCard({
   const tones = {
     blue: "bg-kat/10 text-kat",
     violet: "bg-violet-500/10 text-violet-500",
-    cyan: "bg-cyan-500/10 text-cyan-500",
+    fuchsia: "bg-fuchsia-500/10 text-fuchsia-500",
     slate: "bg-slate-500/10 text-slate-500",
   };
 
@@ -336,10 +336,10 @@ function ActivityYearPanel({ days, sectionLabel, heading, description, dayLabels
   const getTone = (count: number) => {
     if (count <= 0) return "bg-slate-200/70 dark:bg-slate-800";
     const i = count / max;
-    if (i < 0.25) return "bg-sky-200 dark:bg-sky-900";
-    if (i < 0.5) return "bg-sky-300 dark:bg-sky-700";
-    if (i < 0.75) return "bg-sky-500 dark:bg-sky-500";
-    return "bg-blue-600 dark:bg-blue-400";
+    if (i < 0.25) return "bg-violet-200 dark:bg-violet-900";
+    if (i < 0.5) return "bg-violet-300 dark:bg-violet-700";
+    if (i < 0.75) return "bg-violet-500 dark:bg-violet-500";
+    return "bg-violet-600 dark:bg-violet-400";
   };
 
   const allWeeks = useMemo(() => groupIntoWeeks(days), [days]);
@@ -466,10 +466,10 @@ function ActivityYearPanel({ days, sectionLabel, heading, description, dayLabels
                 className={cn(
                   "h-3 w-3 rounded-[3px] ring-1 ring-black/[0.04] dark:ring-white/10",
                   level === 0 && "bg-slate-200/70 dark:bg-slate-800",
-                  level === 1 && "bg-sky-200 dark:bg-sky-900",
-                  level === 2 && "bg-sky-300 dark:bg-sky-700",
-                  level === 3 && "bg-sky-500 dark:bg-sky-500",
-                  level === 4 && "bg-blue-600 dark:bg-blue-400",
+                  level === 1 && "bg-violet-200 dark:bg-violet-900",
+                  level === 2 && "bg-violet-300 dark:bg-violet-700",
+                  level === 3 && "bg-violet-500 dark:bg-violet-500",
+                  level === 4 && "bg-violet-600 dark:bg-violet-400",
                 )}
               />
             ))}
@@ -540,7 +540,7 @@ function StatisticsContent({
           value={formatNumber(stats.totalRoles)}
           detail={sc.roles.detail}
           icon={Tags}
-          tone="cyan"
+          tone="fuchsia"
         />
         <StatCard
           title={sc.customRoles.title}
@@ -554,7 +554,7 @@ function StatisticsContent({
           value={formatNumber(stats.voiceJoinsThisMonth)}
           detail={sc.voiceJoins.detail}
           icon={Mic2}
-          tone="cyan"
+          tone="fuchsia"
         />
         <StatCard
           title={sc.created.title}
@@ -590,7 +590,7 @@ function StatisticsContent({
           value={formatNumber(stats.totalVoiceChannels)}
           detail={sc.voiceChannels.detail}
           icon={Mic2}
-          tone="cyan"
+          tone="fuchsia"
           className="h-[13rem]"
         />
         <StatCard

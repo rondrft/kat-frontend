@@ -212,7 +212,7 @@ function OwnerPageComponent() {
           <div className="space-y-8">
             {/* Section 1 — Bot Status */}
             <section>
-              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-blue-400">
+              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-violet-400">
                 <Activity className="h-4 w-4" />
                 Bot Status
               </h2>
@@ -224,25 +224,25 @@ function OwnerPageComponent() {
                     icon={Server}
                     value={data?.totalGuilds}
                     label="Total Guilds"
-                    accent="text-blue-400"
+                    accent="text-violet-400"
                   />
                   <MetricCard
                     icon={Users}
                     value={data?.totalUsers}
                     label="Total Users"
-                    accent="text-blue-400"
+                    accent="text-violet-400"
                   />
                   <MetricCard
                     icon={Zap}
                     label="Gateway Ping"
-                    accent="text-blue-400"
+                    accent="text-violet-400"
                   >
                     <GatewayPing ms={data?.gatewayPingMs ?? 0} />
                   </MetricCard>
                   <MetricCard
                     icon={Clock}
                     label="Uptime"
-                    accent="text-blue-400"
+                    accent="text-violet-400"
                   >
                     <p className="truncate text-xl font-bold tabular-nums tracking-tight text-white">
                       {data ? formatUptime(data.uptimeSeconds) : "—"}
