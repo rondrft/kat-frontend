@@ -291,8 +291,8 @@ export function ServerTemplatesModal({
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else onOpenChange(true); }}>
       <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
-          <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-xl border border-black/[0.08] bg-indigo-500/10 dark:border-white/10">
-            <LayoutTemplate className="h-5 w-5 text-indigo-500" />
+          <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-xl border border-black/[0.08] bg-violet-500/10 dark:border-white/10">
+            <LayoutTemplate className="h-5 w-5 text-violet-500" />
           </div>
           <DialogTitle>Server Templates</DialogTitle>
           <DialogDescription>

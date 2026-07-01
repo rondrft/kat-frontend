@@ -176,8 +176,8 @@ export function RecurringMessagesModal({ open, onOpenChange, guildId }: Recurrin
     >
       <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-xl border border-black/[0.08] bg-blue-500/10 dark:border-white/10">
-            <RefreshCw className="h-5 w-5 text-blue-500" />
+          <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-xl border border-black/[0.08] bg-violet-500/10 dark:border-white/10">
+            <RefreshCw className="h-5 w-5 text-violet-500" />
           </div>
           <DialogTitle>Recurring Messages</DialogTitle>
           <DialogDescription>

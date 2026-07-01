@@ -36,14 +36,14 @@ const SCAN_LINES = [
 const SEVERITY_COLORS: Record<string, string> = {
   CRITICAL: "text-rose-500 bg-rose-500/10 border-rose-500/30",
   WARNING: "text-amber-500 bg-amber-500/10 border-amber-500/30",
-  INFO: "text-blue-500 bg-blue-500/10 border-blue-500/30",
+  INFO: "text-violet-500 bg-violet-500/10 border-violet-500/30",
   SUCCESS: "text-emerald-500 bg-emerald-500/10 border-emerald-500/30",
 };
 
 function SeverityIcon({ severity }: { severity: string }) {
   if (severity === "CRITICAL") return <ShieldAlert className="h-4 w-4 text-rose-500" />;
   if (severity === "WARNING") return <FileWarning className="h-4 w-4 text-amber-500" />;
-  if (severity === "INFO") return <Shield className="h-4 w-4 text-blue-500" />;
+  if (severity === "INFO") return <Shield className="h-4 w-4 text-violet-500" />;
   return <ShieldCheck className="h-4 w-4 text-emerald-500" />;
 }
 
@@ -166,7 +166,7 @@ function SummaryCards({ summary }: { summary: SecurityScanSummary }) {
         { label: "Total", value: summary.total, color: "text-foreground" },
         { label: "Critical", value: summary.critical, color: "text-rose-500" },
         { label: "Warnings", value: summary.warning, color: "text-amber-500" },
-        { label: "Info", value: summary.info, color: "text-blue-500" },
+        { label: "Info", value: summary.info, color: "text-violet-500" },
       ].map(({ label, value, color }) => (
         <div key={label} className="flex flex-col items-center rounded-xl bg-black/[0.025] p-3 dark:bg-white/[0.03]">
           <span className={cn("text-xl font-black", color)}>{value}</span>

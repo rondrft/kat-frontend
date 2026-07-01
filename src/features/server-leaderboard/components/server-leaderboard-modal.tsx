@@ -162,7 +162,7 @@ function PodiumCard({
 function RankingRow({ entry, rank }: { entry: ServerLeaderboardEntry; rank: number }) {
   return (
     <li className="group relative flex items-center gap-3 rounded-xl bg-white/70 px-3 py-2.5 transition-colors hover:bg-white/90 dark:bg-black/[0.18] dark:hover:bg-black/[0.3]">
-      <div className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-gradient-to-b from-purple-500 to-blue-500 opacity-40 transition-opacity group-hover:opacity-80 dark:opacity-60 dark:group-hover:opacity-100" />
+      <div className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-gradient-to-b from-violet-500 to-purple-600 opacity-40 transition-opacity group-hover:opacity-80 dark:opacity-60 dark:group-hover:opacity-100" />
 
       <span className="flex h-6 w-8 items-center justify-center rounded-md bg-purple-100 font-mono text-xs font-bold text-purple-700 dark:bg-purple-500/15 dark:text-purple-300">
         #{rank}
@@ -275,8 +275,8 @@ function SettingsTab({ guildId }: { guildId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-3 rounded-xl border border-blue-500/20 bg-blue-500/[0.06] p-4">
-        <Zap className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+      <div className="flex gap-3 rounded-xl border border-violet-500/20 bg-violet-500/[0.06] p-4">
+        <Zap className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />
         <p className="text-xs leading-relaxed text-muted-foreground">
           Your server only appears on the public leaderboard if you opt in. It is hidden by default and only admins can change this setting.
         </p>
