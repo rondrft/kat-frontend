@@ -9,6 +9,8 @@ export type RecurringMessage = {
   nextSendAt: string;
   enabled: boolean;
   createdAt: string;
+  color: string | null;
+  footerText: string | null;
 };
 
 export type RecurringMessageRequest = {
@@ -18,4 +20,6 @@ export type RecurringMessageRequest = {
   content: string;
   intervalMinutes: number;
   enabled: boolean;
+  color: string | null;
+  footerText: string | null;
 };
