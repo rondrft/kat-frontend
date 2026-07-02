@@ -378,26 +378,27 @@ export const guildService = {
   },
 
   async getRecurringMessages(guildId: string): Promise<RecurringMessage[]> {
-    const { data } = await apiClient.get<RecurringMessage[]>(
+    const { data } = await apiClient.get<ApiResponse<RecurringMessage[]> | RecurringMessage[]>(
       endpoints.guilds.recurringMessages(guildId),
     );
-    return Array.isArray(data) ? data : [];
+    const raw = unwrapApiData(data);
+    return Array.isArray(raw) ? raw : [];
   },
 
   async createRecurringMessage(guildId: string, req: RecurringMessageRequest): Promise<RecurringMessage> {
-    const { data } = await apiClient.post<RecurringMessage>(
+    const { data } = await apiClient.post<ApiResponse<RecurringMessage> | RecurringMessage>(
       endpoints.guilds.recurringMessages(guildId),
       req,
     );
-    return data;
+    return unwrapApiData(data) as RecurringMessage;
   },
 
   async updateRecurringMessage(guildId: string, id: number, req: RecurringMessageRequest): Promise<RecurringMessage> {
-    const { data } = await apiClient.put<RecurringMessage>(
+    const { data } = await apiClient.put<ApiResponse<RecurringMessage> | RecurringMessage>(
       endpoints.guilds.recurringMessageById(guildId, id),
       req,
     );
-    return data;
+    return unwrapApiData(data) as RecurringMessage;
   },
 
   async deleteRecurringMessage(guildId: string, id: number): Promise<void> {
